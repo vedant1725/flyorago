@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd flyora-frontend && npm run build",
+  "installCommand": "cd flyora-frontend && npm install",
+  "outputDirectory": "flyora-frontend/dist",
+  "framework": "vite"
+}
