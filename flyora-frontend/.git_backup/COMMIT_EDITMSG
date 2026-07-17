@@ -1,0 +1,107 @@
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   package-lock.json
+#	modified:   package.json
+#	modified:   src/App.tsx
+#	modified:   src/components/CTASection.tsx
+#	modified:   src/components/ChooseRole.tsx
+#	modified:   src/components/CommunityTestimonials.tsx
+#	modified:   src/components/Header.tsx
+#	modified:   src/components/Hero.tsx
+#	new file:   src/components/bookings/BookingActionsMenu.tsx
+#	new file:   src/components/bookings/BookingAnalytics.tsx
+#	new file:   src/components/bookings/BookingFilter.tsx
+#	new file:   src/components/bookings/BookingRow.tsx
+#	new file:   src/components/bookings/BookingSidebar.tsx
+#	new file:   src/components/bookings/BookingStatsCard.tsx
+#	new file:   src/components/bookings/BookingStatusBadge.tsx
+#	new file:   src/components/bookings/BookingTable.tsx
+#	new file:   src/components/bookings/QuickActions.tsx
+#	new file:   src/components/dashboard/DashboardMatches.tsx
+#	new file:   src/components/dashboard/DashboardOverview.tsx
+#	new file:   src/components/dashboard/DashboardProfile.tsx
+#	new file:   src/components/dashboard/DashboardShell.tsx
+#	new file:   src/components/dashboard/DashboardShipments.tsx
+#	new file:   src/components/dashboard/DashboardSidebar.tsx
+#	new file:   src/components/dashboard/DashboardTrips.tsx
+#	new file:   src/components/dashboard/DashboardWallet.tsx
+#	new file:   src/components/shipments/QuickActions.tsx
+#	new file:   src/components/shipments/ShipmentActionMenu.tsx
+#	new file:   src/components/shipments/ShipmentAnalytics.tsx
+#	new file:   src/components/shipments/ShipmentCard.tsx
+#	new file:   src/components/shipments/ShipmentDetailsDrawer.tsx
+#	new file:   src/components/shipments/ShipmentFilter.tsx
+#	new file:   src/components/shipments/ShipmentProgress.tsx
+#	new file:   src/components/shipments/ShipmentSidebar.tsx
+#	new file:   src/components/shipments/ShipmentStatsCard.tsx
+#	new file:   src/components/shipments/ShipmentStatusBadge.tsx
+#	new file:   src/components/shipments/ShipmentTimeline.tsx
+#	new file:   src/data/bookings.ts
+#	new file:   src/data/shipments.ts
+#	new file:   src/hooks/useShipmentsView.ts
+#	new file:   src/pages/BookingsPage.tsx
+#	modified:   src/pages/DashboardPage.tsx
+#	new file:   src/pages/ShipmentsPage.tsx
+#	new file:   src/pages/TripsPage.tsx
+#	new file:   src/pages/dashboard.css
+#	new file:   src/pages/shipments.css
+#
+# Changes not staged for commit:
+#	modified:   src/App.tsx
+#	modified:   src/components/Hero.tsx
+#	modified:   src/components/bookings/BookingRow.tsx
+#	modified:   src/components/bookings/BookingStatusBadge.tsx
+#	modified:   src/components/bookings/BookingTable.tsx
+#	modified:   src/components/dashboard/DashboardShell.tsx
+#	modified:   src/components/shipments/ShipmentCard.tsx
+#	modified:   src/components/shipments/ShipmentDetailsDrawer.tsx
+#	modified:   src/components/shipments/ShipmentProgress.tsx
+#	modified:   src/components/shipments/ShipmentSidebar.tsx
+#	modified:   src/components/shipments/ShipmentStatusBadge.tsx
+#	modified:   src/components/shipments/ShipmentTimeline.tsx
+#	modified:   src/config.ts
+#	modified:   src/data/bookings.ts
+#	modified:   src/data/shipments.ts
+#	modified:   src/hooks/useShipmentsView.ts
+#	modified:   src/pages/BookingsPage.tsx
+#	modified:   src/pages/DashboardPage.tsx
+#	modified:   src/pages/KycAdminPage.tsx
+#	modified:   src/pages/KycPage.tsx
+#	modified:   src/pages/LoginPage.tsx
+#	modified:   src/pages/ShipmentsPage.tsx
+#	modified:   src/pages/SignupPage.tsx
+#	modified:   src/pages/TripsPage.tsx
+#	modified:   src/pages/dashboard.css
+#
+# Untracked files:
+#	src/components/Sidebar.tsx
+#	src/components/WeatherWidget.tsx
+#	src/data/earnings.ts
+#	src/data/messages.ts
+#	src/data/support.ts
+#	src/data/trips.ts
+#	src/data/wallet.ts
+#	src/pages/AdminDashboardPage.tsx
+#	src/pages/AnalyticsPage.tsx
+#	src/pages/BookingDetailsPage.tsx
+#	src/pages/EarningsPage.tsx
+#	src/pages/MessagesPage.tsx
+#	src/pages/NotFoundPage.tsx
+#	src/pages/NotificationsPage.tsx
+#	src/pages/ProfilePage.tsx
+#	src/pages/ReportsPage.tsx
+#	src/pages/SettingsPage.tsx
+#	src/pages/ShipmentDetailsPage.tsx
+#	src/pages/SupportPage.tsx
+#	src/pages/TransactionDetailsPage.tsx
+#	src/pages/TripDetailsPage.tsx
+#	src/pages/WalletPage.tsx
+#	src/types/
+#	src/utils/
+#

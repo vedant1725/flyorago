@@ -1,0 +1,1251 @@
+.shipments-page-layout {
+  grid-template-columns: 212px minmax(0, 1fr) 276px;
+}
+
+.shipments-header {
+  min-height: 92px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.shipments-header__title {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--flyora-text);
+}
+
+.shipments-header__subtitle {
+  margin: 6px 0 0;
+  color: var(--flyora-muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.shipments-header__cta {
+  flex-shrink: 0;
+  height: 40px;
+  padding-inline: 16px;
+}
+
+.shipments-summary-grid {
+  margin-top: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.shipment-stat-card {
+  padding: 24px;
+  min-height: 118px;
+}
+
+.shipment-stat-card__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--flyora-teal);
+  background: rgba(24, 182, 164, 0.08);
+  border: 1px solid rgba(24, 182, 164, 0.12);
+  margin-bottom: 12px;
+}
+
+.shipment-stat-card__title {
+  font-size: 15px;
+  color: var(--flyora-text);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.shipment-stat-card__value {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--flyora-text);
+}
+
+.shipment-stat-card__trend {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--flyora-success);
+}
+
+.shipment-filter-card {
+  margin-top: 14px;
+  padding: 24px;
+}
+
+.shipment-filter-grid {
+  display: grid;
+  grid-template-columns: 1.45fr repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.shipment-filter {
+  display: grid;
+  gap: 8px;
+}
+
+.shipment-filter > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--flyora-text);
+}
+
+.shipment-filter__field,
+.shipment-filter__select,
+.shipment-filter__input,
+.shipment-filter__range {
+  height: 38px;
+  border: 1px solid var(--flyora-border);
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  color: #90a1b1;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.75);
+}
+
+.shipment-filter__input,
+.shipment-filter__select input,
+.shipment-filter__field input,
+.shipment-filter__range input {
+  border: 0;
+  outline: none;
+  width: 100%;
+  font: inherit;
+  color: var(--flyora-text);
+  background: transparent;
+}
+
+.shipment-filter__select {
+  justify-content: space-between;
+}
+
+.shipment-filter__range {
+  justify-content: flex-start;
+}
+
+.shipment-filter__range span {
+  color: var(--flyora-muted);
+  font-size: 12px;
+}
+
+.shipment-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.shipment-filter-actions .fly-btn {
+  height: 38px;
+  padding-inline: 16px;
+}
+
+.shipments-list-wrap {
+  margin-top: 14px;
+}
+
+.shipments-list {
+  display: grid;
+  gap: 14px;
+}
+
+.shipment-card {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 210px;
+  gap: 18px;
+  align-items: start;
+}
+
+.shipment-card__left {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.shipment-card__thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 18px;
+  border: 1px solid rgba(24, 182, 164, 0.16);
+  background: linear-gradient(180deg, rgba(24, 182, 164, 0.1), rgba(255,255,255,0.85));
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.shipment-card__tracking {
+  font-size: 12px;
+  color: var(--flyora-muted);
+  font-weight: 700;
+}
+
+.shipment-card__name,
+.shipment-card__airport-code,
+.shipment-card__details-grid strong,
+.shipment-card__package-grid strong {
+  color: var(--flyora-text);
+  font-weight: 800;
+}
+
+.shipment-card__name {
+  margin-top: 6px;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.shipment-card__category {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--flyora-muted);
+}
+
+.shipment-card__badges {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shipment-chip,
+.shipment-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shipment-chip--warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--flyora-warning);
+}
+
+.shipment-chip--mint {
+  background: rgba(24, 182, 164, 0.12);
+  color: var(--flyora-teal);
+}
+
+.shipment-badge.is-pending,
+.shipment-badge.is-pickup {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--flyora-warning);
+}
+
+.shipment-badge.is-transit {
+  background: rgba(24, 182, 164, 0.12);
+  color: var(--flyora-teal);
+}
+
+.shipment-badge.is-customs {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.shipment-badge.is-delivered,
+.shipment-badge.is-returned {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--flyora-success);
+}
+
+.shipment-badge.is-cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--flyora-danger);
+}
+
+.shipment-card__center {
+  min-width: 0;
+}
+
+.shipment-card__route-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.shipment-card__airport-code {
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.shipment-card__airport-copy {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--flyora-muted);
+}
+
+.shipment-card__route-arrow {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(24, 182, 164, 0.08);
+  color: var(--flyora-teal);
+  display: grid;
+  place-items: center;
+  margin-inline: auto;
+}
+
+.shipment-card__meta-grid,
+.shipment-card__details-grid,
+.shipment-card__package-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.shipment-card__meta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shipment-card__details-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.shipment-card__package-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.shipment-card__meta-grid span,
+.shipment-card__details-grid span,
+.shipment-card__package-grid span,
+.shipment-drawer__grid span,
+.shipment-drawer__hero-metrics span,
+.fly-summary-row span,
+.shipment-widget__main span,
+.shipment-side-stats span,
+.shipment-mini-stat__title,
+.shipment-card__category,
+.shipment-card__tracking,
+.shipment-drawer__head p,
+.shipment-quick-actions-card--tips p {
+  color: var(--flyora-muted);
+  font-size: 12px;
+}
+
+.shipment-card__meta-grid strong,
+.shipment-card__details-grid strong,
+.shipment-card__package-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.shipment-card__route-art {
+  margin-top: 10px;
+}
+
+.shipment-card__route-art svg {
+  width: 100%;
+  height: 86px;
+}
+
+.shipment-card__route-art path {
+  fill: none;
+  stroke: #18b6a4;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 5 6;
+}
+
+.shipment-card__route-art circle {
+  fill: #18b6a4;
+}
+
+.shipment-progress {
+  margin-top: 16px;
+}
+
+.shipment-progress__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #eef3f6;
+  overflow: hidden;
+}
+
+.shipment-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #18b6a4, #00a99d);
+  box-shadow: 0 10px 18px rgba(24, 182, 164, 0.2);
+}
+
+.shipment-progress__steps {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.shipment-progress__step {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 11px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.shipment-progress__step.is-active {
+  color: var(--flyora-text);
+}
+
+.shipment-progress__step.is-current .shipment-progress__step-icon {
+  transform: scale(1.05);
+  background: rgba(24, 182, 164, 0.14);
+  color: var(--flyora-teal);
+}
+
+.shipment-progress__step-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #eef3f6;
+  color: #94a3b8;
+}
+
+.shipment-progress__step.is-active .shipment-progress__step-icon {
+  background: rgba(24, 182, 164, 0.08);
+  color: var(--flyora-teal);
+}
+
+.shipment-card__tags {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shipment-tag {
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(23, 43, 77, 0.05);
+  color: var(--flyora-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shipment-card__actions {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.shipment-menu {
+  position: relative;
+}
+
+.shipment-menu__trigger {
+  width: 100%;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--flyora-border);
+  background: #fff;
+  color: #90a1b1;
+  display: grid;
+  place-items: center;
+}
+
+.shipment-menu__dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 185px;
+  border: 1px solid var(--flyora-border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--flyora-shadow);
+  padding: 8px;
+  z-index: 5;
+  display: grid;
+  gap: 4px;
+}
+
+.shipment-menu__dropdown button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  height: 34px;
+  border-radius: 10px;
+  padding: 0 10px;
+  color: var(--flyora-text);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shipment-menu__dropdown button:hover {
+  background: rgba(24, 182, 164, 0.06);
+}
+
+.shipment-analytics {
+  margin-top: 14px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.shipment-chart-card,
+.shipment-status-card,
+.shipment-quick-actions-card {
+  padding: 24px;
+}
+
+.shipment-chart-card__head {
+  margin-bottom: 14px;
+}
+
+.shipment-chart__svg {
+  width: 100%;
+  height: 170px;
+}
+
+.shipment-chart__line {
+  fill: none;
+  stroke: #18b6a4;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shipment-chart__labels {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.shipment-bars {
+  height: 190px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.shipment-bars__bar-wrap {
+  height: 100%;
+  display: flex;
+  align-items: end;
+}
+
+.shipment-bars__bar {
+  width: 100%;
+  min-height: 14px;
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(180deg, #18b6a4, rgba(24, 182, 164, 0.22));
+}
+
+.shipment-donut {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 198px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 999px;
+  background: conic-gradient(
+    #18b6a4 0 42%,
+    #22c55e 42% 60%,
+    #f59e0b 60% 72%,
+    #60a5fa 72% 84%,
+    #ef4444 84% 100%
+  );
+  padding: 10px;
+}
+
+.shipment-donut__core {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--flyora-border);
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.shipment-donut__core strong {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--flyora-text);
+  line-height: 1;
+}
+
+.shipment-donut__core span {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--flyora-muted);
+}
+
+.shipment-donut__legend {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--flyora-muted);
+}
+
+.shipment-donut__legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.dot--transit { background: #18b6a4; }
+.dot--pickup { background: #f59e0b; }
+.dot--customs { background: #3b82f6; }
+.dot--delivered { background: #22c55e; }
+.dot--returned { background: #94a3b8; }
+.dot--cancelled { background: #ef4444; }
+
+.shipment-analytics__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shipment-mini-stat {
+  min-height: 104px;
+  padding: 20px;
+}
+
+.shipment-mini-stat__value {
+  margin-top: 10px;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--flyora-text);
+}
+
+.shipment-mini-stat__trend {
+  margin-top: 8px;
+  color: var(--flyora-success);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.shipment-actions-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shipment-action-button {
+  min-height: 68px;
+  border: 1px solid var(--flyora-border);
+  border-radius: 14px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--flyora-text);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.shipment-action-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(24, 182, 164, 0.22);
+  background: rgba(24, 182, 164, 0.03);
+}
+
+.shipment-quick-actions-card--tips p {
+  margin-top: 12px;
+  line-height: 1.55;
+}
+
+.shipment-sidebar-panel {
+  gap: 14px;
+}
+
+.shipment-widget {
+  padding: 18px;
+}
+
+.shipment-widget__list,
+.shipment-side-stats {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.shipment-widget__row,
+.shipment-side-stats div {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.shipment-widget__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(24, 182, 164, 0.08);
+  color: var(--flyora-teal);
+  display: grid;
+  place-items: center;
+}
+
+.shipment-widget__main strong,
+.shipment-side-stats strong,
+.fly-summary-row strong,
+.shipment-drawer__grid strong,
+.shipment-drawer__hero-metrics strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--flyora-text);
+}
+
+.shipment-widget__main span {
+  display: block;
+  margin-top: 2px;
+}
+
+.shipment-widget__pill {
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(24, 182, 164, 0.08);
+  color: var(--flyora-teal);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.shipment-widget__pill--mint {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--flyora-success);
+}
+
+.shipment-side-stats div {
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+}
+
+.shipment-side-stats svg {
+  color: var(--flyora-teal);
+}
+
+.shipment-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(23, 43, 77, 0.38);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.shipment-drawer {
+  width: min(560px, 100%);
+  height: 100vh;
+  border-radius: 24px 0 0 24px;
+  background: #fff;
+  border-left: 1px solid var(--flyora-border);
+  box-shadow: var(--flyora-shadow);
+  padding: 24px;
+  overflow: auto;
+}
+
+.shipment-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.shipment-drawer__head p {
+  margin: 6px 0 0;
+}
+
+.shipment-drawer__close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--flyora-border);
+  background: #fff;
+  color: #90a1b1;
+}
+
+.shipment-drawer__hero {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(24, 182, 164, 0.06), rgba(255,255,255,1));
+  border: 1px solid rgba(24, 182, 164, 0.08);
+}
+
+.shipment-drawer__thumbs {
+  display: flex;
+  gap: 10px;
+}
+
+.shipment-drawer__thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: 1px solid rgba(24, 182, 164, 0.14);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+}
+
+.shipment-drawer__hero-copy {
+  margin-top: 14px;
+}
+
+.shipment-drawer__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shipment-drawer__title-row h3 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.shipment-drawer__title-row p {
+  margin: 6px 0 0;
+  color: var(--flyora-muted);
+  font-size: 13px;
+}
+
+.shipment-drawer__hero-metrics {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shipment-drawer__section {
+  margin-top: 18px;
+}
+
+.shipment-drawer__section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--flyora-text);
+}
+
+.shipment-timeline {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.shipment-timeline__item {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.shipment-timeline__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #eef3f6;
+  color: #94a3b8;
+}
+
+.shipment-timeline__item.is-done .shipment-timeline__icon,
+.shipment-timeline__item.is-current .shipment-timeline__icon {
+  background: rgba(24, 182, 164, 0.1);
+  color: var(--flyora-teal);
+}
+
+.shipment-timeline__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shipment-timeline__top strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--flyora-text);
+}
+
+.shipment-timeline__top span,
+.shipment-timeline__meta {
+  font-size: 12px;
+  color: var(--flyora-muted);
+}
+
+.shipment-timeline__meta {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.shipment-timeline__spacer {
+  display: none;
+}
+
+.shipment-drawer__grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shipment-drawer__grid > div {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--flyora-border);
+  background: #fff;
+}
+
+.shipment-drawer__grid strong,
+.shipment-drawer__hero-metrics strong {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.shipment-drawer__notes-text {
+  margin-top: 10px;
+  color: var(--flyora-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.shipment-drawer__actions {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shipment-drawer__actions .fly-btn {
+  min-height: 42px;
+}
+
+.shipment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(23, 43, 77, 0.38);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.shipment-modal {
+  width: min(760px, 100%);
+  padding: 24px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--flyora-border);
+  box-shadow: var(--flyora-shadow);
+}
+
+.shipment-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.shipment-modal__head p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--flyora-muted);
+  line-height: 1.5;
+}
+
+.shipment-modal__close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--flyora-border);
+  background: #fff;
+  color: #90a1b1;
+  display: grid;
+  place-items: center;
+}
+
+.shipment-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shipment-modal__grid label {
+  display: grid;
+  gap: 8px;
+}
+
+.shipment-modal__grid span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--flyora-text);
+}
+
+.shipment-modal__grid input {
+  width: 100%;
+  border: 1px solid var(--flyora-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--flyora-text);
+  font: inherit;
+  padding: 11px 12px;
+  outline: none;
+}
+
+.shipment-modal__actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.shipments-skeleton {
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.shipments-skeleton__line {
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eef3f6 25%, #f7fafc 37%, #eef3f6 63%);
+  background-size: 400% 100%;
+  animation: shipmentsSkeleton 1.4s ease infinite;
+}
+
+.shipments-skeleton__line--wide {
+  width: 72%;
+  height: 24px;
+}
+
+.shipments-state {
+  padding: 28px;
+  text-align: center;
+}
+
+.shipments-state__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--flyora-text);
+}
+
+.shipments-state p {
+  margin: 8px auto 0;
+  max-width: 460px;
+  color: var(--flyora-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shipments-pagination {
+  margin-top: 14px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.shipments-pagination__pages {
+  display: flex;
+  gap: 8px;
+}
+
+.shipments-pagination__button,
+.shipments-pagination__page {
+  height: 32px;
+  min-width: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--flyora-border);
+  background: #fff;
+  color: var(--flyora-text);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.shipments-pagination__page.is-active {
+  background: rgba(24, 182, 164, 0.08);
+  color: var(--flyora-teal);
+  border-color: rgba(24, 182, 164, 0.18);
+}
+
+.shipments-pagination__button:disabled {
+  opacity: 0.45;
+}
+
+@keyframes shipmentsSkeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+@media (max-width: 1360px) {
+  .shipments-page-layout {
+    grid-template-columns: 196px minmax(0, 1fr) 252px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .shipments-page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .shipment-sidebar-panel {
+    position: static;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 960px) {
+  .shipments-summary-grid,
+  .shipment-analytics,
+  .shipment-filter-grid,
+  .shipments-header {
+    grid-template-columns: 1fr;
+  }
+
+  .shipments-header {
+    display: grid;
+  }
+
+  .shipment-card {
+    grid-template-columns: 1fr;
+  }
+
+  .shipment-card__left {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .shipment-card__details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shipment-card__package-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shipment-card__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shipment-drawer {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .shipment-drawer__hero-metrics,
+  .shipment-drawer__grid,
+  .shipment-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shipment-drawer-overlay {
+    justify-content: stretch;
+  }
+
+  .shipment-modal__actions,
+  .shipment-drawer__actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .shipments-page-layout {
+    padding: 12px;
+  }
+
+  .shipments-header__title {
+    font-size: 26px;
+  }
+
+  .shipments-header__subtitle {
+    font-size: 13px;
+  }
+
+  .shipment-filter-card,
+  .shipment-chart-card,
+  .shipment-status-card,
+  .shipment-quick-actions-card,
+  .shipment-widget,
+  .shipment-modal,
+  .shipment-drawer {
+    border-radius: 16px;
+  }
+
+  .shipment-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shipment-progress__steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .shipment-card__route-head,
+  .shipment-card__meta-grid,
+  .shipment-card__details-grid,
+  .shipment-card__package-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shipment-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
