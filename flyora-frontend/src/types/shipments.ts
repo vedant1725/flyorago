@@ -1,4 +1,4 @@
-export type ShipmentStatus = 'Pending' | 'In Transit' | 'Customs' | 'Delivered' | 'Cancelled';
+export type ShipmentStatus = 'REQUEST_SENT' | 'IN_TRANSIT' | 'Customs' | 'DELIVERED' | 'CANCELLED';
 
 export interface ShipmentRecord {
   id: string;

@@ -72,7 +72,7 @@ const ServicesPage: React.FC = () => {
               Powered by <span className="text-gradient-teal">Real Travelers</span>
             </h1>
             <p className="text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mx-auto font-medium">
-              Flyora transforms unused luggage space into secure international shipping opportunities.
+              Flyorago transforms unused luggage space into secure international shipping opportunities.
             </p>
           </div>
           

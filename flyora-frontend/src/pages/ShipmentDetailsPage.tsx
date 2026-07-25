@@ -49,7 +49,7 @@ const ShipmentDetailsPage: React.FC = () => {
             setShipment({
               id: `#SH${s.id}`,
               rawId: s.id,
-              status: s.status || 'Pending',
+              status: s.status || 'REQUEST_SENT',
               trackingNumber: s.trackingNumber || `PKG${s.id}`,
               packageName: s.packageName || s.booking_details?.package_name || 'Luggage Cargo',
               category: s.category || 'General',
@@ -140,8 +140,8 @@ const ShipmentDetailsPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <h1 className="trips-header__title">Shipment {shipment.id}</h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                  shipment.status === 'Delivered' ? 'bg-emerald-50 text-emerald-600' :
-                  shipment.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                  shipment.status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-600' :
+                  shipment.status === 'CANCELLED' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
                 }`}>{shipment.status}</span>
               </div>
               <p className="trips-header__subtitle">Tracking Reference: {shipment.trackingNumber}</p>
@@ -246,21 +246,21 @@ const ShipmentDetailsPage: React.FC = () => {
               </div>
               <div className="relative">
                 <span className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-4 border-white ${
-                  ['In Transit', 'Customs', 'Delivered'].includes(shipment.status) ? 'bg-emerald-500' : 'bg-slate-300'
+                  ['IN_TRANSIT', 'Customs', 'DELIVERED'].includes(shipment.status) ? 'bg-emerald-500' : 'bg-slate-300'
                 }`} />
                 <div className="text-xs font-black text-flyora-navy">In Flight - En Route</div>
                 <p className="text-[10px] text-gray-400 mt-1 font-bold">Flight {shipment.flightNumber} airborne in corridor</p>
               </div>
               <div className="relative">
                 <span className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-4 border-white ${
-                  ['Customs', 'Delivered'].includes(shipment.status) ? 'bg-emerald-500' : 'bg-slate-300'
+                  ['Customs', 'DELIVERED'].includes(shipment.status) ? 'bg-emerald-500' : 'bg-slate-300'
                 }`} />
                 <div className="text-xs font-black text-flyora-navy">Customs Cleared</div>
                 <p className="text-[10px] text-gray-400 mt-1 font-bold">Cleared at destination airport clearance check</p>
               </div>
               <div className="relative">
                 <span className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-4 border-white ${
-                  ['Delivered'].includes(shipment.status) ? 'bg-emerald-500' : 'bg-slate-300'
+                  ['DELIVERED'].includes(shipment.status) ? 'bg-emerald-500' : 'bg-slate-300'
                 }`} />
                 <div className="text-xs font-black text-flyora-navy">Dispatched for Receiver Handoff</div>
                 <p className="text-[10px] text-gray-400 mt-1 font-bold">Traveler handoff scheduled at delivery point</p>

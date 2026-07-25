@@ -2,7 +2,7 @@
   "name": "flyora-frontend",
   "private": true,
   "version": "1.0.0",
-  "description": "Flyora - Premium Luggage Sharing Marketplace Frontend",
+  "description": "Flyorago - Premium Luggage Sharing Marketplace Frontend",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -32,11 +32,11 @@
     "vite": "^5.3.1"
   },
   "keywords": [
-    "flyora",
+    "flyorago",
     "luggage",
     "sharing",
     "marketplace"
   ],
-  "author": "Flyora Team",
+  "author": "Flyorago Team",
   "license": "MIT"
 }

@@ -46,7 +46,7 @@ const DashboardMatches: React.FC<Props> = ({ overview }) => (
                   </div>
                   <div className="shrink-0 flex items-center">
                     <Button variant="teal" size="sm"
-                      onClick={() => alert(`Connection request sent to ${match.shipment?.fullName}. Flyora Escrow will lock $${match.shipment?.pricePaid}.`)}>
+                      onClick={() => alert(`Connection request sent to ${match.shipment?.fullName}. Flyorago Escrow will lock $${match.shipment?.pricePaid}.`)}>
                       Accept Request
                     </Button>
                   </div>

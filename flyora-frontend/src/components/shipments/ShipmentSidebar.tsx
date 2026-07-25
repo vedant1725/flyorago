@@ -34,12 +34,12 @@ const ShipmentSidebar: React.FC<ShipmentSidebarProps> = ({ shipments }) => {
   }, []);
 
   // Filter real deliveries and pickups from shipments
-  const activeDeliveries = shipments.filter(s => s.status === 'In Transit').slice(0, 3);
-  const activePickups = shipments.filter(s => s.status === 'Package Received' || s.status === 'Pending').slice(0, 3);
+  const activeDeliveries = shipments.filter(s => s.status === 'IN_TRANSIT').slice(0, 3);
+  const activePickups = shipments.filter(s => s.status === 'Package Received' || s.status === 'REQUEST_SENT').slice(0, 3);
 
   const total = shipments.length;
-  const inTransit = shipments.filter(s => s.status === 'In Transit').length;
-  const delivered = shipments.filter(s => s.status === 'Delivered').length;
+  const inTransit = shipments.filter(s => s.status === 'IN_TRANSIT').length;
+  const delivered = shipments.filter(s => s.status === 'DELIVERED').length;
   const successRate = total > 0 ? Math.round((delivered / total) * 100) : 100;
 
   return (

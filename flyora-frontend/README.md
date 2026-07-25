@@ -1,4 +1,4 @@
-# Flyora Frontend ✈️
+# Flyorago Frontend ✈️
 
 > Premium Luggage Sharing Marketplace — Landing Page
 
@@ -125,4 +125,4 @@ The frontend connects to the backend via Vite proxy (`/api/*` → `http://localh
 
 ---
 
-*Flyora — Your Journey Carries More Than You.*
+*Flyorago — Your Journey Carries More Than You.*

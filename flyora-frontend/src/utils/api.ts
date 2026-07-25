@@ -15,6 +15,10 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   });
 
   if (response.status === 401) {
+    const isAdminPage = window.location.pathname.startsWith('/admin');
+    if (isAdminPage) {
+      throw new Error('Admin API session unauthorized.');
+    }
     localStorage.removeItem('flyora_user_id');
     localStorage.removeItem('flyora_user_name');
     localStorage.removeItem('flyora_access_token');
@@ -23,10 +27,23 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     throw new Error('Session expired. Please login again.');
   }
 
-  const resData = await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  let resData: any = {};
+
+  if (contentType.includes('application/json')) {
+    resData = await response.json();
+  } else {
+    const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`Server returned status ${response.status}. Please check backend logs.`);
+    }
+    return { status: 'success', data: text };
+  }
+
   if (!response.ok) {
-    const errorDetails = resData.errors ? JSON.stringify(resData.errors) : '';
-    throw new Error(`${resData.error || resData.message || resData.detail || 'Request failed'} ${errorDetails}`);
+    const hasErrors = resData.errors && Object.keys(resData.errors).length > 0;
+    const errorDetails = hasErrors ? JSON.stringify(resData.errors) : '';
+    throw new Error(`${resData.error || resData.message || resData.detail || 'Request failed'}${errorDetails ? ' ' + errorDetails : ''}`);
   }
 
   return resData;

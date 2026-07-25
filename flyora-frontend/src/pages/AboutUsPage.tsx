@@ -16,7 +16,7 @@ const values = [
   { title: 'Community Collaboration', icon: <Users size={28} className="text-purple-500" /> },
 ];
 
-const whyFlyora = [
+const whyFlyorago = [
   "Verified Global Network",
   "Modern Technology",
   "Escrow-Based Payments",
@@ -51,7 +51,7 @@ const AboutUsPage: React.FC = () => {
               <span className="text-gradient-teal">Community-Powered Shipping</span>
             </h1>
             <p className="text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mx-auto font-medium">
-              At Flyora, every journey creates an opportunity to help someone else.
+              At Flyorago, every journey creates an opportunity to help someone else.
             </p>
           </div>
 
@@ -64,7 +64,7 @@ const AboutUsPage: React.FC = () => {
             <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
               <div className="w-full lg:w-1/2">
                 <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl">
-                  <img src="/images/about_team_custom.png" alt="Flyora Team Discussing" className="w-full h-full object-cover" />
+                  <img src="/images/about_team_custom.png" alt="Flyorago Team Discussing" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-flyora-navy/10 mix-blend-overlay" />
                 </div>
               </div>
@@ -74,7 +74,7 @@ const AboutUsPage: React.FC = () => {
                   Millions of travelers fly every day with unused luggage capacity, while individuals and businesses pay expensive courier fees to ship items internationally.
                 </p>
                 <p className="text-lg text-flyora-gray-600 leading-relaxed">
-                  Flyora bridges this gap by securely connecting verified travelers with senders, creating a smarter, more sustainable global delivery ecosystem.
+                  Flyorago bridges this gap by securely connecting verified travelers with senders, creating a smarter, more sustainable global delivery ecosystem.
                 </p>
               </div>
             </div>
@@ -115,7 +115,7 @@ const AboutUsPage: React.FC = () => {
           <div className="container-flyora">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <h2 className="text-3xl md:text-4xl font-black text-flyora-navy mb-4">Our Values</h2>
-              <p className="text-lg text-flyora-gray-600">The core principles that guide everything we build at Flyora.</p>
+              <p className="text-lg text-flyora-gray-600">The core principles that guide everything we build at Flyorago.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -131,18 +131,18 @@ const AboutUsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ─── Why Flyora? ──────────────────────────────────────────────── */}
+        {/* ─── Why Flyorago? ──────────────────────────────────────────────── */}
         <section className="py-12 lg:py-16 bg-flyora-navy relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('/images/srv_hero_bg.png')] bg-cover opacity-10 mix-blend-overlay" />
           <div className="container-flyora relative z-10">
             <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
               <div className="w-full lg:w-1/2">
-                <h2 className="text-3xl lg:text-4xl font-black text-white mb-4">Why Flyora?</h2>
+                <h2 className="text-3xl lg:text-4xl font-black text-white mb-4">Why Flyorago?</h2>
                 <p className="text-lg text-white/70 leading-relaxed mb-8">
                   We are building a platform that puts people first. Experience a revolutionary way to ship globally while ensuring total security and trust.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
-                  {whyFlyora.map((reason, idx) => (
+                  {whyFlyorago.map((reason, idx) => (
                     <div key={idx} className="flex items-center gap-3">
                       <CheckCircle2 size={24} className="text-flyora-teal flex-shrink-0" />
                       <span className="text-white font-medium text-lg">{reason}</span>
@@ -187,7 +187,7 @@ const AboutUsPage: React.FC = () => {
                       <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/10 skew-y-12 origin-top-left" />
                       <Package size={36} className="text-[#3b2a1a] opacity-80 z-10 mb-2" />
                       <div className="absolute bottom-3 font-black text-[9px] text-[#3b2a1a] uppercase tracking-widest opacity-90 z-10 flex items-center gap-1">
-                        <Plane size={8} /> Flyora
+                        <Plane size={8} /> Flyorago
                       </div>
                     </div>
                   </div>

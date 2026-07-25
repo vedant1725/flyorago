@@ -36,7 +36,7 @@ const Stats: React.FC = () => {
       ref={sectionRef}
       className="py-12 lg:py-16 bg-white relative overflow-hidden"
       id="stats"
-      aria-label="Flyora platform statistics"
+      aria-label="Flyorago platform statistics"
     >
       {/* Top border gradient */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-flyora-teal/20 to-transparent" />

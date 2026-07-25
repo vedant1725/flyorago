@@ -47,7 +47,7 @@ const FAQSection: React.FC = () => {
                 Frequently Asked <br /> Questions
               </h2>
               <p className="text-sm text-flyora-gray-500 max-w-md">
-                Everything you need to know about shipping and earning with the Flyora community.
+                Everything you need to know about shipping and earning with the Flyorago community.
               </p>
             </div>
 
@@ -92,7 +92,7 @@ const FAQSection: React.FC = () => {
               {/* Custom FAQ Image */}
               <img 
                 src="/images/FAQ SECTION.png" 
-                alt="Flyora Global Support Team" 
+                alt="Flyorago Global Support Team" 
                 className="w-full h-auto max-h-[500px] object-contain object-center group-hover:scale-105 transition-transform duration-700"
               />
 

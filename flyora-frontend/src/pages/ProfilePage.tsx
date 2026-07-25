@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
-import { Sidebar } from '../components/Sidebar';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Plane, Package, CalendarDays, Wallet, CreditCard,
   Headphones, Gift, UserRound, Settings, Search, Bell, ChevronDown,
   ArrowRight, ShieldCheck, BadgeCheck, FileText, Star, Mail, Phone,
-  MapPin, CheckCircle2, User, Lock, Edit3, Trash2, Plus, X
+  MapPin, CheckCircle2, User, Lock, Edit3, Trash2, Plus, X, Camera
 } from 'lucide-react';
+import { Sidebar } from '../components/Sidebar';
 import { apiFetch } from '../utils/api';
+import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
 import './dashboard.css';
-
-// sidebarItems removed
 
 interface Review {
   id: string;
@@ -26,15 +25,23 @@ const mockReviews: Review[] = [];
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Local storage profile state
   const [userName, setUserName] = useState(localStorage.getItem('flyora_user_name') || 'Vedant Sharma');
   const [userEmail, setUserEmail] = useState(localStorage.getItem('flyora_user_email') || 'vedant.sharma@example.com');
   const [userPhone, setUserPhone] = useState(localStorage.getItem('flyora_user_phone') || '+91 98765 43210');
-  const [userBio, setUserBio] = useState('Passionate international traveler and tech enthusiast. Happy to carry safe documents and verified items.');
-  const [userLanguages, setUserLanguages] = useState('English, Hindi, German');
-  
-  const initials = userName.split(' ').map(n => n[0]).join('');
+  const [userAvatar, setUserAvatar] = useState(localStorage.getItem('flyora_user_avatar') || '');
+  const [userBio, setUserBio] = useState(localStorage.getItem('flyora_user_bio') || 'Passionate international traveler and tech enthusiast. Happy to carry safe documents and verified items.');
+  const [userLanguages, setUserLanguages] = useState(localStorage.getItem('flyora_user_languages') || 'English, Hindi, German');
+
+  const initials = (userName || 'User')
+    .trim()
+    .split(/\s+/)
+    .map(n => (n ? n[0] : ''))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'U';
 
   // UI State
   const [activeSubTab, setActiveSubTab] = useState<'details' | 'prefs' | 'reviews' | 'kyc'>('details');
@@ -57,21 +64,45 @@ const ProfilePage: React.FC = () => {
   const [completedTrips, setCompletedTrips] = useState(0);
   const [rating, setRating] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const [profRes, addrRes] = await Promise.all([
           apiFetch('/api/profiles/me'),
           apiFetch('/api/profiles/addresses')
         ]);
-        
+
         if (profRes.status === 'success' && profRes.data) {
           const d = profRes.data;
-          setUserName(`${d.first_name || ''} ${d.last_name || ''}`.trim() || userName);
-          setUserEmail(d.email || userEmail);
-          setUserPhone(d.phone_number || userPhone);
-          if (d.bio) setUserBio(d.bio);
-          if (d.languages) setUserLanguages(d.languages);
+          
+          // Only initialize from backend if local storage does NOT already have user customization
+          if (!localStorage.getItem('flyora_user_name') && (d.first_name || d.last_name)) {
+            const fetchedName = `${d.first_name || ''} ${d.last_name || ''}`.trim();
+            setUserName(fetchedName);
+            localStorage.setItem('flyora_user_name', fetchedName);
+          }
+          if (!localStorage.getItem('flyora_user_email') && d.email) {
+            setUserEmail(d.email);
+            localStorage.setItem('flyora_user_email', d.email);
+          }
+          if (!localStorage.getItem('flyora_user_phone') && d.phone_number) {
+            setUserPhone(d.phone_number);
+            localStorage.setItem('flyora_user_phone', d.phone_number);
+          }
+          if (!localStorage.getItem('flyora_user_avatar') && (d.avatar || d.avatar_url)) {
+            const avatarVal = d.avatar || d.avatar_url;
+            setUserAvatar(avatarVal);
+            localStorage.setItem('flyora_user_avatar', avatarVal);
+          }
+          if (!localStorage.getItem('flyora_user_bio') && d.bio) {
+            setUserBio(d.bio);
+            localStorage.setItem('flyora_user_bio', d.bio);
+          }
+          if (!localStorage.getItem('flyora_user_languages') && d.languages) {
+            setUserLanguages(d.languages);
+            localStorage.setItem('flyora_user_languages', d.languages);
+          }
+
           setPrefFragile(d.pref_fragile ?? true);
           setPrefElectronics(d.pref_electronics ?? true);
           setPrefDocuments(d.pref_documents ?? true);
@@ -85,32 +116,96 @@ const ProfilePage: React.FC = () => {
           setAddresses(addrRes.data);
         }
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
+        console.error('Failed to fetch profile from API:', err);
       }
     };
     fetchProfile();
   }, []);
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+
+      // 1. Immediately update UI state & LocalStorage
+      setUserAvatar(base64String);
+      localStorage.setItem('flyora_user_avatar', base64String);
+      window.dispatchEvent(new Event('profileUpdated'));
+      setSuccessMessage('Profile photo updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3500);
+
+      // 2. Sync to API in background
+      try {
+        await apiFetch('/api/profiles/me', {
+          method: 'PATCH',
+          body: JSON.stringify({ avatar: base64String, avatar_url: base64String }),
+        });
+      } catch (err) {
+        console.error('API notice updating avatar:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const trimmedName = userName.trim();
+    const trimmedEmail = userEmail.trim();
+    const trimmedPhone = userPhone.trim();
+    const trimmedBio = userBio.trim();
+    const trimmedLanguages = userLanguages.trim();
+
+    // 1. Immediately persist ALL updated fields into LocalStorage
+    localStorage.setItem('flyora_user_name', trimmedName);
+    localStorage.setItem('flyora_user_email', trimmedEmail);
+    localStorage.setItem('flyora_user_phone', trimmedPhone);
+    localStorage.setItem('flyora_user_bio', trimmedBio);
+    localStorage.setItem('flyora_user_languages', trimmedLanguages);
+    if (userAvatar) {
+      localStorage.setItem('flyora_user_avatar', userAvatar);
+    }
+
+    // 2. Dispatch custom event so top headers and profile dropdown update live
+    window.dispatchEvent(new Event('profileUpdated'));
+
+    // 3. Show success notification
+    setSuccessMessage('Profile details & preferences saved successfully!');
+    setTimeout(() => setSuccessMessage(''), 3500);
+
+    // 4. Optionally sync with backend
     try {
-      const names = userName.split(' ');
+      const nameParts = trimmedName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       await apiFetch('/api/profiles/me', {
         method: 'PATCH',
         body: JSON.stringify({
-          bio: userBio,
-          languages: userLanguages,
+          first_name: firstName,
+          last_name: lastName,
+          email: trimmedEmail,
+          phone_number: trimmedPhone,
+          bio: trimmedBio,
+          languages: trimmedLanguages,
+          avatar: userAvatar,
+          avatar_url: userAvatar,
           pref_fragile: prefFragile,
           pref_electronics: prefElectronics,
           pref_documents: prefDocuments,
           pref_liquid: prefLiquid
         })
       });
-      localStorage.setItem('flyora_user_name', userName);
-      setSuccessMessage('Profile details saved successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      console.error('Failed to save profile:', err);
+      console.log('Background sync notice:', err);
     }
   };
 
@@ -142,44 +237,66 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="fly-dashboard-shell profile-page min-h-screen bg-slate-50">
-      <div className="fly-dashboard-layout">
-        
-        <Sidebar activeItem="Profile" />
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+      <Sidebar activeItem="Settings" />
 
-        {/* Main Panel */}
-        <main className="fly-main-panel">
-          {/* Topbar */}
-          <div className="flex items-center justify-between gap-4 mb-6 h-[40px]">
-            <label className="flex-1 max-w-[500px] h-full bg-white border border-slate-200 rounded-[12px] flex items-center gap-3 px-4 shadow-sm">
-              <Search size={16} className="text-slate-400" />
-              <input type="text" placeholder="Search trips, shipments, users..." className="w-full bg-transparent border-0 outline-none text-sm text-slate-700 placeholder-slate-400 font-medium" />
-            </label>
+      <main className="flex-1 lg:ml-[240px] flex flex-col h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
+        {/* Top Header */}
+        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0">
+          <label className="flex-1 max-w-[400px] bg-slate-50 border border-slate-200 rounded-full flex items-center gap-3 px-4 py-2">
+            <Search size={16} className="text-slate-400" />
+            <input type="text" placeholder="Search profile settings..." className="w-full bg-transparent border-0 outline-none text-xs text-slate-700 placeholder-slate-400 font-medium" />
+          </label>
 
-            <div className="flex items-center gap-3">
-              <button type="button" className="w-[40px] h-[40px] rounded-[12px] bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-flyora-teal hover:border-teal-200 transition-colors relative shadow-sm" onClick={() => navigate('/notifications')}>
-                <Bell size={18} />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></span>
-              </button>
+          <div className="flex items-center gap-4">
+            <button 
+              type="button"
+              onClick={() => navigate('/notifications')}
+              className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
+            >
+              <Bell size={18} />
+            </button>
 
-              <button type="button" className="flex items-center gap-3 pl-1 pr-3 py-1 bg-transparent hover:bg-slate-200/50 rounded-full transition-colors border-0 cursor-pointer">
-                <div className="w-[32px] h-[32px] rounded-full bg-teal-50 text-teal-700 flex items-center justify-center text-xs font-bold border border-teal-100">
-                  {initials}
-                </div>
-                <div className="hidden sm:flex flex-col items-start">
-                  <span className="text-sm font-bold text-slate-800 leading-tight">{userName}</span>
-                  <span className="text-[11px] font-semibold text-slate-500 leading-tight">Traveler</span>
-                </div>
-                <ChevronDown size={14} className="text-slate-400 ml-1 hidden sm:block" />
-              </button>
-            </div>
+            <HeaderProfileDropdown />
           </div>
+        </header>
 
-          {/* User Profile Header - Redesigned cleanly without overlapping banners */}
+        {/* Scrollable Main Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+
+          {/* User Profile Header */}
           <section className="bg-white rounded-[16px] border border-slate-200 p-6 sm:p-8 mb-6 flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 shadow-sm">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 w-full lg:w-auto">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-flyora-teal to-teal-600 text-white flex shrink-0 items-center justify-center text-3xl font-black shadow-md border-4 border-teal-50/50">
-                {initials}
+              {/* Profile Avatar Upload Circle */}
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="relative group shrink-0 cursor-pointer"
+                title="Click to upload profile photo"
+              >
+                {userAvatar ? (
+                  <img src={userAvatar} alt={userName} className="w-24 h-24 rounded-full object-cover shadow-md border-4 border-teal-50/50" />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-flyora-teal to-teal-600 text-white flex items-center justify-center text-3xl font-black shadow-md border-4 border-teal-50/50">
+                    {initials}
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 rounded-full bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-[2px]">
+                  <Camera size={22} className="mb-1" />
+                  <span className="text-[10px] font-bold">Change Photo</span>
+                </div>
+
+                <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-flyora-teal text-white flex items-center justify-center shadow-md border-2 border-white group-hover:scale-110 transition-transform">
+                  <Camera size={14} />
+                </div>
+
+                <input 
+                  ref={fileInputRef} 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleAvatarChange} 
+                />
               </div>
               
               <div className="flex-1 text-center sm:text-left pt-2">
@@ -254,7 +371,13 @@ const ProfilePage: React.FC = () => {
                     <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</span>
                     <div className="relative">
                       <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} required className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" />
+                      <input 
+                        type="text" 
+                        value={userName} 
+                        onChange={(e) => setUserName(e.target.value)} 
+                        required 
+                        className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" 
+                      />
                     </div>
                   </label>
                 </div>
@@ -262,33 +385,56 @@ const ProfilePage: React.FC = () => {
                 <div className="col-span-1">
                   <label className="block">
                     <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Languages Spoken</span>
-                    <input type="text" value={userLanguages} onChange={(e) => setUserLanguages(e.target.value)} className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" placeholder="English, Hindi" />
+                    <input 
+                      type="text" 
+                      value={userLanguages} 
+                      onChange={(e) => setUserLanguages(e.target.value)} 
+                      className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" 
+                      placeholder="English, Hindi" 
+                    />
                   </label>
                 </div>
 
                 <div className="col-span-1">
                   <label className="block">
                     <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</span>
-                    <input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} required className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" />
+                    <input 
+                      type="email" 
+                      value={userEmail} 
+                      onChange={(e) => setUserEmail(e.target.value)} 
+                      required 
+                      className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" 
+                    />
                   </label>
                 </div>
 
                 <div className="col-span-1">
                   <label className="block">
                     <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</span>
-                    <input type="text" value={userPhone} onChange={(e) => setUserPhone(e.target.value)} required className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" />
+                    <input 
+                      type="text" 
+                      value={userPhone} 
+                      onChange={(e) => setUserPhone(e.target.value)} 
+                      required 
+                      className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" 
+                    />
                   </label>
                 </div>
 
                 <div className="col-span-1 sm:col-span-2">
                   <label className="block">
                     <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bio Details</span>
-                    <textarea rows={4} value={userBio} onChange={(e) => setUserBio(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all resize-none" />
+                    <textarea 
+                      rows={4} 
+                      value={userBio} 
+                      onChange={(e) => setUserBio(e.target.value)} 
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all resize-none" 
+                    />
                   </label>
                 </div>
 
                 <div className="col-span-1 sm:col-span-2 pt-2">
-                  <button type="submit" className="h-12 px-8 bg-flyora-teal hover:bg-teal-600 text-white text-sm font-bold rounded-[12px] shadow-sm transition-all inline-flex items-center justify-center">
+                  <button type="submit" className="h-12 px-8 bg-flyora-teal hover:bg-teal-600 text-white text-sm font-bold rounded-[12px] shadow-sm transition-all inline-flex items-center justify-center cursor-pointer">
                     Save Profile Changes
                   </button>
                 </div>
@@ -354,134 +500,43 @@ const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {/* Tab: Reviews */}
-          {activeSubTab === 'reviews' && (
-            <div className="bg-white rounded-[16px] border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
-              <div className="border-b border-slate-100 pb-5 flex flex-col gap-1.5">
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">Reviews History</h3>
-                <p className="text-sm text-slate-500 font-medium">See what others say about your trips.</p>
-              </div>
-              <div className="space-y-4">
-                {mockReviews.length === 0 ? (
-                  <div className="text-center py-12 text-sm text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-[12px]">No reviews received yet.</div>
-                ) : mockReviews.map((rev) => (
-                  <article key={rev.id} className="p-5 border border-slate-200 rounded-[12px] bg-slate-50">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="text-sm font-black text-slate-900">{rev.reviewerName}</div>
-                        <div className="text-[11px] text-slate-500 font-bold mt-1">{rev.role} • {rev.date}</div>
-                      </div>
-                      <div className="flex gap-1">
-                        {Array.from({ length: 5 }).map((_, idx) => (
-                          <Star key={idx} size={14} className={idx < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300 fill-slate-200'} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-700 font-medium leading-relaxed italic">"{rev.comment}"</p>
-                    {rev.packageDetails && (
-                      <div className="mt-3 text-xs text-slate-500 font-bold">
-                        Package: <span className="text-slate-800">{rev.packageDetails}</span>
-                      </div>
-                    )}
-                  </article>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tab: KYC Status */}
-          {activeSubTab === 'kyc' && (
-            <article className="bg-white rounded-[16px] border border-slate-200 p-6 sm:p-8 shadow-sm">
-              <div className="border-b border-slate-100 pb-5 mb-8 flex flex-col gap-1.5">
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">KYC & Verification Status</h3>
-                <p className="text-sm text-slate-500 font-medium">Verify your identity to unlock trust badges.</p>
-              </div>
-
-              <div className="space-y-6 max-w-xl">
-                <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-[12px] flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-[12px] bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                    <ShieldCheck size={24} strokeWidth={2.4} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-black text-emerald-900">Identity Verification: Level 1</div>
-                    <p className="text-xs text-emerald-700 font-bold mt-1 leading-relaxed">Government ID & Face verify checks successfully approved.</p>
-                  </div>
-                </div>
-
-                <div className="border border-slate-200 rounded-[12px] overflow-hidden bg-white">
-                  <div className="p-5 flex justify-between items-center bg-slate-50 border-b border-slate-200">
-                    <span className="text-sm font-black text-slate-900">KYC Overall Status</span>
-                    <span className={`text-xs font-black px-3 py-1.5 rounded-[8px] uppercase tracking-wider ${
-                      kycStatus === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
-                      kycStatus === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                      kycStatus === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'
-                    }`}>{kycStatus}</span>
-                  </div>
-                </div>
-
-                <button type="button" className="h-12 w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-[12px] transition-colors" onClick={() => navigate('/kyc')}>
-                  Open KYC Verification Portal
-                </button>
-              </div>
-            </article>
-          )}
-
-        </main>
-
-        {/* Right Utility Sidebar - Aligned perfectly with the profile header using mt-[64px] (topbar 40px + mb 24px) */}
-        <aside className="fly-utility-panel">
-          <article className="bg-slate-900 rounded-[16px] border border-slate-800 text-white p-6 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-            <div className="w-12 h-12 rounded-[12px] bg-teal-500/20 text-teal-400 flex items-center justify-center mb-5 border border-teal-500/30">
-              <BadgeCheck size={24} strokeWidth={2.5} />
-            </div>
-            <h4 className="text-sm font-black uppercase tracking-wider mb-3 text-white">Verified Host Status</h4>
-            <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-              Travelers who upload government documents and complete face matching unlock the "Verified Host" badge, boosting booking requests by 4x.
-            </p>
-          </article>
-        </aside>
-
-      </div>
+        </div>
+      </main>
 
       {/* Add Address Modal */}
       {isAddingAddr && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setIsAddingAddr(false)}>
-          <div className="bg-white rounded-[20px] shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <div>
-                <h3 className="text-lg font-black text-slate-900">Add Saved Address</h3>
-                <p className="text-xs font-semibold text-slate-500 mt-1">Register a frequent parcel pickup/drop destination.</p>
-              </div>
-              <button type="button" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition-colors" onClick={() => setIsAddingAddr(false)}>
-                <X size={18} strokeWidth={2.5} />
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[20px] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+              <h3 className="text-lg font-black text-slate-900">Add Saved Address</h3>
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1" onClick={() => setIsAddingAddr(false)}>
+                <X size={20} />
               </button>
             </div>
-            <form className="p-6 space-y-5" onSubmit={handleAddAddress}>
+            <form onSubmit={handleAddAddress} className="space-y-4">
               <label className="block">
-                <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Address Label (Tag)</span>
-                <select className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" value={newAddrTag} onChange={(e) => setNewAddrTag(e.target.value)}>
+                <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Address Tag</span>
+                <select value={newAddrTag} onChange={(e) => setNewAddrTag(e.target.value)} className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal outline-none">
                   <option value="Home">Home</option>
-                  <option value="Office">Office</option>
-                  <option value="Billing">Billing</option>
-                  <option value="Warehouse">Warehouse</option>
+                  <option value="Work / Office">Work / Office</option>
+                  <option value="Warehouse / Drop">Warehouse / Drop</option>
+                  <option value="Other">Other</option>
                 </select>
               </label>
 
               <label className="block">
                 <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Address Line</span>
-                <input type="text" required placeholder="House No, Building, Street, City, ZIP, Country" value={newAddrText} onChange={(e) => setNewAddrText(e.target.value)} className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal focus:ring-4 focus:ring-flyora-teal/10 outline-none transition-all" />
+                <input type="text" required placeholder="House No, Building, Street, City, ZIP, Country" value={newAddrText} onChange={(e) => setNewAddrText(e.target.value)} className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal outline-none" />
               </label>
 
               <div className="pt-4 flex gap-3">
-                <button type="button" className="flex-1 h-12 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-[12px] transition-colors" onClick={() => setIsAddingAddr(false)}>Cancel</button>
-                <button type="submit" className="flex-1 h-12 bg-flyora-teal hover:bg-teal-600 text-white text-sm font-bold rounded-[12px] shadow-sm transition-colors">Add Address</button>
+                <button type="button" className="flex-1 h-12 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-[12px]" onClick={() => setIsAddingAddr(false)}>Cancel</button>
+                <button type="submit" className="flex-1 h-12 bg-flyora-teal hover:bg-teal-600 text-white text-sm font-bold rounded-[12px]">Add Address</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 };

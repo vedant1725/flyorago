@@ -9,10 +9,10 @@ interface Props {
 const timelineStages = [
   { label: 'Pickup Completed', icon: PackageCheck, offsetHours: 0, location: 'Sender Address' },
   { label: 'Airport Check-in', icon: PlaneTakeoff, offsetHours: 4, location: 'Origin Airport' },
-  { label: 'In Transit', icon: Truck, offsetHours: 18, location: 'International Airspace' },
+  { label: 'IN_TRANSIT', icon: Truck, offsetHours: 18, location: 'International Airspace' },
   { label: 'Customs', icon: ShieldCheck, offsetHours: 42, location: 'Destination Customs' },
-  { label: 'Out For Delivery', icon: PlaneLanding, offsetHours: 68, location: 'Local Dispatch Hub' },
-  { label: 'Delivered', icon: CircleCheckBig, offsetHours: 92, location: 'Recipient Address' },
+  { label: 'OUT_FOR_DELIVERY', icon: PlaneLanding, offsetHours: 68, location: 'Local Dispatch Hub' },
+  { label: 'DELIVERED', icon: CircleCheckBig, offsetHours: 92, location: 'Recipient Address' },
 ];
 
 const formatTimelineMoment = (pickupDate: string, offsetHours: number) => {
@@ -46,7 +46,7 @@ const ShipmentTimeline: React.FC<Props> = ({ shipment }) => {
               </div>
               <div className="shipment-timeline__meta">
                 <span>{time}</span>
-                <span>{isCurrent ? 'Current' : isDone ? 'Completed' : 'Upcoming'}</span>
+                <span>{isCurrent ? 'Current' : isDone ? 'PAYMENT_RELEASED' : 'Upcoming'}</span>
                 <span>{stage.location}</span>
               </div>
             </div>

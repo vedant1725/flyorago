@@ -12,7 +12,7 @@ import {
 const categories = [
   {
     title: 'General Support',
-    description: 'Questions about Flyora, your account, or platform features.',
+    description: 'Questions about Flyorago, your account, or platform features.',
     icon: <HelpCircle size={24} className="text-blue-500" />
   },
   {
@@ -216,7 +216,7 @@ const ContactUsPage: React.FC = () => {
                  Your Journey Carries <br className="hidden sm:block" /> More Than You.
               </h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto mb-10">
-                 Join thousands of verified travelers and senders building the future of smarter international delivery with Flyora.
+                 Join thousands of verified travelers and senders building the future of smarter international delivery with Flyorago.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                  <button className="px-8 py-4 bg-white text-flyora-teal font-bold rounded-2xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300">

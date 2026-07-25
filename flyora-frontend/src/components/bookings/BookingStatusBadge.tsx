@@ -12,7 +12,7 @@ const bookingClassMap: Record<BookingStatus, string> = {
   Pending: 'is-pending',
   Confirmed: 'is-confirmed',
   Accepted: 'is-accepted',
-  'In Transit': 'is-transit',
+  'IN_TRANSIT': 'is-transit',
   Delivered: 'is-delivered',
   Completed: 'is-completed',
   Cancelled: 'is-cancelled',

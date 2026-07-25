@@ -1,11 +1,12 @@
 import React from 'react';
 import { ChevronUp, ChevronDown, Check, X, AlertCircle } from 'lucide-react';
 
-export const StatusBadge: React.FC<{ status: string; type?: 'success' | 'warning' | 'danger' | 'info' | 'default' }> = ({ status, type }) => {
+export const StatusBadge: React.FC<{ status?: string; type?: 'success' | 'warning' | 'danger' | 'info' | 'default' }> = ({ status = 'PENDING', type }) => {
+  const safeStatus = String(status || 'PENDING');
   let colors = 'bg-slate-800 text-slate-400 border-slate-700';
   
   if (!type) {
-    const s = status.toLowerCase();
+    const s = safeStatus.toLowerCase();
     if (s.includes('approve') || s.includes('active') || s.includes('complete') || s.includes('deliver') || s.includes('accept')) type = 'success';
     else if (s.includes('reject') || s.includes('cancel') || s.includes('fail')) type = 'danger';
     else if (s.includes('pending') || s.includes('transit') || s.includes('hold')) type = 'warning';
@@ -21,13 +22,13 @@ export const StatusBadge: React.FC<{ status: string; type?: 'success' | 'warning
 
   return (
     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${colors}`}>
-      {status.replace('_', ' ')}
+      {safeStatus.replace('_', ' ')}
     </span>
   );
 };
 
-export const MetricCard: React.FC<{ title: string; value: string | number; trend: number; icon: React.ReactNode; subtitle: string }> = ({ title, value, trend, icon, subtitle }) => {
-  const isPositive = trend >= 0;
+export const MetricCard: React.FC<{ title: string; value: string | number; trend?: number; icon: React.ReactNode; subtitle: string }> = ({ title, value, trend, icon, subtitle }) => {
+  const isPositive = (trend ?? 0) >= 0;
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-[16px] p-5 relative overflow-hidden transition-all hover:border-slate-700 hover:shadow-lg hover:-translate-y-1 group">
       <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity"></div>
@@ -35,10 +36,12 @@ export const MetricCard: React.FC<{ title: string; value: string | number; trend
         <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
           {icon}
         </div>
-        <div className={`flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-          {isPositive ? <ChevronUp size={12} strokeWidth={3} /> : <ChevronDown size={12} strokeWidth={3} />}
-          {Math.abs(trend)}%
-        </div>
+        {trend !== undefined && (
+          <div className={`flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+            {isPositive ? <ChevronUp size={12} strokeWidth={3} /> : <ChevronDown size={12} strokeWidth={3} />}
+            {Math.abs(trend)}%
+          </div>
+        )}
       </div>
       <div className="relative z-10">
         <div className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">{title}</div>

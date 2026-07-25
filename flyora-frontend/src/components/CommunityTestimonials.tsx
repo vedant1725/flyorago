@@ -17,7 +17,7 @@ const testimonials = [
   {
     role: "Community Member",
     quote: "The verification process and delivery updates gave me confidence throughout the entire journey.",
-    footer: "Flyora Community • Verified",
+    footer: "Flyorago Community • Verified",
     avatar: "bg-purple-50 text-purple-500"
   }
 ];
@@ -47,7 +47,7 @@ const CommunityTestimonials: React.FC = () => {
             Trusted by Travellers. <br className="hidden sm:block" /> Loved by Senders.
           </h2>
           <p className="text-sm md:text-base text-flyora-gray-600 max-w-2xl mx-auto leading-relaxed">
-            People use Flyora to make international shipping simpler, safer, and more affordable through trusted community connections.
+            People use Flyorago to make international shipping simpler, safer, and more affordable through trusted community connections.
           </p>
         </div>
 

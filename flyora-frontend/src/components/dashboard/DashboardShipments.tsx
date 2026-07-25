@@ -30,7 +30,7 @@ const DashboardShipments: React.FC<Props> = ({ shipments, onNewShipment, onRelea
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-xl font-black text-flyora-navy">Shipment Requests</h1>
-        <p className="text-xs text-gray-400 mt-1 font-medium">Post parcels for delivery. Rewards are secured in Flyora Escrow.</p>
+        <p className="text-xs text-gray-400 mt-1 font-medium">Post parcels for delivery. Rewards are secured in Flyorago Escrow.</p>
       </div>
       <Button variant="teal" size="sm" onClick={onNewShipment} icon={<PlusCircle size={14} />}>
         Post Request

@@ -85,8 +85,8 @@ const ShipmentsPage: React.FC = () => {
         const mapped = res.data.map((s: any) => {
           // Determine progress percentage from status
           let progressVal = 30;
-          if (s.status === 'In Transit') progressVal = 70;
-          if (s.status === 'Delivered') progressVal = 100;
+          if (s.status === 'IN_TRANSIT') progressVal = 70;
+          if (s.status === 'DELIVERED') progressVal = 100;
 
           // Get latest log location for currentLocation
           const latestLog = s.logs && s.logs.length > 0 ? s.logs[s.logs.length - 1] : null;
@@ -131,7 +131,7 @@ const ShipmentsPage: React.FC = () => {
       const res = await apiFetch('/api/bookings/?user_only=true');
       if (res.status === 'success' && Array.isArray(res.data)) {
         // filter accepted bookings that do not have shipments yet
-        const accepted = res.data.filter((b: any) => b.status === 'Accepted');
+        const accepted = res.data.filter((b: any) => b.status === 'ACCEPTED');
         setAcceptedBookings(accepted);
         if (accepted.length > 0) {
           setSelectedBookingId(accepted[0].id.toString());
@@ -226,14 +226,14 @@ const ShipmentsPage: React.FC = () => {
   }, [filters, shipmentsList]);
 
   // Derived counts
-  const activeCount = shipmentsList.filter(s => s.status !== 'Delivered').length;
-  const inTransitCount = shipmentsList.filter(s => s.status === 'In Transit').length;
-  const deliveredCount = shipmentsList.filter(s => s.status === 'Delivered').length;
+  const activeCount = shipmentsList.filter(s => s.status !== 'DELIVERED').length;
+  const inTransitCount = shipmentsList.filter(s => s.status === 'IN_TRANSIT').length;
+  const deliveredCount = shipmentsList.filter(s => s.status === 'DELIVERED').length;
 
   const summaryCardsStats = [
     { icon: Package, title: 'Active Shipments', value: activeCount.toString(), trend: '+16% this month' },
-    { icon: Truck, title: 'In Transit', value: inTransitCount.toString(), trend: '+8% this month' },
-    { icon: BadgeCheck, title: 'Delivered', value: deliveredCount.toString(), trend: '+22% this month' },
+    { icon: Truck, title: 'IN_TRANSIT', value: inTransitCount.toString(), trend: '+8% this month' },
+    { icon: BadgeCheck, title: 'DELIVERED', value: deliveredCount.toString(), trend: '+22% this month' },
     { icon: Wallet, title: 'Total Earnings', value: `$${deliveredCount * 85}`, trend: '+18.6% this month' },
   ];
 

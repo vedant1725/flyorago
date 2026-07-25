@@ -15,7 +15,7 @@ const ChooseRole: React.FC = () => {
             Built for Travellers and Senders
           </h2>
           <p className="text-sm md:text-base text-flyora-gray-600 max-w-xl mx-auto leading-relaxed">
-            Whether you're flying internationally or sending a package, Flyora gives each user a clear and secure workflow.
+            Whether you're flying internationally or sending a package, Flyorago gives each user a clear and secure workflow.
           </p>
         </div>
 

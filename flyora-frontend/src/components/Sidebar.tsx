@@ -18,6 +18,7 @@ const sidebarItems = [
   { label: 'Trip', icon: Plane, route: '/traveler' },
   { label: 'Sender', icon: Package, route: '/sender' },
   { label: 'Shopper', icon: ShoppingBag, route: '/shopper' },
+  { label: 'Trust Score', icon: ShieldCheck, route: '/trust' },
   { label: 'Wallet', icon: Wallet, route: '/wallet' },
   { label: 'Settings', icon: Settings, route: '/settings' },
 ];
@@ -105,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                 <Plane size={16} className="text-white transform -rotate-45" />
               </div>
             </div>
-            <span className="text-xl font-black text-slate-800 tracking-tight">Flyora<span className="text-flyora-teal">Go</span></span>
+            <span className="text-xl font-black text-slate-800 tracking-tight">Flyorago<span className="text-flyora-teal">Go</span></span>
           </div>
 
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-3">Menu</div>
@@ -114,20 +115,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
             {sidebarItems.map((item) => {
               const Icon = item.icon;
               // Map old activeItems to new labels if needed, or assume activeItem matches exactly
-              const isActive = activeItem.toLowerCase() === item.label.toLowerCase() || 
-                               (activeItem === 'Traveler' && item.label === 'Trip');
+              const isActive = activeItem.toLowerCase() === item.label.toLowerCase() ||
+                (activeItem === 'Traveler' && item.label === 'Trip');
               return (
                 <div key={item.label} className="flex flex-col">
                   <button
                     type="button"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                      isActive && !activeSubItem
-                        ? 'bg-flyora-teal text-white shadow-lg shadow-teal-500/30' 
-                        : isActive 
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${isActive && !activeSubItem
                         ? 'bg-flyora-teal text-white shadow-lg shadow-teal-500/30'
-                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                    }`}
-                    onClick={() => navigate(item.route)}
+                        : isActive
+                          ? 'bg-flyora-teal text-white shadow-lg shadow-teal-500/30'
+                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                      }`}
+                    onClick={() => handleNav(item.route)}
                   >
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                     <span>{item.label}</span>
@@ -150,11 +150,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                           <button
                             key={sub.id}
                             type="button"
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-bold transition-all duration-200 ${
-                              isSubActive 
-                                ? 'bg-teal-50 text-flyora-teal' 
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-bold transition-all duration-200 ${isSubActive
+                                ? 'bg-teal-50 text-flyora-teal'
                                 : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                            }`}
+                              }`}
                             onClick={() => onSubItemClick && onSubItemClick(sub.id)}
                           >
                             <SubIcon size={16} strokeWidth={isSubActive ? 2.5 : 2} />
@@ -167,17 +166,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                 </div>
               );
             })}
-            
-            {localStorage.getItem('flyora_user_role') === 'admin' && (
-              <button
-                type="button"
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-flyora-teal hover:bg-teal-50 mt-4 transition-all"
-                onClick={() => navigate('/admin')}
-              >
-                <ShieldCheck size={18} strokeWidth={2.5} />
-                <span>Admin Panel</span>
-              </button>
-            )}
           </nav>
         </div>
 
@@ -205,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
           <div className="w-7 h-7 rounded-[8px] bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-sm">
             <Plane size={14} className="text-white transform -rotate-45" />
           </div>
-          Flyora<span className="text-flyora-teal">Go</span>
+          Flyorago<span className="text-flyora-teal">Go</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -261,16 +249,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                   </button>
                 );
               })}
-              {localStorage.getItem('flyora_user_role') === 'admin' && (
-                <button
-                  type="button"
-                  className="fly-sidebar-item"
-                  onClick={() => handleNav('/admin')}
-                >
-                  <ShieldCheck size={16} strokeWidth={2} className="text-flyora-teal" />
-                  <span className="text-flyora-teal font-black">Admin Panel</span>
-                </button>
-              )}
             </nav>
 
             {/* Referral card inside drawer */}
@@ -305,7 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
               key={item.label}
               type="button"
               className={`fly-mobile-nav-item ${isActive ? 'is-active' : ''}`}
-              onClick={() => navigate(item.route)}
+              onClick={() => handleNav(item.route)}
             >
               <Icon
                 size={22}
@@ -326,8 +304,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
         >
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black tracking-tighter transition-all duration-200 ${isMoreActive || drawerOpen
-                ? 'bg-gradient-to-br from-flyora-teal to-teal-600 text-white ring-2 ring-flyora-teal ring-offset-2'
-                : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+              ? 'bg-gradient-to-br from-flyora-teal to-teal-600 text-white ring-2 ring-flyora-teal ring-offset-2'
+              : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
               }`}
           >
             {initials || 'U'}

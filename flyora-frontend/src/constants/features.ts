@@ -61,7 +61,7 @@ export const HOW_IT_WORKS = [
     id: 'step-2',
     step: 2,
     title: 'Book & Pay Securely',
-    description: 'Choose your match, agree on terms, and pay safely through Flyora\'s secure escrow system.',
+    description: 'Choose your match, agree on terms, and pay safely through Flyorago\'s secure escrow system.',
     icon: 'credit-card',
   },
   {

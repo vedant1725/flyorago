@@ -36,7 +36,7 @@ const DashboardSidebar: React.FC<Props> = ({ activeTab, setActiveTab, userName, 
             <Plane size={16} className="text-white transform -rotate-45" />
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-black text-white leading-none">fly<span className="text-flyora-teal-light">ora</span></span>
+            <span className="text-base font-black text-white leading-none">fly<span className="text-flyora-teal-light">orago</span></span>
             <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Portal</span>
           </div>
         </Link>
@@ -89,7 +89,7 @@ const DashboardSidebar: React.FC<Props> = ({ activeTab, setActiveTab, userName, 
             <span className="text-[9px] font-black uppercase tracking-wider text-flyora-teal-light">Escrow Protected</span>
           </div>
           <p className="text-[10px] text-white/40 leading-relaxed font-medium">
-            All transactions secured by Flyora Escrow Guarantee system.
+            All transactions secured by Flyorago Escrow Guarantee system.
           </p>
         </div>
 
