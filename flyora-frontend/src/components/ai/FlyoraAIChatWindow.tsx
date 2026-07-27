@@ -223,13 +223,13 @@ export const FlyoraAIChatWindow: React.FC = () => {
           {/* ─── CHATGPT / GEMINI STYLE POWERFUL INPUT FORM ─── */}
           <div className="p-3.5 sm:p-4 bg-white border-t border-slate-200 shrink-0 shadow-lg">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
-              <div className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 flex items-center gap-2 focus-within:border-flyora-teal focus-within:bg-white transition shadow-inner">
+              <div className="flex-1 bg-slate-100/80 rounded-2xl px-4 py-2.5 flex items-center gap-2 transition focus-within:bg-slate-100 focus:outline-none focus:ring-0">
                 <input
                   type="text"
                   placeholder="Ask Flyora AI anything..."
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  className="w-full bg-transparent text-slate-800 text-xs sm:text-sm font-semibold focus:outline-none placeholder-slate-400"
+                  className="w-full bg-transparent text-slate-800 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-0 outline-none border-none placeholder-slate-400"
                 />
 
                 <div className="flex items-center gap-1.5 text-slate-400">

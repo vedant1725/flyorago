@@ -158,13 +158,13 @@ const FlyoraAIPage: React.FC = () => {
         {/* Input Bar */}
         <div className="bg-white p-4 rounded-3xl border border-slate-200 shrink-0 space-y-3 shadow-sm">
           <form onSubmit={handleSubmit} className="flex items-center gap-3">
-            <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 flex items-center gap-3 focus-within:border-flyora-teal focus-within:bg-white transition">
+            <div className="flex-1 bg-slate-100/80 rounded-2xl px-5 py-3 flex items-center gap-3 focus-within:bg-slate-100 transition">
               <input
                 type="text"
                 placeholder="Ask Flyora AI about Luggage Sharing, Parcels, Wallet & Escrow..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                className="w-full bg-transparent text-slate-800 text-sm font-medium focus:outline-none placeholder-slate-400"
+                className="w-full bg-transparent text-slate-800 text-sm font-medium focus:outline-none focus:ring-0 outline-none border-none placeholder-slate-400"
               />
             </div>
 
