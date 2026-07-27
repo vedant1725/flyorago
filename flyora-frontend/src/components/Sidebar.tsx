@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Plane, Package, ShoppingBag, Wallet, CreditCard,
   Headphones, Gift, UserRound, Settings, ShieldCheck, ShieldAlert,
-  BadgeCheck, Clock, Bell, X, Menu, Ellipsis
+  BadgeCheck, Clock, Bell, X, Menu, Luggage, Home, LogOut
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
+import { HeaderProfileDropdown } from './ui/HeaderProfileDropdown';
 
 interface SidebarProps {
   activeItem: string;
@@ -18,12 +19,11 @@ const sidebarItems = [
   { label: 'Trip', icon: Plane, route: '/traveler' },
   { label: 'Sender', icon: Package, route: '/sender' },
   { label: 'Shopper', icon: ShoppingBag, route: '/shopper' },
+  { label: 'Luggage Sharing', icon: Luggage, route: '/luggage-sharing' },
   { label: 'Trust Score', icon: ShieldCheck, route: '/trust' },
   { label: 'Wallet', icon: Wallet, route: '/wallet' },
   { label: 'Settings', icon: Settings, route: '/settings' },
 ];
-
-const BOTTOM_NAV_ITEMS = ['Dashboard', 'Trip', 'Sender', 'Wallet', 'More'];
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onSubItemClick }) => {
   const navigate = useNavigate();
@@ -32,7 +32,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const userName = localStorage.getItem('flyora_user_name') || 'User';
-  const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   useEffect(() => {
     const userId = localStorage.getItem('flyora_user_id');
@@ -62,43 +61,47 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
     const status = kycStatus.toUpperCase();
     if (status === 'APPROVED' || status === 'VERIFIED') {
       return (
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full">
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2.5 py-0.5 rounded-full">
           <BadgeCheck size={11} /> Approved
         </span>
       );
     }
     if (status === 'PENDING' || status === 'UNDER_REVIEW') {
       return (
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/25 px-2.5 py-0.5 rounded-full animate-pulse">
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/25 px-2.5 py-0.5 rounded-full animate-pulse">
           <Clock size={11} /> Under Review
         </span>
       );
     }
     if (status === 'REJECTED') {
       return (
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/25 px-2.5 py-0.5 rounded-full">
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/25 px-2.5 py-0.5 rounded-full">
           <ShieldAlert size={11} /> Rejected
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-slate-500/15 text-slate-400 border border-slate-700/50 px-2.5 py-0.5 rounded-full">
+      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-slate-500/15 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full">
         Not Verified
       </span>
     );
   };
-
-  const isMoreActive = !BOTTOM_NAV_ITEMS.slice(0, 4).includes(activeItem);
 
   const handleNav = (route: string) => {
     navigate(route);
     setDrawerOpen(false);
   };
 
+  const handleLogout = () => {
+    setDrawerOpen(false);
+    localStorage.clear();
+    navigate('/login');
+  };
+
   return (
     <>
       {/* ─── Desktop Sidebar ─── */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[240px] bg-[#FFFDFB] border-r border-slate-100 flex-col pt-8 pb-6 px-4 z-40">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[240px] bg-[#FFFDFB] border-r border-slate-200 flex-col pt-8 pb-6 px-4 z-40">
         <div>
           <div className="flex items-center gap-2 mb-10 px-2 cursor-pointer" onClick={() => navigate('/')}>
             <div className="relative">
@@ -106,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                 <Plane size={16} className="text-white transform -rotate-45" />
               </div>
             </div>
-            <span className="text-xl font-black text-slate-800 tracking-tight">Flyorago<span className="text-flyora-teal">Go</span></span>
+            <span className="text-xl font-black text-slate-900 tracking-tight">FLYORA<span className="text-flyora-teal">GO</span></span>
           </div>
 
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-3">Menu</div>
@@ -114,7 +117,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
           <nav className="flex flex-col gap-1.5">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
-              // Map old activeItems to new labels if needed, or assume activeItem matches exactly
               const isActive = activeItem.toLowerCase() === item.label.toLowerCase() ||
                 (activeItem === 'Traveler' && item.label === 'Trip');
               return (
@@ -169,41 +171,56 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
           </nav>
         </div>
 
-        <div className="mt-auto">
-          {/* Optional bottom section like refer & earn if needed, or KYC */}
+        <div className="mt-auto space-y-3">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition"
+          >
+            <Home size={15} /> Go to Home Page
+          </button>
+
           <div
             onClick={() => navigate('/kyc')}
-            className="p-4 rounded-xl cursor-pointer hover:bg-slate-50 transition-all duration-200 border border-slate-100 flex flex-col gap-2 bg-white shadow-sm"
+            className="p-3.5 rounded-xl cursor-pointer hover:bg-slate-50 transition border border-slate-200 flex items-center justify-between bg-white shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">KYC Status</span>
-              {getKycBadge()}
-            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</span>
+            {getKycBadge()}
           </div>
         </div>
       </aside>
 
       {/* ─── Mobile Top Bar ─── */}
-      <div className="lg:hidden flex items-center justify-between h-[60px] px-4 bg-white border-b border-slate-100 shrink-0 relative z-30">
-        <button type="button" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-700" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+      <div className="lg:hidden flex items-center justify-between h-[64px] px-4 bg-white border-b border-slate-200 shrink-0 sticky top-0 z-40 shadow-sm">
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 transition"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Open menu drawer"
+        >
           <Menu size={20} strokeWidth={2.5} />
         </button>
 
-        <div className="flex items-center gap-2 font-black text-lg text-slate-800">
+        <div className="flex items-center gap-2 font-black text-lg text-slate-800 cursor-pointer" onClick={() => navigate('/')}>
           <div className="w-7 h-7 rounded-[8px] bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-sm">
             <Plane size={14} className="text-white transform -rotate-45" />
           </div>
-          Flyorago<span className="text-flyora-teal">Go</span>
+          FLYORA<span className="text-flyora-teal">GO</span>
         </div>
 
         <div className="flex items-center gap-3">
-          <button type="button" className="relative text-slate-500" aria-label="Notifications" onClick={() => navigate('/notifications')}>
-            <Bell size={20} strokeWidth={2} />
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-white"></span>
+          <button
+            type="button"
+            className="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition relative"
+            aria-label="Notifications"
+            onClick={() => navigate('/notifications')}
+          >
+            <Bell size={18} strokeWidth={2} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500"></span>
           </button>
-          <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center text-xs font-bold border border-teal-100 cursor-pointer" onClick={() => navigate('/profile')}>
-            {initials}
-          </div>
+
+          {/* Profile Dropdown with My Profile, Go Home, Settings & Logout */}
+          <HeaderProfileDropdown compact={true} />
         </div>
       </div>
 
@@ -211,29 +228,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
       {drawerOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setDrawerOpen(false)}></div>
-          <div className="relative flex flex-col w-[280px] max-w-[calc(100%-3rem)] bg-white h-full shadow-2xl transition-transform transform translate-x-0">
-            <div className="flex items-center justify-between px-6 pt-8 pb-6 border-b border-slate-100">
+          <div className="relative flex flex-col w-[280px] max-w-[calc(100%-3rem)] bg-white h-full shadow-2xl transition-transform transform translate-x-0 overflow-y-auto p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2 font-black text-xl text-slate-800">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-sm">
                   <Plane size={16} className="text-white transform -rotate-45" />
                 </div>
-                FlyoraGo
+                FLYORA<span className="text-flyora-teal">GO</span>
               </div>
-              <button type="button" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500" onClick={() => setDrawerOpen(false)} aria-label="Close menu">
+              <button
+                type="button"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Close menu"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            {/* KYC badge in drawer */}
+            {/* KYC badge inside drawer */}
             <div
               onClick={() => handleNav('/kyc')}
-              className="mx-1 mt-4 mb-3 p-3 rounded-2xl cursor-pointer border border-slate-200 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition"
+              className="p-3 rounded-2xl cursor-pointer border border-slate-200 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition mb-4"
             >
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</span>
               {getKycBadge()}
             </div>
 
-            <nav className="fly-sidebar-nav flex-1">
+            <nav className="flex flex-col gap-1.5 flex-1">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.label.toLowerCase() === activeItem.toLowerCase();
@@ -241,78 +263,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                   <button
                     key={item.label}
                     type="button"
-                    className={`fly-sidebar-item ${isActive ? 'is-active' : ''}`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                      isActive ? 'bg-flyora-teal text-white shadow-md shadow-teal-500/20' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                     onClick={() => handleNav(item.route)}
                   >
-                    <Icon size={16} strokeWidth={2} />
+                    <Icon size={18} />
                     <span>{item.label}</span>
                   </button>
                 );
               })}
             </nav>
 
-            {/* Referral card inside drawer */}
-            <div className="fly-referral-card mt-4">
-              <div className="fly-referral-title">Refer & Earn</div>
-              <p className="fly-referral-copy">Invite friends and earn amazing rewards.</p>
-              <div className="fly-referral-gift" style={{ height: 60 }}>
-                <Gift size={22} strokeWidth={1.8} />
-              </div>
-              <button type="button" className="fly-btn fly-btn-primary fly-btn-full" onClick={() => setDrawerOpen(false)}>
-                Refer Now
+            <div className="pt-4 border-t border-slate-100 space-y-2 mt-auto">
+              <button
+                type="button"
+                onClick={() => handleNav('/')}
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition"
+              >
+                <Home size={16} /> Go to Home Page
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 font-bold text-xs hover:bg-rose-100 transition"
+              >
+                <LogOut size={16} /> Log Out
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* ─── Mobile Bottom Navigation Bar ─── */}
-      <nav className="fly-mobile-nav" aria-label="Mobile navigation">
-        {[
-          { label: 'Sender', icon: Package, route: '/sender', match: 'Sender' },
-          { label: 'Traveler', icon: Plane, route: '/traveler', match: 'Traveler' },
-          { label: 'Wallet', icon: Wallet, route: '/wallet', match: 'Wallet' },
-          { label: 'Earnings', icon: CreditCard, route: '/earnings', match: 'Earnings' },
-          { label: 'Support', icon: Gift, route: '/support', match: 'Support' },
-          { label: 'Profile', icon: UserRound, route: '/profile', match: 'Profile' },
-        ].map((item) => {
-          const Icon = item.icon;
-          const isActive = activeItem === item.match;
-          return (
-            <button
-              key={item.label}
-              type="button"
-              className={`fly-mobile-nav-item ${isActive ? 'is-active' : ''}`}
-              onClick={() => handleNav(item.route)}
-            >
-              <Icon
-                size={22}
-                strokeWidth={isActive ? 2.2 : 1.8}
-                fill={isActive ? 'currentColor' : 'none'}
-              />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-
-        {/* Meta iOS Style Menu/Avatar Tab */}
-        <button
-          type="button"
-          className={`fly-mobile-nav-item ${isMoreActive || drawerOpen ? 'is-active' : ''}`}
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Menu"
-        >
-          <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black tracking-tighter transition-all duration-200 ${isMoreActive || drawerOpen
-              ? 'bg-gradient-to-br from-flyora-teal to-teal-600 text-white ring-2 ring-flyora-teal ring-offset-2'
-              : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-              }`}
-          >
-            {initials || 'U'}
-          </div>
-          <span>Menu</span>
-        </button>
-      </nav>
     </>
   );
 };

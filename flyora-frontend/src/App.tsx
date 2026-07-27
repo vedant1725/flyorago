@@ -35,6 +35,8 @@ import TransactionDetailsPage from './pages/TransactionDetailsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import TrustDashboardPage from './pages/TrustDashboardPage';
+import LuggageSharingPage from './pages/LuggageSharingPage';
+import LuggageAdminPage from './pages/LuggageAdminPage';
 
 import { ToastProvider } from './context/ToastContext';
 import { SocketProvider } from './context/SocketContext';
@@ -80,6 +82,8 @@ const App: React.FC = () => {
             <Route path="/wallet/transaction/:id" element={<TransactionDetailsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/trust" element={<TrustDashboardPage />} />
+            <Route path="/luggage-sharing" element={<LuggageSharingPage />} />
+            <Route path="/admin/luggage" element={<LuggageAdminPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Router>

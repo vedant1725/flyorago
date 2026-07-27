@@ -89,9 +89,9 @@ const TrustDashboardPage: React.FC = () => {
   const badgeClasses = getBadgeColor(currentProfile.level);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 flex flex-col lg:flex-row font-sans">
       <Sidebar activeItem="Trust Score" />
-      <main className="flex-1 lg:ml-[240px] overflow-y-auto pb-20">
+      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] overflow-y-auto pb-20 overflow-x-hidden">
         {/* Top Header */}
         <div className="bg-white border-b border-slate-100 sticky top-0 z-30">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">

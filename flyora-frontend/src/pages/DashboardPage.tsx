@@ -66,7 +66,7 @@ const DashboardPage: React.FC = () => {
       const filtered = arr.filter((t: any) => t.airline !== 'SENDER_REQUEST');
       setTrips(filtered);
       fastCache.trips = filtered;
-      try { localStorage.setItem('flyora_cache_trips', JSON.stringify(filtered)); } catch {}
+      try { localStorage.setItem('flyora_cache_trips', JSON.stringify(filtered)); } catch { }
     });
 
     const fetchBookings = apiFetch('/api/bookings/?user_only=true').then(r => {
@@ -74,7 +74,7 @@ const DashboardPage: React.FC = () => {
       const arr = extractArray(r);
       setBookings(arr);
       fastCache.bookings = arr;
-      try { localStorage.setItem('flyora_cache_bookings', JSON.stringify(arr)); } catch {}
+      try { localStorage.setItem('flyora_cache_bookings', JSON.stringify(arr)); } catch { }
     });
 
     const fetchTrust = apiFetch('/api/trust/profile/').then(r => {
@@ -83,7 +83,7 @@ const DashboardPage: React.FC = () => {
       if (data && typeof data.score === 'number') {
         setTrustProfile(data);
         fastCache.trust = data;
-        try { localStorage.setItem('flyora_cache_trust', JSON.stringify(data)); } catch {}
+        try { localStorage.setItem('flyora_cache_trust', JSON.stringify(data)); } catch { }
       }
     });
 
@@ -142,12 +142,12 @@ const DashboardPage: React.FC = () => {
   const scorePercent = Math.round((score / 1000) * 100);
 
   const levelConfig: Record<string, { color: string; bg: string; label: string; ringColor: string }> = {
-    ELITE:    { color: '#059669', bg: 'bg-emerald-50', label: 'Elite',    ringColor: '#34d399' },
-    PLATINUM: { color: '#2563eb', bg: 'bg-blue-50',    label: 'Platinum', ringColor: '#60a5fa' },
-    GOLD:     { color: '#d97706', bg: 'bg-amber-50',   label: 'Gold',     ringColor: '#fbbf24' },
-    SILVER:   { color: '#475569', bg: 'bg-slate-100',  label: 'Silver',   ringColor: '#94a3b8' },
-    STANDARD: { color: '#6b7280', bg: 'bg-gray-50',    label: 'Standard', ringColor: '#d1d5db' },
-    HIGH_RISK:{ color: '#dc2626', bg: 'bg-red-50',     label: 'High Risk',ringColor: '#f87171' },
+    ELITE: { color: '#059669', bg: 'bg-emerald-50', label: 'Elite', ringColor: '#34d399' },
+    PLATINUM: { color: '#2563eb', bg: 'bg-blue-50', label: 'Platinum', ringColor: '#60a5fa' },
+    GOLD: { color: '#d97706', bg: 'bg-amber-50', label: 'Gold', ringColor: '#fbbf24' },
+    SILVER: { color: '#475569', bg: 'bg-slate-100', label: 'Silver', ringColor: '#94a3b8' },
+    STANDARD: { color: '#6b7280', bg: 'bg-gray-50', label: 'Standard', ringColor: '#d1d5db' },
+    HIGH_RISK: { color: '#dc2626', bg: 'bg-red-50', label: 'High Risk', ringColor: '#f87171' },
   };
   const lc = levelConfig[level] || levelConfig['STANDARD'];
 
@@ -165,10 +165,10 @@ const DashboardPage: React.FC = () => {
   const searchResults = useMemo(() => {
     return searchQuery.trim().length >= 1
       ? allItems.filter(item =>
-          item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.sub?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.type.toLowerCase().includes(searchQuery.toLowerCase())
-        ).slice(0, 6)
+        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.sub?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.type.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 6)
       : [];
   }, [searchQuery, allItems]);
 

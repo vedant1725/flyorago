@@ -42,10 +42,10 @@ const ShopperPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
       <Sidebar activeItem="Shopper" />
 
-      <main className="flex-1 lg:ml-[240px] flex flex-col h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
+      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
         {/* Top Header */}
         <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0">
           <div className="flex-1 flex items-center gap-4">
@@ -71,7 +71,7 @@ const ShopperPage: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 bg-[#FFFDFB]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#FFFDFB]">
           <div className="max-w-6xl mx-auto">
 
             {/* Page Header */}

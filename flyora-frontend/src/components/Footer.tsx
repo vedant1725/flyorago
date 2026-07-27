@@ -28,7 +28,7 @@ const Footer: React.FC = () => {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="text-lg font-black tracking-tight text-white">
-                    fly<span className="text-flyora-teal-bright">orago</span>
+                    FLYORA<span className="text-flyora-teal-bright">GO</span>
                   </span>
                   <span className="text-[8px] font-medium text-white/40 tracking-widest uppercase mt-0.5">
                     Ship Smarter
