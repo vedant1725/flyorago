@@ -23,7 +23,7 @@ const HowItWorks: React.FC = () => {
     <section
       className="py-24 bg-white relative overflow-hidden"
       id="how-it-works"
-      aria-label="How Flyora works"
+      aria-label="How Flyorago works"
     >
       {/* Background accents */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-flyora-gray-200 to-transparent" />
@@ -39,7 +39,7 @@ const HowItWorks: React.FC = () => {
             </span>
           </div>
           <h2 className="text-4xl font-black text-flyora-navy mb-4" id="how-it-works-heading">
-            How Flyora Works
+            How Flyorago Works
           </h2>
           <p className="text-lg text-flyora-gray-500 max-w-2xl mx-auto leading-relaxed">
             We make global shipping easy by connecting senders with trusted travelers in just a few steps.

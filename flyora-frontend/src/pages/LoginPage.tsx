@@ -18,6 +18,16 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setErrorMsg('');
 
+    // Check if logging in as Admin credentials
+    const trimmedEmail = email.trim().toLowerCase();
+    if ((trimmedEmail === 'admin@flyorago.com' || trimmedEmail === 'admin') && (password === 'admin' || password === 'admin123')) {
+      localStorage.setItem('flyora_admin_authenticated', 'true');
+      localStorage.setItem('flyora_admin_email', 'admin@flyorago.com');
+      setIsLoading(false);
+      navigate('/admin/dashboard');
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
         method: 'POST',
@@ -78,7 +88,7 @@ const LoginPage: React.FC = () => {
             </div>
             <div className="flex flex-col leading-none">
               <span className="text-2xl font-black tracking-tight text-white transition-colors duration-300">
-                fly<span className="text-flyora-teal">ora</span>
+                fly<span className="text-flyora-teal">orago</span>
               </span>
             </div>
           </Link>
@@ -128,7 +138,7 @@ const LoginPage: React.FC = () => {
               </div>
               <div className="flex flex-col leading-none text-left">
                 <span className="text-2xl font-black tracking-tight text-flyora-navy">
-                  fly<span className="text-flyora-teal">ora</span>
+                  fly<span className="text-flyora-teal">orago</span>
                 </span>
               </div>
             </Link>
@@ -221,6 +231,12 @@ const LoginPage: React.FC = () => {
             </Link>
           </p>
 
+          <div className="text-center mt-4 pt-4 border-t border-slate-100">
+            <Link to="/admin/login" className="text-xs font-bold text-slate-400 hover:text-flyora-teal transition-colors inline-flex items-center gap-1.5">
+              <span>System Administrator Portal Sign In &rarr;</span>
+            </Link>
+          </div>
+
           {/* Mobile Footer Logo */}
           <div className="flex lg:hidden justify-center mt-8 pb-4">
             <Link to="/" className="flex items-center gap-2 group">
@@ -231,7 +247,7 @@ const LoginPage: React.FC = () => {
                 <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-flyora-blue rounded-full border border-flyora-navy" />
               </div>
               <span className="text-lg font-black tracking-tight text-flyora-navy">
-                fly<span className="text-flyora-teal">ora</span>
+                fly<span className="text-flyora-teal">orago</span>
               </span>
             </Link>
           </div>

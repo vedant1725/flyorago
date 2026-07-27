@@ -7,6 +7,9 @@ import {
   ArrowRight, ShieldCheck, Plus, ArrowUpRight, Lock, RefreshCcw, Landmark, X, Filter
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
+import { useKycValidation } from '../hooks/useKycValidation';
+import { KycValidationModal } from '../components/ui/KycValidationModal';
+import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
 import './dashboard.css';
 
 const sidebarItems = [
@@ -24,6 +27,7 @@ const sidebarItems = [
 
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
+  const { validateAction, isModalOpen: isKycModalOpen, closeModal: closeKycModal, kycStatus } = useKycValidation();
   const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
   const initials = userName.split(' ').map(n => n[0]).join('');
 
@@ -98,7 +102,7 @@ const WalletPage: React.FC = () => {
             category: t.type || 'Transfer',
             type: isCredit ? 'credit' : 'debit',
             amount: parseFloat(t.amount) || 0.00,
-            status: t.status || 'Completed',
+            status: t.status || 'PAYMENT_RELEASED',
             reference: t.refId || `REF-${t.id}`
           };
         });
@@ -113,7 +117,7 @@ const WalletPage: React.FC = () => {
           .map((b: any) => ({
             id: b.id.toString(),
             itemName: b.package_name || b.package?.name || 'Cargo Package',
-            status: b.escrow_status === 'Active Hold' ? 'Locked' : 'Released',
+            status: b.escrow_status === 'Active Hold' ? 'Locked' : 'PAYMENT_RELEASED',
             travelerName: b.traveler_name || 'Traveler',
             lockDate: b.createdAt || new Date(b.created_at).toLocaleDateString('en-US'),
             amount: parseFloat(b.reward) || 0.00,
@@ -134,30 +138,30 @@ const WalletPage: React.FC = () => {
   }, []);
 
   const handleSidebarClick = (label: string) => {
-    const route = 
+    const route =
       label === 'Dashboard' ? '/dashboard' :
-      label === 'Trips' ? '/trips' :
-      label === 'Shipments' ? '/shipments' :
-      label === 'Bookings' ? '/bookings' :
-      label === 'Wallet' ? '/wallet' :
-      label === 'Earnings' ? '/earnings' :
-      label === 'Messages' ? '/messages' :
-      label === 'Support' ? '/support' :
-      label === 'Profile' ? '/profile' :
-      label === 'Settings' ? '/settings' : undefined;
+        label === 'Trips' ? '/trips' :
+          label === 'Shipments' ? '/shipments' :
+            label === 'Bookings' ? '/bookings' :
+              label === 'Wallet' ? '/wallet' :
+                label === 'Earnings' ? '/earnings' :
+                  label === 'Messages' ? '/messages' :
+                    label === 'Support' ? '/support' :
+                      label === 'Profile' ? '/profile' :
+                        label === 'Settings' ? '/settings' : undefined;
     if (route) navigate(route);
   };
 
   // Filter transactions
   const filteredTransactions = useMemo(() => {
     return transactionsList.filter(tx => {
-      const matchesSearch = tx.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            tx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            tx.reference.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = tx.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tx.reference.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = filterType === 'all' || tx.type === filterType;
       const matchesCategory = filterCategory === 'all' || tx.category === filterCategory;
       const matchesStatus = filterStatus === 'all' || tx.status === filterStatus;
-      
+
       return matchesSearch && matchesType && matchesCategory && matchesStatus;
     });
   }, [searchQuery, filterType, filterCategory, filterStatus, transactionsList]);
@@ -228,44 +232,39 @@ const WalletPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
       <Sidebar activeItem="Wallet" />
-      
-      <main className="flex-1 lg:ml-[240px] flex flex-col h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
+
+      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
         {/* Top Header */}
         <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-end px-8 shrink-0">
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition">
+            <button 
+              onClick={() => navigate('/notifications')}
+              className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
+            >
               <Bell size={18} />
             </button>
-            <div className="flex items-center gap-3 pl-2 pr-4 py-1.5 border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition">
-              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-bold">
-                {initials}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-800 leading-tight">{userName}</span>
-                <span className="text-[10px] text-slate-500 flex items-center gap-1">Account Settings <ChevronDown size={10} /></span>
-              </div>
-            </div>
+            <HeaderProfileDropdown />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-extrabold text-flyora-teal tracking-tight mb-1">Wallet <span className="text-slate-800">& Payouts</span></h1>
               <p className="text-sm text-slate-500 font-medium">Manage your logistics, track active routes, and review your earnings profile.</p>
             </div>
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setIsAddFundsOpen(true)}
+              <button
+                onClick={() => validateAction(() => setIsAddFundsOpen(true))}
                 className="bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-full text-sm font-bold hover:bg-slate-50 transition flex items-center gap-2 shrink-0"
               >
                 <Plus size={16} />
                 Add Funds
               </button>
-              <button 
-                onClick={() => setIsWithdrawOpen(true)}
+              <button
+                onClick={() => validateAction(() => setIsWithdrawOpen(true))}
                 className="bg-flyora-teal text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg shadow-teal-500/20 hover:bg-teal-600 transition flex items-center gap-2 shrink-0"
               >
                 <ArrowUpRight size={16} />
@@ -304,16 +303,16 @@ const WalletPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Search transactions..." 
-                    value={searchQuery} 
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-flyora-teal transition w-full sm:w-auto" 
+                  <input
+                    type="text"
+                    placeholder="Search transactions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-flyora-teal transition w-full sm:w-auto"
                   />
                 </div>
                 <div className="relative">
-                  <select 
+                  <select
                     className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 pl-4 pr-8 py-2 rounded-lg text-sm font-bold outline-none focus:border-flyora-teal transition cursor-pointer"
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
@@ -357,10 +356,9 @@ const WalletPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
-                          tx.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                          tx.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${tx.status === 'PAYMENT_RELEASED' ? 'bg-emerald-50 text-emerald-600' :
+                            tx.status === 'REQUEST_SENT' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                          }`}>
                           {tx.status}
                         </span>
                       </td>
@@ -473,7 +471,7 @@ const WalletPage: React.FC = () => {
             <div className="trip-modal__header">
               <div>
                 <div className="fly-card-title">Transfer Funds</div>
-                <p>Send funds to another Flyora user instantly using their email or username.</p>
+                <p>Send funds to another Flyorago user instantly using their email or username.</p>
               </div>
               <button type="button" className="trip-modal__close" onClick={() => setIsTransferOpen(false)}>
                 <X size={16} />
@@ -497,6 +495,7 @@ const WalletPage: React.FC = () => {
         </div>
       )}
 
+      <KycValidationModal isOpen={isKycModalOpen} onClose={closeKycModal} kycStatus={kycStatus} />
     </div>
   );
 };

@@ -26,17 +26,18 @@
 
 .fly-dashboard-layout {
   width: 100%;
-  max-width: none;
+  max-width: 100%;
   margin: 0;
-  padding: 18px 18px 28px;
-  display: grid;
-  grid-template-columns: 212px minmax(0, 1fr) 276px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  align-items: start;
 }
 
-.fly-dashboard-layout:not(:has(.fly-utility-panel)) {
-  grid-template-columns: 212px minmax(0, 1fr) !important;
+@media (min-width: 1024px) {
+  .fly-dashboard-layout {
+    padding-left: 258px;
+  }
 }
 
 .fly-sidebar-panel,

@@ -10,16 +10,16 @@ interface Props {
 const stages = [
   { label: 'Pickup Completed', icon: PackageCheck },
   { label: 'Airport Check-in', icon: PlaneTakeoff },
-  { label: 'In Transit', icon: Truck },
+  { label: 'IN_TRANSIT', icon: Truck },
   { label: 'Customs', icon: ShieldCheck },
-  { label: 'Out For Delivery', icon: PlaneLanding },
-  { label: 'Delivered', icon: CircleCheckBig },
+  { label: 'OUT_FOR_DELIVERY', icon: PlaneLanding },
+  { label: 'DELIVERED', icon: CircleCheckBig },
 ];
 
 const statusToIndex: Record<ShipmentStatus, number> = {
   Pending: 0,
   Pickup: 0,
-  'In Transit': 2,
+  'IN_TRANSIT': 2,
   Customs: 3,
   Delivered: 5,
   Returned: 5,

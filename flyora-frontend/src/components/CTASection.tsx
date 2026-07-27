@@ -8,7 +8,7 @@ import {
 const trustCards = [
   {
     title: 'Verified Users',
-    description: 'Every traveller and sender completes identity verification before using Flyora.',
+    description: 'Every traveller and sender completes identity verification before using Flyorago.',
     icon: <ShieldCheck size={28} className="text-flyora-teal" />
   },
   {

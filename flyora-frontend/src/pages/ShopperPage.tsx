@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, Plus, MapPin, Package, Clock, ShieldCheck, ChevronDown, Bell, Star } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { apiFetch } from '../utils/api';
+import { useKycValidation } from '../hooks/useKycValidation';
+import { KycValidationModal } from '../components/ui/KycValidationModal';
 import './dashboard.css';
 
 const ShopperPage: React.FC = () => {
   const navigate = useNavigate();
+  const { validateAction, isModalOpen: isKycModalOpen, closeModal: closeKycModal, kycStatus } = useKycValidation();
   const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
@@ -39,10 +42,10 @@ const ShopperPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
       <Sidebar activeItem="Shopper" />
 
-      <main className="flex-1 lg:ml-[240px] flex flex-col h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
+      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
         {/* Top Header */}
         <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0">
           <div className="flex-1 flex items-center gap-4">
@@ -68,16 +71,16 @@ const ShopperPage: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 bg-[#FFFDFB]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#FFFDFB]">
           <div className="max-w-6xl mx-auto">
-            
+
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
               <div>
                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Shopper <span className="text-flyora-teal">Hub</span></h1>
                 <p className="text-sm text-slate-500 font-medium mt-1">Request items from abroad or fulfill requests to earn rewards.</p>
               </div>
-              <button className="bg-flyora-teal hover:bg-teal-600 text-white px-6 py-3 rounded-[12px] font-bold text-sm shadow-lg shadow-teal-500/30 transition-all flex items-center gap-2">
+              <button onClick={() => validateAction()} className="bg-flyora-teal hover:bg-teal-600 text-white px-6 py-3 rounded-[12px] font-bold text-sm shadow-lg shadow-teal-500/30 transition-all flex items-center gap-2">
                 <Plus size={18} strokeWidth={2.5} />
                 New Request
               </button>
@@ -118,19 +121,17 @@ const ShopperPage: React.FC = () => {
             <div className="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden">
               {/* Tabs */}
               <div className="border-b border-slate-100 flex p-2">
-                <button 
+                <button
                   onClick={() => setActiveTab('requests')}
-                  className={`flex-1 sm:flex-none px-6 py-3 rounded-[12px] text-sm font-bold transition-all ${
-                    activeTab === 'requests' ? 'bg-teal-50 text-flyora-teal' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                  }`}
+                  className={`flex-1 sm:flex-none px-6 py-3 rounded-[12px] text-sm font-bold transition-all ${activeTab === 'requests' ? 'bg-teal-50 text-flyora-teal' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                    }`}
                 >
                   My Requests
                 </button>
-                <button 
+                <button
                   onClick={() => setActiveTab('history')}
-                  className={`flex-1 sm:flex-none px-6 py-3 rounded-[12px] text-sm font-bold transition-all ${
-                    activeTab === 'history' ? 'bg-teal-50 text-flyora-teal' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                  }`}
+                  className={`flex-1 sm:flex-none px-6 py-3 rounded-[12px] text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-teal-50 text-flyora-teal' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                    }`}
                 >
                   History
                 </button>
@@ -146,14 +147,13 @@ const ShopperPage: React.FC = () => {
                           <div className="bg-slate-100 px-2.5 py-1 rounded-[8px] text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                             {req.id}
                           </div>
-                          <span className={`px-2.5 py-1 rounded-[8px] text-[10px] font-bold uppercase tracking-wider ${
-                            req.status === 'PENDING' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
-                          }`}>
+                          <span className={`px-2.5 py-1 rounded-[8px] text-[10px] font-bold uppercase tracking-wider ${req.status === 'PENDING' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                            }`}>
                             {req.status}
                           </span>
                         </div>
                         <h3 className="font-bold text-slate-800 mb-4 truncate" title={req.item}>{req.item}</h3>
-                        
+
                         <div className="space-y-3 mb-6 relative">
                           <div className="absolute left-2.5 top-3 bottom-3 w-[2px] bg-slate-100"></div>
                           <div className="flex items-center gap-3 relative z-10">
@@ -178,7 +178,7 @@ const ShopperPage: React.FC = () => {
                         </div>
                       </div>
                     ))}
-                    
+
                     {/* Empty State Card */}
                     <div className="border-2 border-dashed border-slate-200 rounded-[16px] p-5 flex flex-col items-center justify-center text-center cursor-pointer hover:border-flyora-teal hover:bg-teal-50/30 transition-all min-h-[240px]">
                       <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
@@ -189,7 +189,7 @@ const ShopperPage: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {activeTab === 'history' && (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
@@ -205,6 +205,7 @@ const ShopperPage: React.FC = () => {
           </div>
         </div>
       </main>
+      <KycValidationModal isOpen={isKycModalOpen} onClose={closeKycModal} kycStatus={kycStatus} />
     </div>
   );
 };

@@ -107,9 +107,9 @@ const BookingsPage: React.FC = () => {
           },
           weight: `${b.weight} KG`,
           reward: parseFloat(b.reward) || 0,
-          paymentStatus: b.paymentStatus || 'Pending',
+          paymentStatus: b.paymentStatus || 'REQUEST_SENT',
           escrow: b.escrow || 'Inactive',
-          status: b.status || 'Pending',
+          status: b.status || 'REQUEST_SENT',
         }));
         setBookingsList(mapped);
       }
@@ -218,16 +218,16 @@ const BookingsPage: React.FC = () => {
   }, [filters, bookingsList]);
 
   // Derived stats
-  const pendingCount = bookingsList.filter(b => b.status === 'Pending').length;
-  const confirmedCount = bookingsList.filter(b => b.status === 'Accepted' || b.status === 'Confirmed').length;
-  const inTransitCount = bookingsList.filter(b => b.status === 'In Transit').length;
-  const completedCount = bookingsList.filter(b => b.status === 'Completed').length;
+  const pendingCount = bookingsList.filter(b => b.status === 'REQUEST_SENT').length;
+  const confirmedCount = bookingsList.filter(b => b.status === 'ACCEPTED' || b.status === 'Confirmed').length;
+  const inTransitCount = bookingsList.filter(b => b.status === 'IN_TRANSIT').length;
+  const completedCount = bookingsList.filter(b => b.status === 'PAYMENT_RELEASED').length;
 
   const summaryCardsStats = [
     { icon: ClipboardList, title: 'Pending Bookings', value: pendingCount.toString(), trend: '+12% this month' },
     { icon: BadgeCheck, title: 'Confirmed', value: confirmedCount.toString(), trend: '+18% this month' },
-    { icon: Truck, title: 'In Transit', value: inTransitCount.toString(), trend: '+5% this month' },
-    { icon: Gift, title: 'Completed', value: completedCount.toString(), trend: '+22% this month' },
+    { icon: Truck, title: 'IN_TRANSIT', value: inTransitCount.toString(), trend: '+5% this month' },
+    { icon: Gift, title: 'PAYMENT_RELEASED', value: completedCount.toString(), trend: '+22% this month' },
   ];
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
@@ -265,11 +265,10 @@ const BookingsPage: React.FC = () => {
   };
 
   return (
-    <div className="fly-dashboard-shell bookings-page">
-      <div className="fly-dashboard-layout bookings-page-layout">
-        <Sidebar activeItem="Bookings" />
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+      <Sidebar activeItem="Bookings" />
 
-        <main className="fly-main-panel">
+      <main className="flex-1 lg:ml-[240px] flex flex-col min-h-screen overflow-y-auto pb-24 lg:pb-10 p-4 sm:p-6 lg:p-8 space-y-6">
           <div className="fly-topbar">
             <label className="fly-search">
               <Search size={16} strokeWidth={2} />
@@ -385,9 +384,6 @@ const BookingsPage: React.FC = () => {
 
           <BookingAnalytics />
         </main>
-
-        <BookingSidebar />
-      </div>
 
       {isNewBookingOpen && (
         <div className="booking-modal-overlay" onClick={(event) => { if (event.target === event.currentTarget) setIsNewBookingOpen(false); }}>

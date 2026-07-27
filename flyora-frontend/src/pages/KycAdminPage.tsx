@@ -14,11 +14,12 @@ interface KycSubmission {
   fullName: string;
   email: string;
   phone: string;
-  documentType: 'national_id' | 'passport';
+  documentType: string;
   frontImage: string;
   backImage: string;
+  passportImage?: string;
   selfieImage: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NOT_SUBMITTED';
   rejectionReason?: string;
   submittedAt: string;
 }
@@ -27,23 +28,13 @@ const KycAdminPage: React.FC = () => {
   const navigate = useNavigate();
   const [roleVerified, setRoleVerified] = useState(false);
 
-  // Verify Admin Role dynamically
   useEffect(() => {
-    const verifyAdmin = async () => {
-      try {
-        const res = await apiFetch('/api/auth/me/');
-        if (res.status === 'success' && res.data.role === 'admin') {
-          localStorage.setItem('flyora_user_role', 'admin');
-          setRoleVerified(true);
-        } else {
-          localStorage.setItem('flyora_user_role', res.data.role || 'sender');
-          navigate('/dashboard');
-        }
-      } catch (err) {
-        navigate('/login');
-      }
-    };
-    verifyAdmin();
+    const isAdminAuth = localStorage.getItem('flyora_admin_authenticated') === 'true';
+    if (!isAdminAuth) {
+      navigate('/admin/login');
+      return;
+    }
+    setRoleVerified(true);
   }, [navigate]);
 
   const [submissions, setSubmissions] = useState<KycSubmission[]>([]);
@@ -138,13 +129,14 @@ const KycAdminPage: React.FC = () => {
   };
 
   // Filter & Search submissions
-  const filteredSubmissions = submissions.filter(sub => {
+  const filteredSubmissions = (submissions || []).filter(sub => {
+    if (!sub) return false;
     const matchesFilter = filter === 'ALL' || sub.status === filter;
-    const matchesSearch = 
-      sub.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.phone.includes(searchQuery);
-    return matchesFilter && matchesSearch;
+    const sQuery = (searchQuery || '').toLowerCase();
+    const nameMatch = (sub.fullName || '').toLowerCase().includes(sQuery);
+    const emailMatch = (sub.email || '').toLowerCase().includes(sQuery);
+    const phoneMatch = String(sub.phone || '').toLowerCase().includes(sQuery);
+    return matchesFilter && (nameMatch || emailMatch || phoneMatch);
   });
 
   if (!roleVerified) {
@@ -165,7 +157,7 @@ const KycAdminPage: React.FC = () => {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
               <Plane size={18} className="text-white transform -rotate-45" />
             </div>
-            <span className="text-xl font-black text-white">fly<span className="text-flyora-teal">ora</span></span>
+            <span className="text-xl font-black text-white">fly<span className="text-flyora-teal">orago</span></span>
             <span className="bg-flyora-teal text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full ml-1">Admin Dashboard</span>
           </Link>
 
@@ -245,7 +237,7 @@ const KycAdminPage: React.FC = () => {
                     <p className="text-[10px] text-gray-400 truncate">{sub.email}</p>
                     <div className="text-[9px] text-gray-400 flex items-center gap-1">
                       <Calendar size={10} />
-                      <span>{new Date(sub.submittedAt).toLocaleDateString()}</span>
+                      <span>{sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString() : 'Recent'}</span>
                     </div>
                   </div>
 
@@ -320,13 +312,13 @@ const KycAdminPage: React.FC = () => {
               )}
 
               {/* Image Previews Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-4 flex-1">
                 {/* Front ID */}
                 <div className="space-y-2 flex flex-col">
                   <span className="text-xs font-bold text-flyora-navy">
-                    {selectedKyc.documentType === 'national_id' ? 'Front Side of ID' : 'Passport Photo Page'}
+                    National ID (Front)
                   </span>
-                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[160px] flex items-center justify-center relative group">
+                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[150px] flex items-center justify-center relative group">
                     {selectedKyc.frontImage ? (
                       <img src={selectedKyc.frontImage} alt="Front ID" className="w-full h-full object-contain" />
                     ) : (
@@ -335,14 +327,28 @@ const KycAdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Back Document (Optional) */}
+                {/* Back ID */}
                 <div className="space-y-2 flex flex-col">
                   <span className="text-xs font-bold text-flyora-navy">
-                    {selectedKyc.documentType === 'national_id' ? 'Back Side of ID' : 'Back Side of Passport (Optional)'}
+                    National ID (Back)
                   </span>
-                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[160px] flex items-center justify-center relative group">
+                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[150px] flex items-center justify-center relative group">
                     {selectedKyc.backImage ? (
-                      <img src={selectedKyc.backImage} alt="Back Document" className="w-full h-full object-contain" />
+                      <img src={selectedKyc.backImage} alt="Back ID" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-gray-400 font-semibold">Not Uploaded</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Passport */}
+                <div className="space-y-2 flex flex-col">
+                  <span className="text-xs font-bold text-flyora-navy">
+                    Passport Bio Page
+                  </span>
+                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[150px] flex items-center justify-center relative group">
+                    {selectedKyc.passportImage ? (
+                      <img src={selectedKyc.passportImage} alt="Passport Bio Page" className="w-full h-full object-contain" />
                     ) : (
                       <span className="text-xs text-gray-400 font-semibold">Not Uploaded</span>
                     )}
@@ -351,8 +357,8 @@ const KycAdminPage: React.FC = () => {
 
                 {/* Selfie */}
                 <div className="space-y-2 flex flex-col">
-                  <span className="text-xs font-bold text-flyora-navy">Live Selfie Verification</span>
-                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[160px] flex items-center justify-center relative group">
+                  <span className="text-xs font-bold text-flyora-navy">Live Selfie</span>
+                  <div className="border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden flex-1 min-h-[150px] flex items-center justify-center relative group">
                     {selectedKyc.selfieImage ? (
                       <img src={selectedKyc.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
                     ) : (
@@ -440,7 +446,7 @@ const KycAdminPage: React.FC = () => {
       {/* Footer */}
       <footer className="py-6 border-t border-gray-100 bg-white px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-3">
-          <span>© 2025 Flyora Admin Panel. All rights reserved.</span>
+          <span>© 2025 Flyorago Admin Panel. All rights reserved.</span>
           <div className="flex gap-4">
             <a href="#" className="hover:text-flyora-navy transition-colors">Admin Policy</a>
             <a href="#" className="hover:text-flyora-navy transition-colors">Compliance Log</a>

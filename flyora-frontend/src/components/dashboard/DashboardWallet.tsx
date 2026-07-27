@@ -10,7 +10,7 @@ const DashboardWallet: React.FC<Props> = ({ overview, walletHistory }) => (
   <div className="space-y-6 animate-fade-in">
     <div>
       <h1 className="text-xl font-black text-flyora-navy">Wallet & Escrow</h1>
-      <p className="text-xs text-gray-400 mt-1 font-medium">Flyora Escrow locks payments securely until delivery is validated.</p>
+      <p className="text-xs text-gray-400 mt-1 font-medium">Flyorago Escrow locks payments securely until delivery is validated.</p>
     </div>
 
     {/* Wallet Cards */}

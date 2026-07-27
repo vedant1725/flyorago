@@ -8,7 +8,7 @@ interface Props {
 const statusClassMap: Record<ShipmentStatus, string> = {
   Pending: 'is-pending',
   Pickup: 'is-pickup',
-  'In Transit': 'is-transit',
+  'IN_TRANSIT': 'is-transit',
   Customs: 'is-customs',
   Delivered: 'is-delivered',
   Returned: 'is-returned',

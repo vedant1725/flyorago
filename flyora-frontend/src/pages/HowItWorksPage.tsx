@@ -38,7 +38,7 @@ const senderSteps = [
   {
     id: '02',
     title: 'We Match a Carrier',
-    description: "Flyora intelligently connects your shipment with a verified traveler already flying to your destination.",
+    description: "Flyorago intelligently connects your shipment with a verified traveler already flying to your destination.",
     icon: <Map size={28} className="text-orange-500" />
   },
   {
@@ -78,14 +78,14 @@ const HowItWorksPage: React.FC = () => {
           
           <div className="container-flyora relative z-10 text-center">
             <span className="inline-block py-1 px-3 rounded-full bg-flyora-teal/20 border border-flyora-teal/30 text-flyora-teal-bright text-xs font-bold uppercase tracking-widest mb-6">
-              How Flyora Works
+              How Flyorago Works
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
               One Journey. <br />
               <span className="text-gradient-teal">Endless Possibilities.</span>
             </h1>
             <p className="text-lg md:text-xl text-white/70 leading-relaxed max-w-3xl mx-auto font-medium">
-              Whether you're flying abroad or sending a package internationally, Flyora connects verified travelers and senders through a secure, transparent, and trusted platform.
+              Whether you're flying abroad or sending a package internationally, Flyorago connects verified travelers and senders through a secure, transparent, and trusted platform.
             </p>
           </div>
           

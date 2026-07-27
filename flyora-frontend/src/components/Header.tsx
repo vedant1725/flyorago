@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Plane, Globe, ChevronDown } from 'lucide-react';
+import { Menu, X, Plane, Globe, ChevronDown, LayoutGrid } from 'lucide-react';
 import Button from './ui/Button';
 import { NAV_LINKS } from '../constants/routes';
 
@@ -9,6 +9,9 @@ const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const rawUserId = localStorage.getItem('flyora_user_id');
+  const isLoggedIn = Boolean(rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,7 +46,7 @@ const Header: React.FC = () => {
             </div>
             <div className="flex flex-col leading-none">
               <span className={`text-xl font-black tracking-tight transition-colors duration-300 ${isScrolled ? 'text-flyora-navy' : 'text-flyora-navy'}`}>
-                fly<span className="text-flyora-teal">ora</span>
+                FLYORA<span className="text-flyora-teal">GO</span>
               </span>
               <span className="text-[9px] font-medium text-flyora-gray-500 tracking-widest uppercase">
                 Ship Smarter
@@ -86,19 +89,34 @@ const Header: React.FC = () => {
               <span>EN</span>
               <ChevronDown size={13} />
             </button>
-            <Link to="/login" className="text-sm font-semibold text-flyora-navy hover:text-flyora-teal transition-colors px-4 py-2 rounded-xl hover:bg-flyora-gray-50">
-              Log In
-            </Link>
-            <Link to="/signup">
-              <Button
-                variant="teal"
-                size="md"
-                id="header-cta-btn"
-                iconRight={<Plane size={14} className="-rotate-45" />}
-              >
-                Get Started
-              </Button>
-            </Link>
+
+            {isLoggedIn ? (
+              <Link to="/dashboard">
+                <Button
+                  variant="teal"
+                  size="md"
+                  iconRight={<LayoutGrid size={14} />}
+                >
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm font-semibold text-flyora-navy hover:text-flyora-teal transition-colors px-4 py-2 rounded-xl hover:bg-flyora-gray-50">
+                  Log In
+                </Link>
+                <Link to="/signup">
+                  <Button
+                    variant="teal"
+                    size="md"
+                    id="header-cta-btn"
+                    iconRight={<Plane size={14} className="-rotate-45" />}
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* ─── Mobile Menu Button ──────────────────────────────────────────── */}
@@ -146,14 +164,24 @@ const Header: React.FC = () => {
             );
           })}
           <div className="flex flex-col gap-2 pt-3 pb-2 border-t border-flyora-gray-100 mt-2">
-            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-sm font-semibold text-flyora-navy py-2 text-left px-4 hover:text-flyora-teal transition-colors">
-              Log In
-            </Link>
-            <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-              <Button variant="teal" size="lg" fullWidth id="mobile-cta-btn">
-                Get Started →
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="teal" size="lg" fullWidth>
+                  Go to Dashboard &rarr;
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-sm font-semibold text-flyora-navy py-2 text-left px-4 hover:text-flyora-teal transition-colors">
+                  Log In
+                </Link>
+                <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="teal" size="lg" fullWidth id="mobile-cta-btn">
+                    Get Started &rarr;
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

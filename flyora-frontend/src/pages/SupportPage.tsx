@@ -170,7 +170,7 @@ const SupportPage: React.FC = () => {
     setTimeout(() => {
       const agentReply = {
         sender: 'agent' as const,
-        senderName: 'Flyora Automated Support Agent',
+        senderName: 'Flyorago Automated Support Agent',
         text: 'Thank you for your response. Our team has received your message and is processing it accordingly. You will be updated here shortly.',
         timestamp: new Date().toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       };
@@ -474,7 +474,7 @@ const SupportPage: React.FC = () => {
                     Call for urgent cargo or flight custom issues. 24/7 support line.
                   </p>
                 </div>
-                <button type="button" className="fly-btn fly-btn-secondary fly-btn-full mt-6" onClick={() => alert('Dialing Flyora Payout Hotline +1 (800) 555-0199')}>+1 (800) 555-0199</button>
+                <button type="button" className="fly-btn fly-btn-secondary fly-btn-full mt-6" onClick={() => alert('Dialing Flyorago Payout Hotline +1 (800) 555-0199')}>+1 (800) 555-0199</button>
               </article>
             </div>
           )}

@@ -28,7 +28,7 @@ const Footer: React.FC = () => {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="text-lg font-black tracking-tight text-white">
-                    fly<span className="text-flyora-teal-bright">ora</span>
+                    FLYORA<span className="text-flyora-teal-bright">GO</span>
                   </span>
                   <span className="text-[8px] font-medium text-white/40 tracking-widest uppercase mt-0.5">
                     Ship Smarter
@@ -37,14 +37,14 @@ const Footer: React.FC = () => {
               </a>
 
               <p className="text-white/55 text-xs leading-relaxed mb-5 max-w-xs">
-                Flyora connects verified travelers and senders worldwide to share luggage space
+                Flyorago connects verified travelers and senders worldwide to share luggage space
                 and ship packages globally. Simple. Safe. Smart.
               </p>
 
               {/* Contact */}
               <div className="space-y-2 mb-5">
                 {[
-                  { icon: <Mail size={12} />, text: 'hello@flyora.com' },
+                  { icon: <Mail size={12} />, text: 'hello@flyorago.com' },
                   { icon: <Phone size={12} />, text: '+1 (800) FLYORA-1' },
                   { icon: <MapPin size={12} />, text: 'San Francisco, CA, USA' },
                 ].map((item) => (
@@ -67,7 +67,7 @@ const Footer: React.FC = () => {
                     key={social.label}
                     href="#"
                     id={social.id}
-                    aria-label={`Flyora on ${social.label}`}
+                    aria-label={`Flyorago on ${social.label}`}
                     className="w-7 h-7 rounded-lg bg-white/8 border border-white/12 flex items-center justify-center text-white/60 hover:text-flyora-teal-bright hover:bg-flyora-teal/15 hover:border-flyora-teal/30 transition-all duration-300"
                   >
                     {social.icon}
@@ -110,7 +110,7 @@ const Footer: React.FC = () => {
         <div className="py-4 border-t border-white/8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-white/35 text-xs">
-              © {currentYear} Flyora Inc. All rights reserved.
+              © {currentYear} Flyorago Inc. All rights reserved.
             </p>
             <div className="flex items-center gap-1 text-white/35 text-xs">
               <span className="flex items-center gap-1">

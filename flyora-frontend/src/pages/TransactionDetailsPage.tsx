@@ -50,7 +50,7 @@ const TransactionDetailsPage: React.FC = () => {
             category: t.type || 'Transfer',
             type: isCredit ? 'credit' : 'debit',
             amount: parseFloat(t.amount) || 0.00,
-            status: t.status || 'Completed',
+            status: t.status || 'PAYMENT_RELEASED',
             reference: t.refId || `REF-${t.id}`
           });
         }
@@ -139,8 +139,8 @@ const TransactionDetailsPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <h1 className="trips-header__title">Transaction {tx.id}</h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                  tx.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                  tx.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                  tx.status === 'PAYMENT_RELEASED' ? 'bg-emerald-50 text-emerald-600' :
+                  tx.status === 'REQUEST_SENT' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
                 }`}>{tx.status}</span>
               </div>
               <p className="trips-header__subtitle">Payment Reference: {tx.reference}</p>
@@ -180,7 +180,7 @@ const TransactionDetailsPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span>Payment Provider:</span>
-                <strong className="text-flyora-navy font-extrabold">Flyora Payout Network</strong>
+                <strong className="text-flyora-navy font-extrabold">Flyorago Payout Network</strong>
               </div>
             </div>
 
@@ -189,7 +189,7 @@ const TransactionDetailsPage: React.FC = () => {
               <div>
                 <span>Secure Escrow Protection Logged</span>
                 <p className="text-[10px] text-teal-600 font-medium mt-0.5">
-                  This transaction is fully protected and monitored by the Flyora Secure Ledger. For billing disputes, contact support.
+                  This transaction is fully protected and monitored by the Flyorago Secure Ledger. For billing disputes, contact support.
                 </p>
               </div>
             </div>

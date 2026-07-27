@@ -43,8 +43,8 @@ const timelineSteps = [
   'Traveller Verified',
   'Package Accepted',
   'Escrow Activated',
-  'In Transit',
-  'Delivered',
+  'IN_TRANSIT',
+  'DELIVERED',
   'Payment Released'
 ];
 
@@ -52,7 +52,7 @@ const badges = [
   { label: 'Verified', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
   { label: 'Protected', color: 'text-blue-600 bg-blue-50 border-blue-200' },
   { label: 'Live Tracking', color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  { label: 'Completed', color: 'text-flyora-teal bg-flyora-teal/10 border-flyora-teal/20' }
+  { label: 'PAYMENT_RELEASED', color: 'text-flyora-teal bg-flyora-teal/10 border-flyora-teal/20' }
 ];
 
 const WhyChoose: React.FC = () => {
@@ -65,14 +65,14 @@ const WhyChoose: React.FC = () => {
           {/* ─── Left Side: Content & Cards ──────────────────────────────── */}
           <div className="w-full lg:w-[55%]">
             <span className="inline-block py-1 px-3 rounded-full bg-flyora-teal/10 border border-flyora-teal/20 text-flyora-teal-dark font-bold text-[10px] uppercase tracking-widest mb-4">
-              WHY FLYORA?
+              WHY FLYORAGO?
             </span>
             <h2 className="text-3xl md:text-4xl font-black text-flyora-navy mb-4 leading-tight tracking-tight">
               Built on Trust. <br className="hidden md:block" />
               Designed for Global Delivery.
             </h2>
             <p className="text-sm md:text-base text-flyora-gray-600 leading-relaxed mb-8 max-w-xl">
-              Flyora connects verified travellers and senders through a secure, transparent, and technology-driven delivery experience.
+              Flyorago connects verified travellers and senders through a secure, transparent, and technology-driven delivery experience.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

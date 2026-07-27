@@ -435,7 +435,7 @@ const MessagesPage: React.FC = () => {
 
               {/* Safety notice */}
               <div className="pt-4 border-t border-gray-100 text-[10px] text-gray-400 leading-relaxed font-bold">
-                Never accept payments outside Flyora Escrow Guarantee to ensure fraud protection.
+                Never accept payments outside Flyorago Escrow Guarantee to ensure fraud protection.
               </div>
             </div>
           )}

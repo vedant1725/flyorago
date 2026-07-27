@@ -162,7 +162,7 @@ const EarningsPage: React.FC = () => {
               </div>
               <div className="mt-4">
                 <div className="text-3xl font-black text-gray-500">${earningsBreakdown.platformCommission.toFixed(2)}</div>
-                <p className="text-[11px] text-gray-400 mt-2 font-medium">Flyora global matching & security service fee.</p>
+                <p className="text-[11px] text-gray-400 mt-2 font-medium">Flyorago global matching & security service fee.</p>
               </div>
             </article>
           </section>
@@ -231,7 +231,7 @@ const EarningsPage: React.FC = () => {
                         <td className="py-3.5 text-right font-bold">${wth.amount.toFixed(2)}</td>
                         <td className="py-3.5 text-center pr-2">
                           <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black ${
-                            wth.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                            wth.status === 'PAYMENT_RELEASED' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
                           }`}>{wth.status}</span>
                         </td>
                       </tr>

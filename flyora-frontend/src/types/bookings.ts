@@ -1,5 +1,5 @@
-export type BookingStatus = 'Pending' | 'Confirmed' | 'Accepted' | 'In Transit' | 'Delivered' | 'Completed' | 'Rejected' | 'Cancelled';
-export type PaymentStatus = 'Pending Deposit' | 'Escrow Locked' | 'Released' | 'Refunded';
+export type BookingStatus = 'REQUEST_SENT' | 'Confirmed' | 'ACCEPTED' | 'IN_TRANSIT' | 'DELIVERED' | 'PAYMENT_RELEASED' | 'REJECTED' | 'CANCELLED';
+export type PaymentStatus = 'Pending Deposit' | 'Escrow Locked' | 'PAYMENT_RELEASED' | 'Refunded';
 
 export interface BookingRecord {
   id: string;
