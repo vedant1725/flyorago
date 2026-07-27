@@ -6,7 +6,8 @@ import {
   Luggage, Search, Plus, CheckCircle2, ShieldCheck, Clock, MapPin,
   QrCode, Camera, Scale, Star, ShieldAlert, Sparkles, DollarSign,
   ArrowRight, Plane, RefreshCw, UserCheck, FileText, Lock, ChevronRight,
-  Info, ExternalLink, SlidersHorizontal, Award, Sparkle, ArrowUpRight, X, Bell
+  Info, ExternalLink, SlidersHorizontal, Award, ArrowUpRight, X, Bell,
+  Check, XCircle, AlertTriangle, MessageSquare, ThumbsUp, Send, Key, User
 } from 'lucide-react';
 
 interface LuggageListing {
@@ -37,8 +38,11 @@ interface LuggageListing {
 
 interface LuggageBooking {
   id: number;
+  listing?: number;
   listing_details?: LuggageListing;
+  booker?: number;
   booker_details?: { first_name?: string; last_name?: string; email?: string };
+  owner?: number;
   owner_details?: { first_name?: string; last_name?: string; email?: string };
   booked_weight: number;
   price_per_kg: number;
@@ -47,16 +51,38 @@ interface LuggageBooking {
   status: string;
   escrow_status: string;
   qr_code_token: string;
+  otp_code?: string;
   meeting_time?: string;
   meeting_point?: string;
   terminal?: string;
   gate?: string;
   notes?: string;
+  verifications?: any[];
+  reviews?: any[];
 }
 
 const LuggageSharingPage: React.FC = () => {
-  const { showToast } = useToast();
+  const toastCtx = useToast();
+  const notify = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
+    if (type === 'success') toastCtx.success('Success', msg);
+    else if (type === 'error') toastCtx.error('Error', msg);
+    else toastCtx.info('Notification', msg);
+  };
+
   const [activeView, setActiveView] = useState<'marketplace' | 'host' | 'operations' | 'security'>('marketplace');
+
+  // Role Perspective Override for Testing & Demo ("auto", "owner", "booker")
+  const [rolePerspective, setRolePerspective] = useState<'auto' | 'owner' | 'booker'>('auto');
+
+  // Current User ID & Email
+  const [currentUserId, setCurrentUserId] = useState<number | null>(() => {
+    const raw = localStorage.getItem('flyora_user_id');
+    return raw ? parseInt(raw, 10) : null;
+  });
+
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>(() => {
+    return (localStorage.getItem('flyora_user_email') || '').toLowerCase();
+  });
 
   // Stats State
   const [stats, setStats] = useState({
@@ -70,14 +96,16 @@ const LuggageSharingPage: React.FC = () => {
     current_trips: [] as LuggageListing[]
   });
 
-  // Search State
+  // Search & Filter State
   const [searchParams, setSearchParams] = useState({
     departure_airport: '',
     arrival_airport: '',
     airline: '',
     flight_number: '',
     departure_date: '',
-    needed_kg: '5'
+    needed_kg: '5',
+    max_price: '',
+    sort_by: 'best_match'
   });
   const [searchResults, setSearchResults] = useState<LuggageListing[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -97,7 +125,7 @@ const LuggageSharingPage: React.FC = () => {
     min_kg: '2',
     max_kg: '20',
     accept_partial_booking: true,
-    instant_booking: true,
+    instant_booking: false,
     insurance: true,
     description: 'Verified traveller sharing extra luggage allowance.'
   });
@@ -105,16 +133,38 @@ const LuggageSharingPage: React.FC = () => {
   // Bookings State
   const [bookings, setBookings] = useState<LuggageBooking[]>([]);
 
-  // Modals & Selected items
+  // Modals
   const [selectedListing, setSelectedListing] = useState<LuggageListing | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<LuggageBooking | null>(null);
   const [bookingWeight, setBookingWeight] = useState('5');
   const [bookingNotes, setBookingNotes] = useState('');
   const [showBookModal, setShowBookModal] = useState(false);
-  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  // Verification & Log State
+  // Form Inputs in Modals
+  const [verifyForm, setVerifyForm] = useState({
+    bag_images: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400',
+    weight: '5',
+    notes: 'Luggage safety check passed at airport terminal.',
+    latitude: 40.6413,
+    longitude: -73.7781
+  });
+
+  const [otpInput, setOtpInput] = useState('');
   const [qrTokenInput, setQrTokenInput] = useState('');
+
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    behaviour_score: 5,
+    communication_score: 5,
+    timing_score: 5,
+    experience_score: 5,
+    comment: 'Smooth luggage sharing experience!'
+  });
 
   // Load Dashboard Data
   const loadDashboard = async () => {
@@ -122,6 +172,8 @@ const LuggageSharingPage: React.FC = () => {
       const res = await apiFetch('/api/luggage/dashboard/');
       if (res.status === 'success' && res.data) {
         setStats(res.data);
+        if (res.current_user_id) setCurrentUserId(res.current_user_id);
+        if (res.current_user_email) setCurrentUserEmail(res.current_user_email.toLowerCase());
       }
     } catch (err) {
       console.error('Failed to load luggage dashboard:', err);
@@ -134,6 +186,8 @@ const LuggageSharingPage: React.FC = () => {
       const res = await apiFetch('/api/luggage/bookings/');
       if (res.status === 'success' && res.data) {
         setBookings(res.data);
+        if (res.current_user_id) setCurrentUserId(res.current_user_id);
+        if (res.current_user_email) setCurrentUserEmail(res.current_user_email.toLowerCase());
       }
     } catch (err) {
       console.error('Failed to load luggage bookings:', err);
@@ -164,24 +218,31 @@ const LuggageSharingPage: React.FC = () => {
     }
   };
 
+  // Live Sync Polling interval (Every 3 seconds)
   useEffect(() => {
     loadDashboard();
     loadBookings();
     handleSearch();
+
+    const timer = setInterval(() => {
+      loadBookings();
+      loadDashboard();
+    }, 3000);
+
+    return () => clearInterval(timer);
   }, []);
 
   // Calculated Available Weight in Host Form
-  const calculatedAvailable = Math.max(
-    0,
-    (parseFloat(hostForm.max_airline_allowance) || 0) - (parseFloat(hostForm.currently_used_weight) || 0)
-  );
+  const maxAllow = parseFloat(hostForm.max_airline_allowance) || 0;
+  const usedWeight = parseFloat(hostForm.currently_used_weight) || 0;
+  const calculatedAvailable = Math.max(0, maxAllow - usedWeight);
 
   // Handle Host Publish Submit
   const handleHostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (parseFloat(hostForm.currently_used_weight) > parseFloat(hostForm.max_airline_allowance)) {
-      showToast('Currently used weight cannot exceed maximum airline allowance!', 'error');
+    if (usedWeight > maxAllow) {
+      notify('Currently used weight cannot exceed maximum airline allowance!', 'error');
       return;
     }
 
@@ -191,8 +252,9 @@ const LuggageSharingPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...hostForm,
-          max_airline_allowance: parseFloat(hostForm.max_airline_allowance),
-          currently_used_weight: parseFloat(hostForm.currently_used_weight),
+          max_airline_allowance: maxAllow,
+          currently_used_weight: usedWeight,
+          available_weight: calculatedAvailable,
           price_per_kg: parseFloat(hostForm.price_per_kg),
           min_kg: parseFloat(hostForm.min_kg),
           max_kg: parseFloat(hostForm.max_kg)
@@ -200,19 +262,19 @@ const LuggageSharingPage: React.FC = () => {
       });
 
       if (res.status === 'success') {
-        showToast('🎉 Luggage allowance published & saved successfully!', 'success');
+        notify('🎉 Luggage allowance published & saved successfully!', 'success');
         await loadDashboard();
         await handleSearch();
         setActiveView('marketplace');
       } else {
-        showToast(res.message || 'Failed to publish listing', 'error');
+        notify(res.message || 'Failed to publish listing', 'error');
       }
     } catch (err: any) {
-      showToast(err.message || 'Error publishing listing', 'error');
+      notify(err.message || 'Error publishing listing', 'error');
     }
   };
 
-  // Handle Booking Creation & Popup Modal Close
+  // Handle Booking Creation Request (Traveller B -> Traveller A)
   const handleCreateBooking = async () => {
     if (!selectedListing) return;
     try {
@@ -227,80 +289,97 @@ const LuggageSharingPage: React.FC = () => {
       });
 
       if (res.status === 'success') {
-        showToast('🔒 Booking confirmed & Escrow held successfully!', 'success');
-        setShowBookModal(false); // CLOSE MODAL IMMEDIATELY!
+        notify('📩 Request sent to Traveller A successfully!', 'success');
+        setShowBookModal(false);
         setSelectedListing(null);
         setBookingNotes('');
         await loadBookings();
         await loadDashboard();
-        await handleSearch(); // Re-search to remove booked listing from marketplace!
-        setActiveView('operations'); // Move user to tracking view!
+        await handleSearch();
+        setActiveView('operations');
       } else {
-        showToast(res.message || 'Booking creation failed', 'error');
+        notify(res.message || 'Booking request creation failed', 'error');
       }
     } catch (err: any) {
-      showToast(err.message || 'Error creating booking', 'error');
+      notify(err.message || 'Error creating booking', 'error');
     }
   };
 
-  // Handle Booking Action
-  const handleBookingAction = async (bookingId: number, action: string) => {
+  // Handle Booking Action (Accept, Reject, Pay, Start Transit, Arrived)
+  const handleBookingAction = async (bookingId: number, action: string, extraData = {}) => {
     try {
       const res = await apiFetch(`/api/luggage/bookings/${bookingId}/action/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
+        body: JSON.stringify({ action, ...extraData })
       });
 
       if (res.status === 'success') {
-        showToast(`Action '${action}' completed successfully!`, 'success');
+        notify(`Action executed successfully! Status: ${res.data.status}`, 'success');
         await loadBookings();
         await loadDashboard();
-        await handleSearch(); // Re-search marketplace to exclude accepted listing if full
+        await handleSearch();
+
+        if (action === 'verify_qr' || action === 'verify_otp' || res.data.status === 'COMPLETED') {
+          setShowSuccessPopup(true);
+        }
       } else {
-        showToast(res.message || 'Action failed', 'error');
+        notify(res.message || 'Action failed', 'error');
       }
     } catch (err: any) {
-      showToast(err.message || 'Error updating booking', 'error');
+      notify(err.message || 'Error updating booking', 'error');
     }
   };
 
-  // Verify QR Scan (Lookup by input token or selected booking)
-  const handleVerifyQR = async () => {
-    const token = qrTokenInput.trim() || selectedBooking?.qr_code_token;
-    if (!token) {
-      showToast('Please enter or scan a valid QR token (e.g. LUG-D9A69839D83D)', 'error');
-      return;
-    }
-    try {
-      const url = selectedBooking?.id
-        ? `/api/luggage/bookings/${selectedBooking.id}/verify-qr/`
-        : `/api/luggage/verify-qr/`;
+  // Handle Luggage Verification Submit (Traveller A)
+  const handleVerifyLuggageSubmit = async () => {
+    if (!selectedBooking) return;
+    await handleBookingAction(selectedBooking.id, 'verify_luggage', {
+      bag_images: verifyForm.bag_images,
+      weight: parseFloat(verifyForm.weight),
+      notes: verifyForm.notes,
+      latitude: verifyForm.latitude,
+      longitude: verifyForm.longitude,
+      is_approved: true
+    });
+    setShowVerifyModal(false);
+  };
 
-      const res = await apiFetch(url, {
+  // Handle Submit Rating & Review
+  const handleSubmitReview = async () => {
+    if (!selectedBooking) return;
+    try {
+      const res = await apiFetch('/api/luggage/ratings/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          qr_code_token: token,
-          selfie_image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          latitude: 40.6413,
-          longitude: -73.7781,
-          device_hash: 'DEV-IPHONE15-PASSPORT-VERIFIED'
+          booking_id: selectedBooking.id,
+          rating: reviewForm.rating,
+          behaviour_score: reviewForm.behaviour_score,
+          communication_score: reviewForm.communication_score,
+          timing_score: reviewForm.timing_score,
+          experience_score: reviewForm.experience_score,
+          comment: reviewForm.comment
         })
       });
-
       if (res.status === 'success') {
-        showToast('✅ QR Token Verified! Airport bag handover confirmed.', 'success');
-        setQrTokenInput('');
-        await loadBookings();
+        notify('⭐ Review submitted successfully!', 'success');
+        setShowReviewModal(false);
         await loadDashboard();
-        setActiveView('operations'); // Move user directly to Operations Tracker!
-      } else {
-        showToast(res.message || 'QR verification failed', 'error');
       }
-    } catch (err: any) {
-      showToast(err.message || 'Error verifying QR', 'error');
+    } catch (e) {
+      console.error(e);
     }
+  };
+
+  // Helper to determine if current user is Owner (Traveller A who received request)
+  const isUserOwner = (b: LuggageBooking) => {
+    if (rolePerspective === 'owner') return true;
+    if (rolePerspective === 'booker') return false;
+
+    if (currentUserId && b.owner === currentUserId) return true;
+    if (currentUserEmail && b.owner_details?.email && b.owner_details.email.toLowerCase() === currentUserEmail) return true;
+    return false;
   };
 
   return (
@@ -309,20 +388,20 @@ const LuggageSharingPage: React.FC = () => {
 
       <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] pb-24 lg:pb-12 px-3 sm:px-8 pt-6 max-w-7xl mx-auto space-y-8 overflow-x-hidden">
         
-        {/* ─── GOOGLE-GRADE CLEAN WHITE HERO HEADER ─── */}
+        {/* ─── GOOGLE-GRADE HERO HEADER ─── */}
         <div className="relative rounded-3xl bg-white p-4 sm:p-8 border border-slate-200 shadow-sm overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-100 text-xs font-bold uppercase tracking-wider mb-3">
-                <ShieldCheck size={14} className="text-teal-600" /> Google-Grade Verified Baggage Platform
+                <ShieldCheck size={14} className="text-teal-600" /> Traveller ↔ Traveller Baggage Marketplace
               </div>
               <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 mb-2">
-                Luggage <span className="text-flyora-teal">Sharing Marketplace</span>
+                🧳 Luggage <span className="text-flyora-teal">Sharing</span>
               </h1>
               <p className="text-slate-500 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                Connect directly with verified travellers on your exact flight to rent or monetize spare baggage allowance. Escrow protected with QR verification.
+                Connect directly with travellers on your flight route to share unused baggage allowance. Protected with Escrow, Luggage Verification, QR Code & Secure OTP.
               </p>
             </div>
 
@@ -347,7 +426,7 @@ const LuggageSharingPage: React.FC = () => {
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                <Plus size={16} /> Host Baggage Allowance
+                <Plus size={16} /> Publish Baggage Space
               </button>
             </div>
           </div>
@@ -381,18 +460,18 @@ const LuggageSharingPage: React.FC = () => {
               </div>
             </div>
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Trips</span>
-              <div className="text-lg font-black text-purple-600 mt-0.5">{stats.current_trips.length}</div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Completed</span>
+              <div className="text-lg font-black text-purple-600 mt-0.5">{stats.completed_sharing}</div>
             </div>
           </div>
         </div>
 
-        {/* ─── SEGMENTED SUB-NAVIGATION TABS ─── */}
+        {/* ─── SUB-NAV TABS ─── */}
         <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'marketplace', label: 'Flight Marketplace & AI Match', icon: Search },
-            { id: 'host', label: 'Host Baggage Allowance', icon: Plus },
-            { id: 'operations', label: 'Operations & Escrow Tracker', icon: Clock },
+            { id: 'marketplace', label: 'Baggage Marketplace', icon: Search },
+            { id: 'host', label: 'Publish Baggage Space', icon: Plus },
+            { id: 'operations', label: 'Live Operations & Escrow Tracker', icon: Clock },
             { id: 'security', label: 'Security & Verification Vault', icon: ShieldCheck },
           ].map(tab => {
             const Icon = tab.icon;
@@ -415,101 +494,100 @@ const LuggageSharingPage: React.FC = () => {
           })}
         </div>
 
-        {/* ─── VIEW 1: GOOGLE FLIGHTS STYLE CLEAN MARKETPLACE & AI MATCH ─── */}
+        {/* ─── VIEW 1: MARKETPLACE & MATCHING ─── */}
         {activeView === 'marketplace' && (
           <div className="space-y-8">
             
-            {/* Google Flights Style Search Box */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            {/* Search Box */}
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">Search Flight Luggage Space</h3>
-                  <p className="text-xs text-slate-500">Match with travellers on your flight route with AI verification</p>
+                  <h3 className="text-xl font-black text-slate-900">Search Matching Baggage Listings</h3>
+                  <p className="text-xs text-slate-500">Only verified listings matching your flight criteria are displayed</p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-3.5 py-1.5 rounded-full">
-                  <Sparkles size={14} /> AI Route Matcher Enabled
+                  <Sparkles size={14} /> Strict Route Matcher Active
                 </div>
               </div>
 
-              {/* Preset Airline Quick Chips */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 scrollbar-none text-xs">
-                <span className="text-[10px] font-black uppercase text-slate-400 mr-2">Top Airlines:</span>
-                {['Emirates', 'Qatar Airways', 'Air India', 'British Airways', 'Lufthansa', 'Delta'].map(air => (
-                  <button
-                    key={air}
-                    type="button"
-                    onClick={() => {
-                      setSearchParams({ ...searchParams, airline: air });
-                      handleSearch();
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition ${
-                      searchParams.airline === air
-                        ? 'bg-teal-50 border-teal-300 text-teal-800'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    ✈️ {air}
-                  </button>
-                ))}
-              </div>
-
-              <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+              <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Departure Airport</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Departure Airport</label>
                   <input
                     type="text"
-                    placeholder="e.g. JFK or New York"
+                    placeholder="e.g. JFK"
                     value={searchParams.departure_airport}
                     onChange={e => setSearchParams({ ...searchParams, departure_airport: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Arrival Airport</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Destination Airport</label>
                   <input
                     type="text"
-                    placeholder="e.g. DXB or Dubai"
+                    placeholder="e.g. DXB"
                     value={searchParams.arrival_airport}
                     onChange={e => setSearchParams({ ...searchParams, arrival_airport: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Flight Number</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Travel Date</label>
+                  <input
+                    type="date"
+                    value={searchParams.departure_date}
+                    onChange={e => setSearchParams({ ...searchParams, departure_date: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Airline / Flight</label>
                   <input
                     type="text"
                     placeholder="e.g. EK202"
                     value={searchParams.flight_number}
                     onChange={e => setSearchParams({ ...searchParams, flight_number: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Airline</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Emirates"
-                    value={searchParams.airline}
-                    onChange={e => setSearchParams({ ...searchParams, airline: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Needed Weight (KG)</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Required Weight (KG)</label>
                   <input
                     type="number"
                     value={searchParams.needed_kg}
                     onChange={e => setSearchParams({ ...searchParams, needed_kg: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
                   />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Max Price ($/KG)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 20"
+                    value={searchParams.max_price}
+                    onChange={e => setSearchParams({ ...searchParams, max_price: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Sort By</label>
+                  <select
+                    value={searchParams.sort_by}
+                    onChange={e => setSearchParams({ ...searchParams, sort_by: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                  >
+                    <option value="best_match">Best Match</option>
+                    <option value="lowest_price">Lowest Price</option>
+                    <option value="most_weight">Most Available Weight</option>
+                  </select>
                 </div>
                 <div className="flex items-end">
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition flex items-center justify-center gap-2 shadow-md shadow-teal-500/20"
+                    className="w-full py-2.5 rounded-2xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition flex items-center justify-center gap-2 shadow-md shadow-teal-500/20"
                   >
                     {isSearching ? <RefreshCw className="animate-spin" size={16} /> : <Search size={16} />}
-                    <span>AI Search</span>
+                    <span>Filter & Search</span>
                   </button>
                 </div>
               </form>
@@ -518,25 +596,24 @@ const LuggageSharingPage: React.FC = () => {
             {/* Results Grid */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-black text-slate-900 text-base">Matching Luggage Hosts ({searchResults.length})</h4>
-                <span className="text-xs font-bold text-slate-400">Sorted by AI Match Percentage</span>
+                <h4 className="font-black text-slate-900 text-base">Matching Luggage Listings ({searchResults.length})</h4>
+                <span className="text-xs font-bold text-slate-400">Strict Verification & Matching Active</span>
               </div>
 
               {searchResults.length === 0 ? (
                 <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center shadow-sm">
                   <Plane size={44} className="mx-auto text-slate-300 mb-3" />
-                  <p className="text-base font-bold text-slate-700">No luggage listings match your search criteria right now.</p>
-                  <p className="text-xs text-slate-400 mt-1">Try clearing airport keywords or host your own baggage allowance!</p>
+                  <p className="text-base font-bold text-slate-700">No luggage listings match all of your strict criteria right now.</p>
+                  <p className="text-xs text-slate-400 mt-1">Note: Your own published listings are automatically hidden from your search results.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {searchResults.map(listing => (
                     <div key={listing.id} className="bg-white p-6 rounded-3xl border border-slate-200 hover:border-flyora-teal shadow-sm hover:shadow-md transition relative overflow-hidden group">
                       
-                      {/* AI Match Badge */}
                       <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 text-teal-800 text-xs font-black">
                         <Sparkles size={13} />
-                        <span>{listing.ai_match_badge || '98% Match'}</span>
+                        <span>{listing.ai_match_badge || '100% Match'}</span>
                       </div>
 
                       <div className="flex items-center gap-3 mb-5">
@@ -547,12 +624,11 @@ const LuggageSharingPage: React.FC = () => {
                           <h5 className="font-bold text-slate-900 text-sm">{listing.owner_details?.first_name || 'Verified Traveller'}</h5>
                           <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                             <span className="flex items-center text-amber-500 font-bold"><Star size={12} fill="currentColor" className="mr-0.5" /> 4.9</span>
-                            <span>• Passport & KYC Verified</span>
+                            <span>• KYC & Passport Verified</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Flight Route Banner */}
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 mb-4 space-y-2">
                         <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                           <span>✈️ {listing.airline} ({listing.flight_number})</span>
@@ -565,11 +641,10 @@ const LuggageSharingPage: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between text-[11px] text-slate-400">
                           <span>Date: {listing.departure_date}</span>
-                          <span>Cabin: {listing.cabin_class}</span>
+                          <span>Time: {listing.departure_time}</span>
                         </div>
                       </div>
 
-                      {/* Weight Progress Bar */}
                       <div className="space-y-1.5 mb-5">
                         <div className="flex justify-between text-xs font-bold">
                           <span className="text-slate-500">Available Weight:</span>
@@ -593,7 +668,7 @@ const LuggageSharingPage: React.FC = () => {
                         }}
                         className="w-full py-3 rounded-2xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition flex items-center justify-center gap-2 shadow-md shadow-teal-500/20"
                       >
-                        <Luggage size={16} /> Rent Luggage Space
+                        <Luggage size={16} /> Send Sharing Request
                       </button>
                     </div>
                   ))}
@@ -603,7 +678,7 @@ const LuggageSharingPage: React.FC = () => {
           </div>
         )}
 
-        {/* ─── VIEW 2: HOST BAGGAGE ALLOWANCE ─── */}
+        {/* ─── VIEW 2: CREATE LISTING ─── */}
         {activeView === 'host' && (
           <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm max-w-3xl mx-auto">
             <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-100">
@@ -611,15 +686,15 @@ const LuggageSharingPage: React.FC = () => {
                 <Plus size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900">Host Your Unused Baggage Allowance</h3>
-                <p className="text-xs text-slate-500">List spare weight & get paid securely via Escrow</p>
+                <h3 className="text-xl font-black text-slate-900">Publish Baggage Space (Traveller A)</h3>
+                <p className="text-xs text-slate-500">Monetize unused airline baggage allowance securely</p>
               </div>
             </div>
 
             <form onSubmit={handleHostSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Airline Name</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Airline</label>
                   <input
                     type="text"
                     required
@@ -699,11 +774,11 @@ const LuggageSharingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Weight Allowance Rule Box */}
+              {/* Validation Box */}
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Max Allowance (KG)</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Max Airline Allowance (KG)</label>
                     <input
                       type="number"
                       required
@@ -713,7 +788,7 @@ const LuggageSharingPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Currently Used (KG)</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Used Weight (KG)</label>
                     <input
                       type="number"
                       required
@@ -723,9 +798,9 @@ const LuggageSharingPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-teal-700 mb-1.5">Available (Calculated)</label>
+                    <label className="block text-xs font-bold text-teal-700 mb-1.5">Available Weight (Validated)</label>
                     <div className="w-full px-4 py-3 rounded-2xl bg-teal-50 border border-teal-200 text-teal-900 font-black text-sm">
-                      {calculatedAvailable} KG Available
+                      {calculatedAvailable} KG Free
                     </div>
                   </div>
                 </div>
@@ -742,7 +817,7 @@ const LuggageSharingPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Min Booking KG</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Minimum Shareable KG</label>
                     <input
                       type="number"
                       required
@@ -752,7 +827,7 @@ const LuggageSharingPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Max Booking KG</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Maximum Shareable KG</label>
                     <input
                       type="number"
                       required
@@ -764,51 +839,74 @@ const LuggageSharingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={hostForm.accept_partial_booking}
-                    onChange={e => setHostForm({ ...hostForm, accept_partial_booking: e.target.checked })}
-                    className="w-4 h-4 text-flyora-teal rounded"
-                  />
-                  <span>Accept Partial KG</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={hostForm.instant_booking}
-                    onChange={e => setHostForm({ ...hostForm, instant_booking: e.target.checked })}
-                    className="w-4 h-4 text-flyora-teal rounded"
-                  />
-                  <span>Instant Booking ON</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={hostForm.insurance}
-                    onChange={e => setHostForm({ ...hostForm, insurance: e.target.checked })}
-                    className="w-4 h-4 text-flyora-teal rounded"
-                  />
-                  <span>Insurance Protection</span>
-                </label>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Description</label>
+                <textarea
+                  rows={3}
+                  value={hostForm.description}
+                  onChange={e => setHostForm({ ...hostForm, description: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-medium focus:outline-none focus:border-flyora-teal"
+                ></textarea>
               </div>
 
               <button
                 type="submit"
                 className="w-full py-4 rounded-2xl bg-flyora-teal text-white font-bold text-sm hover:bg-teal-600 transition shadow-md shadow-teal-500/20"
               >
-                Publish Baggage Allowance
+                Publish Baggage Allowance Listing
               </button>
             </form>
           </div>
         )}
 
-        {/* ─── VIEW 3: OPERATIONS & ESCROW TRACKER ─── */}
+        {/* ─── VIEW 3: LIVE OPERATIONS & WORKFLOW TRACKER ─── */}
         {activeView === 'operations' && (
           <div className="space-y-6">
-            <h3 className="text-xl font-black text-slate-900">Active Operations & Escrow Status</h3>
+            
+            {/* Role Perspective Switcher Bar */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                <User size={16} className="text-flyora-teal" />
+                <span>Testing Mode (Role Perspective):</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRolePerspective('auto')}
+                  className={`px-3.5 py-2 rounded-xl font-bold text-xs transition ${
+                    rolePerspective === 'auto'
+                      ? 'bg-slate-900 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Auto Detect
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRolePerspective('owner')}
+                  className={`px-3.5 py-2 rounded-xl font-bold text-xs transition ${
+                    rolePerspective === 'owner'
+                      ? 'bg-flyora-teal text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Traveller A (Owner / Host View)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRolePerspective('booker')}
+                  className={`px-3.5 py-2 rounded-xl font-bold text-xs transition ${
+                    rolePerspective === 'booker'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Traveller B (Booker / Requester View)
+                </button>
+              </div>
+            </div>
+
+            <h3 className="text-xl font-black text-slate-900">Live Sharings & Verification Workflow</h3>
 
             {bookings.length === 0 ? (
               <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center shadow-sm">
@@ -817,131 +915,227 @@ const LuggageSharingPage: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                {bookings.map(booking => (
-                  <div key={booking.id} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-black text-slate-400">Booking #{booking.id}</span>
-                          <span className="px-3 py-0.5 rounded-full bg-teal-50 text-teal-800 text-[10px] font-black border border-teal-100">
-                            {booking.status}
-                          </span>
-                          <span className="px-3 py-0.5 rounded-full bg-purple-50 text-purple-800 text-[10px] font-black border border-purple-100">
-                            Escrow: {booking.escrow_status}
-                          </span>
+                {bookings.map(b => {
+                  const isOwner = isUserOwner(b);
+                  
+                  return (
+                    <div key={b.id} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                      
+                      {/* Booking Header */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black text-slate-400">Sharing #{b.id}</span>
+                            
+                            {/* Live Status Badges - Strictly scoped by Role */}
+                            {b.status === 'REQUESTED' && (
+                              <span className={`px-3 py-1 rounded-full font-black text-xs border ${
+                                isOwner
+                                  ? 'bg-amber-500/10 text-amber-700 border-amber-500/30'
+                                  : 'bg-blue-500/10 text-blue-700 border-blue-500/30'
+                              }`}>
+                                {isOwner ? 'New Request Received' : 'Request Sent'}
+                              </span>
+                            )}
+
+                            {b.status === 'REJECTED' && (
+                              <span className="px-3 py-1 rounded-full bg-rose-500 text-white font-black text-xs shadow-md shadow-rose-500/30">
+                                Rejected
+                              </span>
+                            )}
+
+                            {b.status === 'ACCEPTED' && (
+                              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-black text-xs border border-emerald-200">
+                                Approved
+                              </span>
+                            )}
+
+                            {b.status === 'PAID' && (
+                              <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs">
+                                {isOwner ? 'Paid by Booker' : 'Payment Successful'}
+                              </span>
+                            )}
+
+                            {b.status === 'VERIFIED' && (
+                              <span className="px-3 py-1 rounded-full bg-teal-600 text-white font-black text-xs">
+                                Luggage Verified
+                              </span>
+                            )}
+
+                            {b.status === 'IN_TRANSIT' && (
+                              <span className="px-3 py-1 rounded-full bg-blue-600 text-white font-black text-xs">
+                                In Transit
+                              </span>
+                            )}
+
+                            {b.status === 'ARRIVED' && (
+                              <span className="px-3 py-1 rounded-full bg-indigo-600 text-white font-black text-xs">
+                                {isOwner ? 'Arrived at Destination' : 'Traveller Arrived'}
+                              </span>
+                            )}
+
+                            {b.status === 'COMPLETED' && (
+                              <span className="px-3 py-1 rounded-full bg-purple-600 text-white font-black text-xs">
+                                Sharing Completed 🎉
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-lg font-black text-slate-900">
+                            ✈️ {b.listing_details?.airline} ({b.listing_details?.flight_number}) • {b.booked_weight} KG
+                          </h4>
+                          <p className="text-xs text-slate-500">
+                            Route: {b.listing_details?.departure_airport} → {b.listing_details?.arrival_airport}
+                          </p>
                         </div>
-                        <h4 className="text-lg font-black text-slate-900">
-                          ✈️ {booking.listing_details?.airline} ({booking.listing_details?.flight_number}) • {booking.booked_weight} KG
-                        </h4>
+
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-emerald-600">${b.total_price}</div>
+                          <span className="text-xs text-slate-400 font-bold">Escrow: {b.escrow_status}</span>
+                        </div>
                       </div>
 
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-emerald-600">${booking.total_price}</div>
-                        <span className="text-xs text-slate-400 font-bold">${booking.price_per_kg} / KG</span>
-                      </div>
-                    </div>
+                      {/* WORKFLOW ACTION BUTTONS - Strictly Scoped by Role (isOwner vs !isOwner) */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        
+                        {/* ACCEPT / REJECT BUTTONS: Appears ONLY for Traveller A (Owner / Host who received the request) */}
+                        {b.status === 'REQUESTED' && isOwner && (
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleBookingAction(b.id, 'accept')}
+                              className="px-5 py-2.5 rounded-2xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                            >
+                              <Check size={16} /> Accept Request
+                            </button>
+                            <button
+                              onClick={() => handleBookingAction(b.id, 'reject')}
+                              className="px-5 py-2.5 rounded-2xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 transition flex items-center gap-1.5"
+                            >
+                              <XCircle size={16} /> Reject Request
+                            </button>
+                          </div>
+                        )}
 
-                    {/* Timeline Pipeline */}
-                    <div>
-                      <span className="block text-[10px] font-black uppercase text-slate-400 mb-3 tracking-wider">Flight Handover Progress</span>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                        {['REQUESTED', 'ACCEPTED', 'AIRPORT_MEETING', 'BAG_RECEIVED', 'IN_FLIGHT', 'ARRIVED', 'COMPLETED'].map((st, idx) => {
-                          const currentIdx = ['REQUESTED', 'ACCEPTED', 'AIRPORT_MEETING', 'BAG_RECEIVED', 'IN_FLIGHT', 'ARRIVED', 'COMPLETED'].indexOf(booking.status);
-                          const isDone = idx <= currentIdx;
-                          return (
-                            <div key={st} className={`p-2.5 rounded-xl text-center border transition ${
-                              isDone ? 'bg-teal-50 border-teal-300 text-teal-800 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400'
-                            }`}>
-                              <div className="text-[9px] uppercase tracking-wider">{st.replace('_', ' ')}</div>
+                        {/* REQUEST SENT WAITING NOTICE: Displayed ONLY for Traveller B (Booker / Requester who sent the request) */}
+                        {b.status === 'REQUESTED' && !isOwner && (
+                          <div className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl flex items-center gap-2">
+                            <Clock size={16} className="animate-spin text-amber-600" />
+                            <span>Request sent! Waiting for Traveller A to accept your request...</span>
+                          </div>
+                        )}
+
+                        {/* PROCEED TO PAYMENT BUTTON: Appears ONLY for Traveller B AFTER Traveller A accepts */}
+                        {b.status === 'ACCEPTED' && !isOwner && (
+                          <button
+                            onClick={() => handleBookingAction(b.id, 'pay')}
+                            className="px-6 py-3 rounded-2xl bg-flyora-teal text-white font-black text-xs hover:bg-teal-600 transition shadow-lg shadow-teal-500/20 flex items-center gap-2"
+                          >
+                            <DollarSign size={16} /> Proceed To Payment (${b.total_price})
+                          </button>
+                        )}
+
+                        {/* PAYMENT WAITING NOTICE FOR OWNER */}
+                        {b.status === 'ACCEPTED' && isOwner && (
+                          <div className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-2xl flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-emerald-600" />
+                            <span>Request approved! Waiting for Traveller B to make payment into escrow...</span>
+                          </div>
+                        )}
+
+                        {/* VERIFY LUGGAGE BUTTON: Appears ONLY for Traveller A AFTER Payment */}
+                        {b.status === 'PAID' && isOwner && (
+                          <button
+                            onClick={() => {
+                              setSelectedBooking(b);
+                              setShowVerifyModal(true);
+                            }}
+                            className="px-5 py-2.5 rounded-2xl bg-teal-600 text-white font-bold text-xs hover:bg-teal-700 transition flex items-center gap-2"
+                          >
+                            <Camera size={16} /> Verify Luggage
+                          </button>
+                        )}
+
+                        {/* START TRANSIT BUTTON: Appears ONLY for Traveller A AFTER Luggage Verified */}
+                        {b.status === 'VERIFIED' && isOwner && (
+                          <button
+                            onClick={() => handleBookingAction(b.id, 'start_transit')}
+                            className="px-5 py-2.5 rounded-2xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-2"
+                          >
+                            <Plane size={16} /> Start Transit
+                          </button>
+                        )}
+
+                        {/* ARRIVED BUTTON: Appears ONLY for Traveller A AFTER Transit */}
+                        {b.status === 'IN_TRANSIT' && isOwner && (
+                          <button
+                            onClick={() => handleBookingAction(b.id, 'arrived')}
+                            className="px-5 py-2.5 rounded-2xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition flex items-center gap-2"
+                          >
+                            <CheckCircle2 size={16} /> Arrived at Destination
+                          </button>
+                        )}
+
+                        {/* DISPLAY SECURE QR & OTP CODES TO TRAVELLER B AFTER ARRIVAL */}
+                        {b.status === 'ARRIVED' && !isOwner && (
+                          <div className="w-full bg-slate-900 text-white p-4 rounded-2xl space-y-3">
+                            <h5 className="font-bold text-xs text-teal-400">Present These Verification Credentials To Traveller A:</h5>
+                            <div className="flex flex-wrap items-center gap-4">
+                              <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 font-mono text-sm tracking-wider text-teal-300">
+                                🔑 QR Token: {b.qr_code_token}
+                              </div>
+                              <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 font-mono text-sm font-black tracking-widest text-amber-400">
+                                🔢 OTP Code: {b.otp_code || '482910'}
+                              </div>
                             </div>
-                          );
-                        })}
+                          </div>
+                        )}
+
+                        {/* VERIFY QR / OTP: Appears ONLY for Traveller A when Arrived */}
+                        {b.status === 'ARRIVED' && isOwner && (
+                          <div className="flex items-center gap-3 pt-2">
+                            <button
+                              onClick={() => {
+                                setSelectedBooking(b);
+                                setShowQRModal(true);
+                              }}
+                              className="px-5 py-2.5 rounded-2xl bg-teal-600 text-white font-bold text-xs hover:bg-teal-700 transition flex items-center gap-2"
+                            >
+                              <QrCode size={16} /> Scan QR Code
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedBooking(b);
+                                setShowOTPModal(true);
+                              }}
+                              className="px-5 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition flex items-center gap-2"
+                            >
+                              <Key size={16} /> Enter OTP Code
+                            </button>
+                          </div>
+                        )}
+
+                        {/* LEAVE REVIEW BUTTON ON COMPLETION */}
+                        {b.status === 'COMPLETED' && (
+                          <button
+                            onClick={() => {
+                              setSelectedBooking(b);
+                              setShowReviewModal(true);
+                            }}
+                            className="px-5 py-2.5 rounded-2xl bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 transition flex items-center gap-2"
+                          >
+                            <Star size={16} /> Leave Review
+                          </button>
+                        )}
                       </div>
                     </div>
-
-                    {/* Actions for All Lifecycle Stages */}
-                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <button
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setShowMeetingModal(true);
-                        }}
-                        className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition flex items-center gap-1.5"
-                      >
-                        <QrCode size={14} /> Airport Meeting & QR Code
-                      </button>
-
-                      {booking.status === 'REQUESTED' && (
-                        <>
-                          <button
-                            onClick={() => handleBookingAction(booking.id, 'accept')}
-                            className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition"
-                          >
-                            Accept Request
-                          </button>
-                          <button
-                            onClick={() => handleBookingAction(booking.id, 'reject')}
-                            className="px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 transition"
-                          >
-                            Reject Request
-                          </button>
-                        </>
-                      )}
-
-                      {(booking.status === 'ACCEPTED' || booking.status === 'AIRPORT_MEETING') && (
-                        <button
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setQrTokenInput(booking.qr_code_token);
-                            handleVerifyQR();
-                          }}
-                          className="px-4 py-2.5 rounded-xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition flex items-center gap-1.5 shadow-md shadow-teal-500/20"
-                        >
-                          <Camera size={14} /> Validate Handover & Scan Token
-                        </button>
-                      )}
-
-                      {booking.status === 'BAG_RECEIVED' && (
-                        <button
-                          onClick={() => handleBookingAction(booking.id, 'in_flight')}
-                          className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-1.5 shadow-md shadow-blue-500/20"
-                        >
-                          <Plane size={14} /> Confirm Flight Departure (In Flight)
-                        </button>
-                      )}
-
-                      {booking.status === 'IN_FLIGHT' && (
-                        <button
-                          onClick={() => handleBookingAction(booking.id, 'arrived')}
-                          className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
-                        >
-                          <CheckCircle2 size={14} /> Confirm Flight Arrival
-                        </button>
-                      )}
-
-                      {booking.status === 'ARRIVED' && (
-                        <button
-                          onClick={() => handleBookingAction(booking.id, 'confirm_delivery')}
-                          className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
-                        >
-                          <CheckCircle2 size={15} /> Confirm Destination & Release Escrow
-                        </button>
-                      )}
-
-                      {booking.status === 'COMPLETED' && (
-                        <span className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-black text-xs border border-emerald-200 flex items-center gap-1.5">
-                          <CheckCircle2 size={14} /> Sharing Completed & Escrow Released
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         )}
 
-        {/* ─── VIEW 4: SECURITY & VERIFICATION VAULT ─── */}
+        {/* ─── VIEW 4: SECURITY VAULT ─── */}
         {activeView === 'security' && (
           <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
@@ -949,8 +1143,8 @@ const LuggageSharingPage: React.FC = () => {
                 <ShieldCheck size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900">Trust & Compliance Vault</h3>
-                <p className="text-xs text-slate-500">Passport, KYC, GPS validation & QR verification audit</p>
+                <h3 className="text-xl font-black text-slate-900">Security & Compliance Vault</h3>
+                <p className="text-xs text-slate-500">KYC verification, OTP logs and QR verification records</p>
               </div>
             </div>
 
@@ -965,53 +1159,29 @@ const LuggageSharingPage: React.FC = () => {
               <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 flex items-center gap-4">
                 <FileText className="text-blue-600" size={28} />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">Passport Verification</span>
+                  <span className="block text-xs font-bold text-slate-800">Passport Check</span>
                   <span className="text-xs font-black text-blue-600">PASSED</span>
                 </div>
               </div>
             </div>
-
-            {/* QR Token Verification Test */}
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
-              <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <QrCode size={18} className="text-flyora-teal" /> Execute Airport QR Verification
-              </h4>
-              <input
-                type="text"
-                placeholder="Scan or enter QR token (e.g. LUG-A1B2C3D4)"
-                value={qrTokenInput}
-                onChange={e => setQrTokenInput(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-800 text-xs font-mono focus:outline-none focus:border-flyora-teal"
-              />
-              <button
-                type="button"
-                onClick={handleVerifyQR}
-                className="w-full py-3.5 rounded-2xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition"
-              >
-                Validate Handover & Scan Token
-              </button>
-            </div>
           </div>
         )}
 
-        {/* ─── MODAL: BOOK LUGGAGE SPACE (FIXED POPUP CLOSING & DATA SAVE) ─── */}
+        {/* ─── MODAL 1: REQUEST LUGGAGE SPACE ─── */}
         {showBookModal && selectedListing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 relative">
-              <button
-                onClick={() => setShowBookModal(false)}
-                className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
-              >
+              <button onClick={() => setShowBookModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
 
-              <h3 className="text-xl font-black text-slate-900">Rent Luggage Allowance</h3>
+              <h3 className="text-xl font-black text-slate-900">Send Baggage Request</h3>
               <p className="text-xs text-slate-500">
                 {selectedListing.airline} ({selectedListing.flight_number}) • {selectedListing.departure_airport} → {selectedListing.arrival_airport}
               </p>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Weight to Book (KG)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Weight to Request (KG)</label>
                 <input
                   type="number"
                   value={bookingWeight}
@@ -1021,29 +1191,14 @@ const LuggageSharingPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Notes / Special Instructions</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Notes for Traveller A</label>
                 <input
                   type="text"
-                  placeholder="e.g. Suitcase size, fragile items, etc."
+                  placeholder="e.g. Carry-on size bag, fragile contents"
                   value={bookingNotes}
                   onChange={e => setBookingNotes(e.target.value)}
                   className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-medium focus:outline-none focus:border-flyora-teal"
                 />
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Price Per KG:</span>
-                  <span className="font-bold text-slate-800">${selectedListing.price_per_kg}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Insurance Protection:</span>
-                  <span className="font-bold text-slate-800">$5.00</span>
-                </div>
-                <div className="flex justify-between text-sm font-black text-flyora-teal pt-2 border-t border-slate-200">
-                  <span>Escrow Hold Total:</span>
-                  <span>${(parseFloat(bookingWeight || '1') * selectedListing.price_per_kg + 5).toFixed(2)}</span>
-                </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2">
@@ -1059,46 +1214,227 @@ const LuggageSharingPage: React.FC = () => {
                   onClick={handleCreateBooking}
                   className="flex-1 py-3 rounded-2xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition shadow-md shadow-teal-500/20"
                 >
-                  Confirm & Lock Escrow
+                  Send Request
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ─── MODAL: AIRPORT MEETING DETAILS ─── */}
-        {showMeetingModal && selectedBooking && (
+        {/* ─── MODAL 2: VERIFY LUGGAGE (Traveller A) ─── */}
+        {showVerifyModal && selectedBooking && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 text-center relative">
-              <button
-                onClick={() => setShowMeetingModal(false)}
-                className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
-              >
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 relative">
+              <button onClick={() => setShowVerifyModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
 
-              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto border border-teal-100">
-                <QrCode size={24} />
-              </div>
-              <h3 className="text-xl font-black text-slate-900">Airport Handover QR Token</h3>
+              <h3 className="text-xl font-black text-slate-900">Verify Luggage</h3>
+              <p className="text-xs text-slate-500">Upload bag images, weight & location verification timestamp</p>
 
-              <div className="p-4 bg-slate-900 text-teal-300 rounded-2xl font-mono text-base tracking-widest border border-slate-800">
-                {selectedBooking.qr_code_token}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Bag Image URL</label>
+                <input
+                  type="text"
+                  value={verifyForm.bag_images}
+                  onChange={e => setVerifyForm({ ...verifyForm, bag_images: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-medium focus:outline-none focus:border-flyora-teal"
+                />
               </div>
 
-              <div className="text-xs text-left bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-200 text-slate-700">
-                <div><strong>Meeting Point:</strong> {selectedBooking.meeting_point || 'Terminal 1 Main Info Counter'}</div>
-                <div><strong>Terminal & Gate:</strong> {selectedBooking.terminal || 'T1'} | {selectedBooking.gate || 'Gate A4'}</div>
-                <div><strong>Flight:</strong> {selectedBooking.listing_details?.airline} ({selectedBooking.listing_details?.flight_number})</div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Measured Weight (KG)</label>
+                <input
+                  type="number"
+                  value={verifyForm.weight}
+                  onChange={e => setVerifyForm({ ...verifyForm, weight: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Verification Notes</label>
+                <input
+                  type="text"
+                  value={verifyForm.notes}
+                  onChange={e => setVerifyForm({ ...verifyForm, notes: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-medium focus:outline-none focus:border-flyora-teal"
+                />
               </div>
 
               <button
                 type="button"
-                onClick={() => setShowMeetingModal(false)}
-                className="w-full py-3.5 rounded-2xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800"
+                onClick={handleVerifyLuggageSubmit}
+                className="w-full py-3.5 rounded-2xl bg-teal-600 text-white font-bold text-xs hover:bg-teal-700 transition"
               >
-                Close View
+                Submit Luggage Verification
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── MODAL 3: SCAN QR CODE (Traveller A) ─── */}
+        {showQRModal && selectedBooking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 text-center relative">
+              <button onClick={() => setShowQRModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+
+              <QrCode size={40} className="mx-auto text-flyora-teal" />
+              <h3 className="text-xl font-black text-slate-900">Scan QR Code Token</h3>
+
+              <input
+                type="text"
+                placeholder="Enter QR token (e.g. LUG-94A18F)"
+                value={qrTokenInput}
+                onChange={e => setQrTokenInput(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-center text-sm font-bold focus:outline-none focus:border-flyora-teal"
+              />
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleBookingAction(selectedBooking.id, 'verify_qr', { qr_code_token: qrTokenInput });
+                  setShowQRModal(false);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-flyora-teal text-white font-bold text-xs hover:bg-teal-600 transition"
+              >
+                Verify QR & Complete Sharing
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── MODAL 4: ENTER OTP CODE (Traveller A) ─── */}
+        {showOTPModal && selectedBooking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 text-center relative">
+              <button onClick={() => setShowOTPModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+
+              <Key size={40} className="mx-auto text-purple-600" />
+              <h3 className="text-xl font-black text-slate-900">Enter 6-Digit OTP Code</h3>
+
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="e.g. 482910"
+                value={otpInput}
+                onChange={e => setOtpInput(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-center text-2xl font-black tracking-widest focus:outline-none focus:border-purple-600"
+              />
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleBookingAction(selectedBooking.id, 'verify_otp', { otp: otpInput });
+                  setShowOTPModal(false);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition"
+              >
+                Verify OTP & Complete Sharing
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── MODAL 5: LEAVE REVIEW ─── */}
+        {showReviewModal && selectedBooking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 relative">
+              <button onClick={() => setShowReviewModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+
+              <h3 className="text-xl font-black text-slate-900">Leave User Review</h3>
+
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-700">Rating: {reviewForm.rating} / 5</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={reviewForm.rating}
+                  onChange={e => setReviewForm({ ...reviewForm, rating: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+
+                <label className="block text-xs font-bold text-slate-700">Comment</label>
+                <textarea
+                  rows={3}
+                  value={reviewForm.comment}
+                  onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs focus:outline-none focus:border-flyora-teal"
+                ></textarea>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSubmitReview}
+                className="w-full py-3.5 rounded-2xl bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 transition"
+              >
+                Submit Review
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── SUCCESS POPUP ─── */}
+        {showSuccessPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fadeIn">
+            
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[...Array(20)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-3 h-3 rounded-full animate-ping opacity-75"
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                    backgroundColor: ['#0D9488', '#10B981', '#6366F1', '#F59E0B', '#EC4899'][i % 5],
+                    animationDuration: `${1.5 + Math.random()}s`
+                  }}
+                ></div>
+              ))}
+            </div>
+
+            <div className="relative bg-white/95 rounded-3xl p-8 sm:p-10 max-w-lg w-full border border-teal-200 shadow-2xl text-center space-y-6 transform animate-bounce-short">
+              <button onClick={() => setShowSuccessPopup(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+
+              <div className="w-20 h-20 rounded-3xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto border border-teal-200 shadow-lg shadow-teal-500/20">
+                <CheckCircle2 size={44} />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-slate-900">🎉 Luggage Sharing Completed Successfully</h3>
+                <div className="space-y-1 text-xs sm:text-sm font-bold text-teal-800 bg-teal-50/80 p-4 rounded-2xl border border-teal-100">
+                  <p>✔ Payment Released Successfully</p>
+                  <p>✔ Trust Score Updated</p>
+                  <p>✔ Thank You For Using FlyoraGo</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setShowSuccessPopup(false);
+                    setShowReviewModal(true);
+                  }}
+                  className="flex-1 py-3.5 rounded-2xl bg-flyora-teal text-white font-black text-xs hover:bg-teal-600 transition shadow-md shadow-teal-500/20"
+                >
+                  Leave Your Review
+                </button>
+                <button
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="py-3.5 px-5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}

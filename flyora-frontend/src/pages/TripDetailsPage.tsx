@@ -351,6 +351,10 @@ const TripDetailsPage: React.FC = () => {
                               <span className="bg-amber-500 text-white px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
                                 Parcel Verified 📷
                               </span>
+                            ) : b.status === 'REJECTED' ? (
+                              <span className="bg-rose-600 text-white px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+                                Rejected ❌
+                              </span>
                             ) : isPaid ? (
                               <span className="bg-emerald-600 text-white px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
                                 Paid ✅
@@ -398,12 +402,20 @@ const TripDetailsPage: React.FC = () => {
                           {/* Traveler Verification & Transit Action Buttons */}
                           <div className="flex items-center gap-2 flex-wrap">
                             {b.status === 'REQUEST_SENT' && (
-                              <button
-                                onClick={() => handleBookingAction(b.id, 'ACCEPT')}
-                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5"
-                              >
-                                <CheckCircle2 size={14} /> Accept Request
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleBookingAction(b.id, 'ACCEPT')}
+                                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5"
+                                >
+                                  <CheckCircle2 size={14} /> Accept Request
+                                </button>
+                                <button
+                                  onClick={() => handleBookingAction(b.id, 'REJECT')}
+                                  className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5"
+                                >
+                                  <XCircle size={14} /> Reject Request
+                                </button>
+                              </div>
                             )}
 
                             {/* TRAVELER PARCEL VERIFICATION BUTTON (ONLY FOR TRAVELER WHEN PAID) */}

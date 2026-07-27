@@ -95,7 +95,7 @@ const BookingDetailsPage: React.FC = () => {
         const rawStatus = linkedBooking ? linkedBooking.status : 'Searching for Traveler';
 
         const resolvedStatus = linkedBooking
-          ? (['PARCEL_VERIFIED', 'IN_TRANSIT', 'ARRIVED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PAYMENT_RELEASED', 'DISPUTED', 'DISPUTE_RESOLVED', 'DISPUTE_REJECTED'].includes(rawStatus) ? rawStatus : (isPaid ? 'PAID' : (hasTraveler ? (rawStatus === 'REQUEST_SENT' ? 'ACCEPTED' : (rawStatus || 'ACCEPTED')) : 'Searching for Traveler')))
+          ? (['PARCEL_VERIFIED', 'IN_TRANSIT', 'ARRIVED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PAYMENT_RELEASED', 'DISPUTED', 'DISPUTE_RESOLVED', 'DISPUTE_REJECTED'].includes(rawStatus) ? rawStatus : (isPaid ? 'PAID' : (hasTraveler ? (rawStatus || 'REQUEST_SENT') : 'Searching for Traveler')))
           : 'Searching for Traveler';
 
         const targetBookingId = linkedBooking?.id || senderTrip.id;
@@ -696,13 +696,17 @@ const BookingDetailsPage: React.FC = () => {
                   <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
                     <UserCheck size={18} className="text-teal-600" /> Traveler Status & Confirmation
                   </h3>
-                  {booking.traveler ? (
+                  {booking.status === 'REJECTED' ? (
+                    <span className="bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
+                      <XCircle size={14} className="text-rose-600" /> Request Rejected by Traveler
+                    </span>
+                  ) : booking.status === 'ACCEPTED' || isPaid || ['PARCEL_VERIFIED', 'IN_TRANSIT', 'ARRIVED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PAYMENT_RELEASED'].includes(booking.status) ? (
                     <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
                       <CheckCircle2 size={14} className="text-emerald-600" /> Accepted by Traveler
                     </span>
                   ) : (
                     <span className="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
-                      <Clock size={14} className="text-amber-500" /> Searching / Awaiting Acceptance
+                      <Clock size={14} className="text-amber-500" /> Request Sent (Awaiting Traveler Acceptance)
                     </span>
                   )}
                 </div>
