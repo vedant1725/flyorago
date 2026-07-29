@@ -274,21 +274,54 @@ const LuggageAdminPage: React.FC = () => {
 
         {/* TAB 5: DISPUTES */}
         {activeTab === 'disputes' && (
-          <div className="bg-slate-800/50 p-6 rounded-3xl border border-slate-800 space-y-4">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <ShieldAlert className="text-rose-500" size={20} /> Luggage Disputes ({data.disputes.length})
-            </h2>
+          <div className="bg-slate-800/50 p-4 sm:p-6 rounded-3xl border border-slate-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <ShieldAlert className="text-rose-500" size={22} /> Luggage Disputes ({data.disputes.length})
+                </h2>
+                <p className="text-xs text-slate-400">Order conflict claims, item damage & escrow hold investigations</p>
+              </div>
+              <button
+                onClick={() => navigate('/admin/dashboard?tab=disputes')}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-400 font-bold text-xs flex items-center gap-2 transition-colors border border-slate-700 self-start sm:self-auto"
+              >
+                Open Full Admin Dispute Portal →
+              </button>
+            </div>
+
             {data.disputes.length === 0 ? (
-              <p className="text-xs text-slate-400">No active dispute cases opened.</p>
+              <div className="text-center py-10 text-slate-400 space-y-1">
+                <CheckCircle2 size={28} className="mx-auto text-emerald-400" />
+                <p className="text-xs font-bold text-slate-300">No active dispute cases opened</p>
+                <p className="text-[11px] text-slate-500">All luggage sharing transactions are running smoothly.</p>
+              </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.disputes.map(d => (
-                  <div key={d.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                    <div>
-                      <span className="text-xs font-bold text-rose-400">Dispute #{d.id} - Reason: {d.reason}</span>
-                      <p className="text-xs text-slate-300 mt-1">{d.description}</p>
+                  <div key={d.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-black text-rose-400">Dispute Case #{d.id}</span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[11px] font-extrabold uppercase border border-rose-500/30">
+                          {d.status}
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold text-white bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
+                        Reason: {d.reason}
+                      </div>
+                      <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">{d.description || 'No description provided.'}</p>
                     </div>
-                    <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold">{d.status}</span>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+                      <span>Booking #{d.booking}</span>
+                      <button
+                        onClick={() => navigate('/admin/dashboard')}
+                        className="px-3 py-1.5 rounded-lg bg-teal-500/20 text-teal-300 hover:bg-teal-500/30 font-bold text-xs transition-colors"
+                      >
+                        Manage Dispute →
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

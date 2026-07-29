@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
@@ -6,8 +6,10 @@ import {
   ShieldAlert, Handshake, Mail, 
   Phone, User, MessageSquare,
   Clock, Globe, Lock, Headphones, ShieldCheck,
-  ArrowRight
+  ArrowRight, CheckCircle2, AlertCircle, Loader2
 } from 'lucide-react';
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const categories = [
   {
@@ -49,6 +51,60 @@ const ContactUsPage: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Form State
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [userType, setUserType] = useState('traveler');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+      setErrorMsg('Please fill in all required fields (Full Name, Email, Subject, and Message).');
+      return;
+    }
+
+    setErrorMsg('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/support/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: fullName,
+          email: email,
+          phone: phone,
+          user_type: userType,
+          subject: subject,
+          message: message,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        setIsSubmitted(true);
+        setFullName('');
+        setEmail('');
+        setPhone('');
+        setSubject('');
+        setMessage('');
+      } else {
+        setErrorMsg(data?.message || data?.error || 'Failed to send message. Please try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg('Network error. Please make sure backend server is running.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
@@ -94,7 +150,8 @@ const ContactUsPage: React.FC = () => {
                       </p>
                    </div>
                 ))}
-                {/* Filler card to make grid even if needed, or an extra quick contact info card */}
+                
+                {/* Emergency Card */}
                 <div className="bg-gradient-to-br from-flyora-teal to-blue-500 rounded-3xl p-8 shadow-teal text-white flex flex-col justify-center">
                    <h3 className="text-2xl font-bold mb-4">Urgent Issue?</h3>
                    <p className="text-white/90 mb-6 leading-relaxed">
@@ -115,21 +172,59 @@ const ContactUsPage: React.FC = () => {
                
                {/* Left: Contact Form */}
                <div className="w-full lg:w-[55%] bg-white rounded-[2rem] p-6 lg:p-8 border border-flyora-gray-200 shadow-[0_15px_40px_rgba(10,22,40,0.04)]">
-                  <h2 className="text-2xl font-black text-flyora-navy mb-6">Send a Message</h2>
+                  <h2 className="text-2xl font-black text-flyora-navy mb-2">Send a Message</h2>
+                  <p className="text-xs text-slate-500 mb-6">Fill in the details below and our team will get back to you shortly.</p>
                   
-                  <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                  {isSubmitted && (
+                    <div className="mb-6 p-4 rounded-2xl bg-teal-50 border border-teal-200 flex items-start gap-3 text-teal-800">
+                      <CheckCircle2 size={20} className="text-teal-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-sm">Message Sent Successfully!</h4>
+                        <p className="text-xs text-teal-700 mt-0.5">Thank you for reaching out. Your message has been logged in our support admin panel, and our team will respond soon.</p>
+                        <button 
+                          onClick={() => setIsSubmitted(false)}
+                          className="mt-3 text-xs font-bold text-teal-800 underline hover:text-teal-900"
+                        >
+                          Send another message
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {errorMsg && (
+                    <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 flex items-center gap-3 text-red-700 text-xs font-bold">
+                      <AlertCircle size={18} className="text-red-500 shrink-0" />
+                      <span>{errorMsg}</span>
+                    </div>
+                  )}
+
+                  <form className="space-y-5" onSubmit={handleSubmit}>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5">
                            <label className="text-xs font-bold text-flyora-navy flex items-center gap-1.5">
-                              <User size={14} className="text-flyora-gray-400" /> Full Name
+                              <User size={14} className="text-flyora-gray-400" /> Full Name *
                            </label>
-                           <input type="text" placeholder="John Doe" className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all" />
+                           <input 
+                              type="text" 
+                              required
+                              value={fullName}
+                              onChange={(e) => setFullName(e.target.value)}
+                              placeholder="John Doe" 
+                              className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all font-medium text-slate-800" 
+                           />
                         </div>
                         <div className="space-y-1.5">
                            <label className="text-xs font-bold text-flyora-navy flex items-center gap-1.5">
-                              <Mail size={14} className="text-flyora-gray-400" /> Email Address
+                              <Mail size={14} className="text-flyora-gray-400" /> Email Address *
                            </label>
-                           <input type="email" placeholder="john@example.com" className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all" />
+                           <input 
+                              type="email" 
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="john@example.com" 
+                              className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all font-medium text-slate-800" 
+                           />
                         </div>
                      </div>
 
@@ -138,13 +233,23 @@ const ContactUsPage: React.FC = () => {
                            <label className="text-xs font-bold text-flyora-navy flex items-center gap-1.5">
                               <Phone size={14} className="text-flyora-gray-400" /> Phone Number
                            </label>
-                           <input type="tel" placeholder="+1 (555) 000-0000" className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all" />
+                           <input 
+                              type="tel" 
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="+1 (555) 000-0000" 
+                              className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all font-medium text-slate-800" 
+                           />
                         </div>
                         <div className="space-y-1.5">
                            <label className="text-xs font-bold text-flyora-navy flex items-center gap-1.5">
                               <User size={14} className="text-flyora-gray-400" /> User Type
                            </label>
-                           <select className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all appearance-none text-flyora-gray-600">
+                           <select 
+                              value={userType}
+                              onChange={(e) => setUserType(e.target.value)}
+                              className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all appearance-none text-slate-800 font-medium"
+                           >
                               <option value="traveler">Traveler</option>
                               <option value="sender">Sender</option>
                               <option value="both">Both</option>
@@ -154,19 +259,46 @@ const ContactUsPage: React.FC = () => {
                      </div>
 
                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-flyora-navy">Subject</label>
-                        <input type="text" placeholder="How can we help?" className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all" />
+                        <label className="text-xs font-bold text-flyora-navy">Subject *</label>
+                        <input 
+                           type="text" 
+                           required
+                           value={subject}
+                           onChange={(e) => setSubject(e.target.value)}
+                           placeholder="How can we help?" 
+                           className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all font-medium text-slate-800" 
+                        />
                      </div>
 
                      <div className="space-y-1.5">
                         <label className="text-xs font-bold text-flyora-navy flex items-center gap-1.5">
-                           <MessageSquare size={14} className="text-flyora-gray-400" /> Message
+                           <MessageSquare size={14} className="text-flyora-gray-400" /> Message *
                         </label>
-                        <textarea rows={4} placeholder="Describe your issue or question in detail..." className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all resize-none"></textarea>
+                        <textarea 
+                           rows={4} 
+                           required
+                           value={message}
+                           onChange={(e) => setMessage(e.target.value)}
+                           placeholder="Describe your issue or question in detail..." 
+                           className="w-full px-4 py-3 rounded-xl bg-flyora-gray-50 border border-flyora-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-flyora-teal focus:border-transparent transition-all resize-none font-medium text-slate-800"
+                        ></textarea>
                      </div>
 
-                     <button className="w-full py-3.5 bg-flyora-navy text-white text-sm font-bold rounded-xl hover:bg-flyora-navy-light focus:outline-none focus:ring-4 focus:ring-flyora-navy/20 transition-all flex items-center justify-center gap-2 group">
-                        Send Message <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                     <button 
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-3.5 bg-flyora-navy text-white text-sm font-bold rounded-xl hover:bg-flyora-navy-light focus:outline-none focus:ring-4 focus:ring-flyora-navy/20 transition-all flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+                     >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Sending Message...
+                          </>
+                        ) : (
+                          <>
+                            Send Message <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                          </>
+                        )}
                      </button>
                   </form>
                </div>

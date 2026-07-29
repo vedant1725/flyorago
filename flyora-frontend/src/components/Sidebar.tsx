@@ -5,7 +5,6 @@ import {
   Headphones, Gift, UserRound, Settings, ShieldCheck, ShieldAlert,
   BadgeCheck, Clock, Bell, X, Menu, Luggage, Home, LogOut, Sparkles
 } from 'lucide-react';
-import { apiFetch } from '../utils/api';
 import { HeaderProfileDropdown } from './ui/HeaderProfileDropdown';
 
 interface SidebarProps {
@@ -28,25 +27,7 @@ const sidebarItems = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onSubItemClick }) => {
   const navigate = useNavigate();
-  const [kycStatus, setKycStatus] = useState<string>(
-    localStorage.getItem('flyora_kyc_status') || 'NOT_SUBMITTED'
-  );
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const userName = localStorage.getItem('flyora_user_name') || 'User';
-
-  useEffect(() => {
-    const userId = localStorage.getItem('flyora_user_id');
-    if (userId && userId !== 'undefined' && userId !== 'null') {
-      apiFetch(`/api/kyc/status/${userId}`)
-        .then((res) => {
-          if (res.status === 'success' && res.data) {
-            setKycStatus(res.data.status);
-            localStorage.setItem('flyora_kyc_status', res.data.status);
-          }
-        })
-        .catch((err) => console.error('Error fetching KYC status in sidebar:', err));
-    }
-  }, []);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -57,36 +38,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
     }
     return () => { document.body.style.overflow = ''; };
   }, [drawerOpen]);
-
-  const getKycBadge = () => {
-    const status = kycStatus.toUpperCase();
-    if (status === 'APPROVED' || status === 'VERIFIED') {
-      return (
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2.5 py-0.5 rounded-full">
-          <BadgeCheck size={11} /> Approved
-        </span>
-      );
-    }
-    if (status === 'PENDING' || status === 'UNDER_REVIEW') {
-      return (
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/25 px-2.5 py-0.5 rounded-full animate-pulse">
-          <Clock size={11} /> Under Review
-        </span>
-      );
-    }
-    if (status === 'REJECTED') {
-      return (
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/25 px-2.5 py-0.5 rounded-full">
-          <ShieldAlert size={11} /> Rejected
-        </span>
-      );
-    }
-    return (
-      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-slate-500/15 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full">
-        Not Verified
-      </span>
-    );
-  };
 
   const handleNav = (route: string) => {
     navigate(route);
@@ -102,20 +53,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
   return (
     <>
       {/* ─── Desktop Sidebar ─── */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[240px] bg-[#FFFDFB] border-r border-slate-200 flex-col pt-8 pb-6 px-4 z-40">
-        <div>
-          <div className="flex items-center gap-2 mb-10 px-2 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="relative">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-sm">
-                <Plane size={16} className="text-white transform -rotate-45" />
-              </div>
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[240px] bg-[#FFFDFB] border-r border-slate-200 flex-col pt-6 pb-6 px-4 z-40 select-none overflow-hidden">
+        {/* Brand Logo Header */}
+        <div className="flex items-center gap-2 mb-6 px-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
+          <div className="relative">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-sm">
+              <Plane size={16} className="text-white transform -rotate-45" />
             </div>
-            <span className="text-xl font-black text-slate-900 tracking-tight">FLYORA<span className="text-flyora-teal">GO</span></span>
           </div>
+          <span className="text-xl font-black text-slate-900 tracking-tight">FLYORA<span className="text-flyora-teal">GO</span></span>
+        </div>
 
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-3">Menu</div>
+        {/* Scrollable Navigation Area (Hidden Scrollbar) */}
+        <div className="flex-1 overflow-y-auto min-h-0 pr-1 space-y-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3">Menu</div>
 
-          <nav className="flex flex-col gap-1.5">
+          <nav className="flex flex-col gap-1.5 pb-4">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeItem.toLowerCase() === item.label.toLowerCase() ||
@@ -138,8 +91,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
 
                   {/* Sub-menu for Settings */}
                   {isActive && item.label === 'Settings' && (
-                    <div className="flex flex-col gap-1 mt-3 mb-2 px-1">
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-3">Account Preferences</div>
+                    <div className="flex flex-col gap-1 mt-2 mb-2 px-1 animate-in fade-in">
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest my-2 pl-3">Account Preferences</div>
                       {[
                         { id: 'profile', label: 'My Profile', icon: UserRound },
                         { id: 'notifications', label: 'Notification Setting', icon: Bell },
@@ -153,14 +106,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
                           <button
                             key={sub.id}
                             type="button"
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-bold transition-all duration-200 ${isSubActive
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${isSubActive
                                 ? 'bg-teal-50 text-flyora-teal'
                                 : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                               }`}
                             onClick={() => onSubItemClick && onSubItemClick(sub.id)}
                           >
-                            <SubIcon size={16} strokeWidth={isSubActive ? 2.5 : 2} />
-                            <span>{sub.label}</span>
+                            <SubIcon size={15} className="shrink-0" strokeWidth={isSubActive ? 2.5 : 2} />
+                            <span className="whitespace-nowrap truncate">{sub.label}</span>
                           </button>
                         );
                       })}
@@ -170,24 +123,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
               );
             })}
           </nav>
-        </div>
-
-        <div className="mt-auto space-y-3">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition"
-          >
-            <Home size={15} /> Go to Home Page
-          </button>
-
-          <div
-            onClick={() => navigate('/kyc')}
-            className="p-3.5 rounded-xl cursor-pointer hover:bg-slate-50 transition border border-slate-200 flex items-center justify-between bg-white shadow-sm"
-          >
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</span>
-            {getKycBadge()}
-          </div>
         </div>
       </aside>
 
@@ -220,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500"></span>
           </button>
 
-          {/* Profile Dropdown with My Profile, Go Home, Settings & Logout */}
+          {/* Profile Dropdown */}
           <HeaderProfileDropdown compact={true} />
         </div>
       </div>
@@ -229,8 +164,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
       {drawerOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setDrawerOpen(false)}></div>
-          <div className="relative flex flex-col w-[280px] max-w-[calc(100%-3rem)] bg-white h-full shadow-2xl transition-transform transform translate-x-0 overflow-y-auto p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+          <div className="relative flex flex-col w-[280px] max-w-[calc(100%-3rem)] bg-white h-full shadow-2xl transition-transform transform translate-x-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 shrink-0">
               <div className="flex items-center gap-2 font-black text-xl text-slate-800">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-sm">
                   <Plane size={16} className="text-white transform -rotate-45" />
@@ -247,43 +182,60 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
               </button>
             </div>
 
-            {/* KYC badge inside drawer */}
-            <div
-              onClick={() => handleNav('/kyc')}
-              className="p-3 rounded-2xl cursor-pointer border border-slate-200 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition mb-4"
-            >
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</span>
-              {getKycBadge()}
-            </div>
-
-            <nav className="flex flex-col gap-1.5 flex-1">
+            <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-4">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.label.toLowerCase() === activeItem.toLowerCase();
                 return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-                      isActive ? 'bg-flyora-teal text-white shadow-md shadow-teal-500/20' : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                    onClick={() => handleNav(item.route)}
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </button>
+                  <div key={item.label} className="flex flex-col">
+                    <button
+                      type="button"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                        isActive ? 'bg-flyora-teal text-white shadow-md shadow-teal-500/20' : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                      onClick={() => handleNav(item.route)}
+                    >
+                      <Icon size={18} />
+                      <span>{item.label}</span>
+                    </button>
+
+                    {/* Sub-menu in mobile drawer if settings */}
+                    {isActive && item.label === 'Settings' && (
+                      <div className="flex flex-col gap-1 mt-2 mb-2 pl-3">
+                        {[
+                          { id: 'profile', label: 'My Profile', icon: UserRound },
+                          { id: 'notifications', label: 'Notification Setting', icon: Bell },
+                          { id: 'invite', label: 'Invite Friend', icon: UserRound },
+                          { id: 'guidelines', label: 'Community Guidelines', icon: ShieldCheck },
+                          { id: 'support', label: 'Help & Support', icon: Headphones }
+                        ].map(sub => {
+                          const SubIcon = sub.icon;
+                          const isSubActive = activeSubItem === sub.id;
+                          return (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                                isSubActive ? 'bg-teal-50 text-flyora-teal' : 'text-slate-500 hover:bg-slate-50'
+                              }`}
+                              onClick={() => {
+                                if (onSubItemClick) onSubItemClick(sub.id);
+                                setDrawerOpen(false);
+                              }}
+                            >
+                              <SubIcon size={15} className="shrink-0" />
+                              <span className="whitespace-nowrap truncate">{sub.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </nav>
 
-            <div className="pt-4 border-t border-slate-100 space-y-2 mt-auto">
-              <button
-                type="button"
-                onClick={() => handleNav('/')}
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition"
-              >
-                <Home size={16} /> Go to Home Page
-              </button>
+            <div className="pt-4 border-t border-slate-100 space-y-2 shrink-0 mt-auto">
               <button
                 type="button"
                 onClick={handleLogout}

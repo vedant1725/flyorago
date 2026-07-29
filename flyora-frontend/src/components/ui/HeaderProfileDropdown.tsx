@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, LogOut, ChevronDown, User, Settings, Wallet, ShieldCheck } from 'lucide-react';
+import { Home, LogOut, ChevronDown, User, ShieldCheck, BadgeCheck, Clock, ShieldAlert } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 interface HeaderProfileDropdownProps {
   userName?: string;
@@ -22,6 +23,9 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
   const [userName, setUserName] = useState(propName || localStorage.getItem('flyora_user_name') || 'User Account');
   const [userEmail, setUserEmail] = useState(propEmail || localStorage.getItem('flyora_user_email') || 'user@flyorago.com');
   const [userAvatar, setUserAvatar] = useState(propAvatar || localStorage.getItem('flyora_user_avatar') || '');
+  const [kycStatus, setKycStatus] = useState<string>(
+    localStorage.getItem('flyora_kyc_status') || 'NOT_SUBMITTED'
+  );
 
   useEffect(() => {
     const syncProfile = () => {
@@ -29,6 +33,18 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
       setUserEmail(localStorage.getItem('flyora_user_email') || 'user@flyorago.com');
       setUserAvatar(localStorage.getItem('flyora_user_avatar') || '');
     };
+
+    const userId = localStorage.getItem('flyora_user_id');
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+      apiFetch(`/api/kyc/status/${userId}`)
+        .then((res) => {
+          if (res.status === 'success' && res.data) {
+            setKycStatus(res.data.status);
+            localStorage.setItem('flyora_kyc_status', res.data.status);
+          }
+        })
+        .catch((err) => console.error('Error fetching KYC status in profile dropdown:', err));
+    }
 
     window.addEventListener('storage', syncProfile);
     window.addEventListener('profileUpdated', syncProfile);
@@ -62,6 +78,36 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const getKycBadge = () => {
+    const status = (kycStatus || '').toUpperCase();
+    if (status === 'APPROVED' || status === 'VERIFIED') {
+      return (
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+          <BadgeCheck size={11} /> Approved
+        </span>
+      );
+    }
+    if (status === 'PENDING' || status === 'UNDER_REVIEW') {
+      return (
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/25 px-2 py-0.5 rounded-full animate-pulse">
+          <Clock size={11} /> Under Review
+        </span>
+      );
+    }
+    if (status === 'REJECTED') {
+      return (
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/25 px-2 py-0.5 rounded-full">
+          <ShieldAlert size={11} /> Rejected
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-slate-500/15 text-slate-500 border border-slate-300 px-2 py-0.5 rounded-full">
+        Not Verified
+      </span>
+    );
+  };
 
   const handleGoHome = () => {
     setIsOpen(false);
@@ -119,7 +165,7 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
         </button>
       )}
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu Popup */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200/80 shadow-2xl z-50 p-2 transform transition-all duration-200 animate-in fade-in slide-in-from-top-2">
           {/* Header User Details */}
@@ -155,32 +201,22 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
               <span>My Profile</span>
             </button>
 
+            {/* KYC Status Option - Navigates to /kyc */}
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
-                navigate('/wallet');
+                navigate('/kyc');
               }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-flyora-teal hover:bg-teal-50/80 transition-all text-left"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-flyora-teal hover:bg-teal-50/80 transition-all text-left"
             >
-              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
-                <Wallet size={14} />
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                  <ShieldCheck size={14} />
+                </div>
+                <span>KYC Status</span>
               </div>
-              <span>My Wallet</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                navigate('/settings');
-              }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-flyora-teal hover:bg-teal-50/80 transition-all text-left"
-            >
-              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
-                <Settings size={14} />
-              </div>
-              <span>Settings</span>
+              {getKycBadge()}
             </button>
 
             <div className="h-px bg-slate-100 my-1" />

@@ -155,8 +155,8 @@ const Header: React.FC = () => {
                 to={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`px-4 py-3 text-sm font-medium rounded-xl transition-all ${isActive
-                    ? 'text-flyora-teal bg-flyora-teal/5'
-                    : 'text-flyora-gray-700 hover:text-flyora-teal hover:bg-flyora-teal/5'
+                  ? 'text-flyora-teal bg-flyora-teal/5'
+                  : 'text-flyora-gray-700 hover:text-flyora-teal hover:bg-flyora-teal/5'
                   }`}
               >
                 {link.label}
