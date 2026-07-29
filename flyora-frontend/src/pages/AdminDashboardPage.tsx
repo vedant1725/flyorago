@@ -6,7 +6,7 @@ import {
   FileText, Globe, User, TrendingUp, Bell, Settings, Search,
   MapPin, Calendar, Menu, Trash2, Edit3, CheckCircle2, XCircle,
   AlertTriangle, Info, Activity, MoreVertical, Filter, Download,
-  UserCheck, UserX, ArrowRight, Clock, Star, Shield, Zap
+  UserCheck, UserX, ArrowRight, Clock, Star, Shield, Zap, Plus
 } from 'lucide-react';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -1044,7 +1044,7 @@ const DisputeModal: React.FC<{
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  type Tab = 'overview'|'users'|'trips'|'bookings'|'shipments'|'kyc'|'disputes'|'trust';
+  type Tab = 'overview'|'users'|'trips'|'bookings'|'shipments'|'kyc'|'disputes'|'trust'|'ai_knowledge';
   const [tab, setTab] = useState<Tab>('overview');
   const [chartPeriod, setChartPeriod] = useState<'day'|'week'|'month'>('week');
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
@@ -1071,6 +1071,20 @@ const AdminDashboardPage: React.FC = () => {
   const [trustProfiles, setTrustProfiles] = useState<any[]>([]);
   const [trustLoading, setTrustLoading] = useState(false);
   const [overrideModal, setOverrideModal] = useState<{userId:number;current:number}|null>(null);
+
+  const [aiFaqs, setAiFaqs] = useState<any[]>([]);
+  const [newFaqQuestion, setNewFaqQuestion] = useState('');
+  const [newFaqAnswer, setNewFaqAnswer] = useState('');
+  const [newFaqCategory, setNewFaqCategory] = useState('platform');
+  const [isCreatingFaq, setIsCreatingFaq] = useState(false);
+
+  useEffect(() => {
+    if (tab === 'ai_knowledge') {
+      api('/api/ai/admin/faqs/')
+        .then(res => setAiFaqs(res.data || []))
+        .catch(err => console.warn('AI faqs fetch warning:', err));
+    }
+  }, [tab]);
 
   const toast = useCallback((type: Toast['type'], msg: string) => {
     const id = ++toastId;
@@ -1332,6 +1346,7 @@ const AdminDashboardPage: React.FC = () => {
     { label:'KYC Approvals',               icon:ShieldCheck,     tab:'kyc',       badge: stats?.pendingKyc??kycUsers.filter(u=>u.status==='PENDING').length },
     { label:'Disputes',                    icon:AlertTriangle,   tab:'disputes',  badge: disputes.filter(d=>d.status==='Under Review' || d.status==='Open').length },
     { label:'Trust & Risk',                icon:ShieldCheck,     tab:'trust' },
+    { label:'AI Knowledge & FAQ',          icon:Zap,             tab:'ai_knowledge' },
   ];
 
   return (
@@ -2090,6 +2105,153 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 );
               })()}
+            </div>
+          )}
+
+          {/* AI KNOWLEDGE BASE MANAGEMENT TAB */}
+          {tab === 'ai_knowledge' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                    <Zap className="text-flyora-teal" size={22} /> AI Knowledge Base & FAQ Management
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">Manage custom policies, safety rules, and FAQs used by Flyora AI to respond to users.</p>
+                </div>
+                <button
+                  onClick={() => setIsCreatingFaq(!isCreatingFaq)}
+                  className="px-4 py-2.5 bg-flyora-teal hover:bg-teal-600 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2"
+                >
+                  <Plus size={16} /> {isCreatingFaq ? 'Cancel' : 'Add AI Knowledge Rule'}
+                </button>
+              </div>
+
+              {/* Create FAQ Form */}
+              {isCreatingFaq && (
+                <div className="bg-white rounded-3xl p-6 border-2 border-teal-100 shadow-md space-y-4 animate-in fade-in">
+                  <h4 className="font-extrabold text-sm text-slate-800">Add New AI Policy / FAQ Rule</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 block mb-1">Category</label>
+                      <select
+                        value={newFaqCategory}
+                        onChange={e => setNewFaqCategory(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-800 outline-none"
+                      >
+                        <option value="platform">Platform & How It Works</option>
+                        <option value="traveller">Traveller Workflow & Earning</option>
+                        <option value="sender">Sender & Package Delivery</option>
+                        <option value="security">Safety, KYC & Security</option>
+                        <option value="prohibited_items">Prohibited Items Policy</option>
+                        <option value="payments">Escrow & Wallet</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 block mb-1">Question / Keyword Trigger</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Any drugs item delivered?"
+                        value={newFaqQuestion}
+                        onChange={e => setNewFaqQuestion(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-800 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 block mb-1">Direct Policy Answer</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Enter direct factual answer..."
+                      value={newFaqAnswer}
+                      onChange={e => setNewFaqAnswer(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-800 outline-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!newFaqQuestion || !newFaqAnswer) {
+                          toast('error', 'Please provide question and answer');
+                          return;
+                        }
+                        try {
+                          const res = await api('/api/ai/admin/faqs/', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                              category: newFaqCategory,
+                              question: newFaqQuestion,
+                              answer: newFaqAnswer
+                            })
+                          });
+                          toast('success', 'AI Knowledge Rule added!');
+                          if (res.data) setAiFaqs(prev => [res.data, ...prev]);
+                          setNewFaqQuestion('');
+                          setNewFaqAnswer('');
+                          setIsCreatingFaq(false);
+                        } catch (err: any) {
+                          toast('error', err.message || 'Failed to save rule');
+                        }
+                      }}
+                      className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-sm transition"
+                    >
+                      Save Knowledge Rule
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* FAQ Rules Table */}
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <h4 className="font-extrabold text-xs text-slate-700 uppercase tracking-wider">Active AI Policy Rules ({aiFaqs.length})</h4>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await api('/api/ai/admin/faqs/');
+                        setAiFaqs(res.data || []);
+                        toast('success', 'Refreshed AI rules');
+                      } catch { toast('error', 'Failed to load rules'); }
+                    }}
+                    className="text-xs text-flyora-teal font-bold flex items-center gap-1 hover:underline"
+                  >
+                    <RefreshCw size={12} /> Refresh
+                  </button>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {aiFaqs.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium">
+                      No custom AI rules added yet. Standard platform rules are active by default.
+                    </div>
+                  ) : (
+                    aiFaqs.map(item => (
+                      <div key={item.id} className="p-5 flex items-start justify-between gap-4 hover:bg-slate-50/50 transition">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-200 uppercase">
+                              {item.category}
+                            </span>
+                            <strong className="text-sm font-bold text-slate-800">{item.question}</strong>
+                          </div>
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium pl-1">{item.answer}</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await api(`/api/ai/admin/faqs/${item.id}/`, { method: 'DELETE' });
+                              setAiFaqs(prev => prev.filter(x => x.id !== item.id));
+                              toast('success', 'Rule deleted');
+                            } catch { toast('error', 'Failed to delete rule'); }
+                          }}
+                          className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition"
+                          title="Delete Rule"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

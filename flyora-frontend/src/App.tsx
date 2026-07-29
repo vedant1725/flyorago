@@ -37,56 +37,67 @@ import NotFoundPage from './pages/NotFoundPage';
 import TrustDashboardPage from './pages/TrustDashboardPage';
 import LuggageSharingPage from './pages/LuggageSharingPage';
 import LuggageAdminPage from './pages/LuggageAdminPage';
+import FlyoraAIPage from './pages/FlyoraAIPage';
 
 import { ToastProvider } from './context/ToastContext';
 import { SocketProvider } from './context/SocketContext';
+import { FlyoraAIProvider } from './context/FlyoraAIContext';
+import { FlyoraAIFloatingButton } from './components/ai/FlyoraAIFloatingButton';
+import { FlyoraAIChatWindow } from './components/ai/FlyoraAIChatWindow';
 
 const App: React.FC = () => {
   return (
     <ToastProvider>
       <SocketProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/about" element={<AboutUsPage />} />
-            <Route path="/contact" element={<ContactUsPage />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/kyc" element={<KycPage />} />
-            <Route path="/admin/login" element={<AdminLoginPage />} />
-            <Route path="/admin/kyc" element={<KycAdminPage />} />
-            <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/trips" element={<TripsPage />} />
-            <Route path="/bookings" element={<BookingsPage />} />
-            <Route path="/shipments" element={<ShipmentsPage />} />
-            <Route path="/sender" element={<SenderPage />} />
-            <Route path="/traveler" element={<TravelerPage />} />
-            <Route path="/shopper" element={<ShopperPage />} />
+        <FlyoraAIProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/about" element={<AboutUsPage />} />
+              <Route path="/contact" element={<ContactUsPage />} />
+              <Route path="/how-it-works" element={<HowItWorksPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/kyc" element={<KycPage />} />
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin/kyc" element={<KycAdminPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/trips" element={<TripsPage />} />
+              <Route path="/bookings" element={<BookingsPage />} />
+              <Route path="/shipments" element={<ShipmentsPage />} />
+              <Route path="/sender" element={<SenderPage />} />
+              <Route path="/traveler" element={<TravelerPage />} />
+              <Route path="/shopper" element={<ShopperPage />} />
 
-            {/* New Pages */}
-            <Route path="/wallet" element={<WalletPage />} />
-            <Route path="/earnings" element={<EarningsPage />} />
-            <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/support" element={<SupportPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/booking/:id" element={<BookingDetailsPage />} />
-            <Route path="/trip/:id" element={<TripDetailsPage />} />
-            <Route path="/shipment/:id" element={<ShipmentDetailsPage />} />
-            <Route path="/wallet/transaction/:id" element={<TransactionDetailsPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/trust" element={<TrustDashboardPage />} />
-            <Route path="/luggage-sharing" element={<LuggageSharingPage />} />
-            <Route path="/admin/luggage" element={<LuggageAdminPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
+              {/* New Pages */}
+              <Route path="/wallet" element={<WalletPage />} />
+              <Route path="/earnings" element={<EarningsPage />} />
+              <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/booking/:id" element={<BookingDetailsPage />} />
+              <Route path="/trip/:id" element={<TripDetailsPage />} />
+              <Route path="/shipment/:id" element={<ShipmentDetailsPage />} />
+              <Route path="/wallet/transaction/:id" element={<TransactionDetailsPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/trust" element={<TrustDashboardPage />} />
+              <Route path="/luggage-sharing" element={<LuggageSharingPage />} />
+              <Route path="/admin/luggage" element={<LuggageAdminPage />} />
+              <Route path="/ai" element={<FlyoraAIPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+
+            {/* Global Flyora AI Floating Assistant */}
+            <FlyoraAIChatWindow />
+            <FlyoraAIFloatingButton />
+          </Router>
+        </FlyoraAIProvider>
       </SocketProvider>
     </ToastProvider>
   );

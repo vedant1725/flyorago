@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Plane, Package, ShoppingBag, Wallet, CreditCard,
   Headphones, Gift, UserRound, Settings, ShieldCheck, ShieldAlert,
-  BadgeCheck, Clock, Bell, X, Menu, Luggage, Home, LogOut
+  BadgeCheck, Clock, Bell, X, Menu, Luggage, Home, LogOut, Sparkles
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { HeaderProfileDropdown } from './ui/HeaderProfileDropdown';
@@ -20,6 +20,7 @@ const sidebarItems = [
   { label: 'Sender', icon: Package, route: '/sender' },
   { label: 'Shopper', icon: ShoppingBag, route: '/shopper' },
   { label: 'Luggage Sharing', icon: Luggage, route: '/luggage-sharing' },
+  { label: 'Flyora AI', icon: Sparkles, route: '/ai' },
   { label: 'Trust Score', icon: ShieldCheck, route: '/trust' },
   { label: 'Wallet', icon: Wallet, route: '/wallet' },
   { label: 'Settings', icon: Settings, route: '/settings' },
