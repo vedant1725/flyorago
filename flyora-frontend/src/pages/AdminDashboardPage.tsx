@@ -11,11 +11,16 @@ import {
 } from 'lucide-react';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+import { API_BASE_URL as BASE } from '../config';
 const api = async (path: string, opts: RequestInit = {}) => {
+  const token = localStorage.getItem('flyora_access_token');
   const r = await fetch(`${BASE}${path}`, {
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    headers: { 
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(opts.headers || {}) 
+    },
     ...opts,
   });
   const d = await r.json().catch(() => ({}));
