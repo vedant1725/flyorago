@@ -13,20 +13,6 @@ import AdvancedHeroBgAnimation from './AdvancedHeroBgAnimation';
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab] = useState<'find' | 'post'>('find');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchData, setSearchData] = useState({
-    from: '', to: '', date: '', weight: '',
-  });
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchData.from) params.append('from', searchData.from);
-    if (searchData.to) params.append('to', searchData.to);
-    if (searchData.date) params.append('date', searchData.date);
-    navigate(`/trips?${params.toString()}`);
-  };
 
   return (
     <section
@@ -156,7 +142,7 @@ const Hero: React.FC = () => {
             <div className="flex flex-row flex-wrap gap-3 mb-10 w-auto">
               <button
                 id="hero-find-traveler-btn-desktop"
-                onClick={() => setIsSearchOpen(true)}
+                onClick={() => navigate('/trips')}
                 className="inline-flex items-center justify-start gap-2.5 px-6 py-3.5 bg-flyora-navy text-white font-bold text-sm rounded-xl shadow-[0_6px_20px_rgba(10,22,40,0.30)] hover:bg-flyora-navy-light hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(10,22,40,0.38)] transition-all duration-300 w-auto"
               >
                 Find a Traveler
@@ -237,13 +223,14 @@ const Hero: React.FC = () => {
           {/* CTAs */}
           <div className="flex flex-col gap-3.5 mb-8 w-full max-w-[340px] relative z-30">
             <button
-              onClick={() => setIsSearchOpen(true)}
+              onClick={() => navigate('/trips')}
               className="flex items-center justify-center gap-3 w-full py-4 bg-flyora-navy text-white font-black text-[15px] rounded-2xl shadow-[0_8px_25px_rgba(10,22,40,0.25)] hover:bg-flyora-navy-light transition-all active:scale-95"
             >
               Find a Traveler
               <ArrowRight size={18} />
             </button>
             <button
+              onClick={() => navigate('/trips')}
               className="flex items-center justify-center gap-3 w-full py-4 bg-white/80 backdrop-blur-xl text-flyora-navy font-black text-[15px] rounded-2xl border border-flyora-gray-200/80 shadow-[0_4px_15px_rgba(0,0,0,0.04)] hover:bg-white transition-all active:scale-95"
             >
               <Send size={18} className="text-flyora-teal -rotate-45 -ml-1 mt-0.5" />
@@ -266,168 +253,6 @@ const Hero: React.FC = () => {
             className="w-full max-w-[440px] object-contain drop-shadow-[0_25px_45px_rgba(13,148,136,0.35)] z-20 scale-[1.3] origin-top-right -mr-6 pb-12 relative"
           />
         </div>
-      </div>
-
-      {/* ── FAB BUTTON & POPUP ────────────────────────────────────────── */}
-      <div className="absolute bottom-8 right-4 lg:bottom-12 lg:right-12 z-40 flex flex-col items-end">
-        {/* The Search Form Popup */}
-        {isSearchOpen && (
-          <div
-            className="mb-6 w-[360px] rounded-3xl shadow-[0_20px_60px_rgba(10,22,40,0.25)] overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300"
-            style={{ background: 'rgba(255,255,255,0.97)' }}
-          >
-            {/* Card Header */}
-            <div className="px-6 pt-6 pb-4 border-b border-flyora-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-black text-flyora-navy">Find a Traveler</h2>
-                <p className="text-xs text-flyora-gray-500 mt-0.5">Ship your package with verified travelers</p>
-              </div>
-              <button
-                onClick={() => setIsSearchOpen(false)}
-                className="w-8 h-8 rounded-full bg-flyora-gray-100 flex items-center justify-center text-flyora-gray-500 hover:bg-flyora-gray-200 hover:text-flyora-navy transition-colors"
-                aria-label="Close search"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Search Form */}
-            <form onSubmit={handleSearch} className="px-6 py-5 space-y-4">
-              {/* From / To */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-flyora-gray-500 uppercase tracking-wider mb-1.5">
-                    From
-                  </label>
-                  <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-flyora-teal" />
-                    <input
-                      type="text"
-                      id="search-from"
-                      placeholder="Select origin"
-                      value={searchData.from}
-                      onChange={(e) => setSearchData({ ...searchData, from: e.target.value })}
-                      className="w-full pl-8 pr-2 py-2.5 text-xs bg-flyora-gray-50 border border-flyora-gray-200 rounded-xl text-flyora-navy placeholder-flyora-gray-400 transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Swap icon */}
-                <div>
-                  <label className="block text-[10px] font-bold text-flyora-gray-500 uppercase tracking-wider mb-1.5">
-                    To
-                  </label>
-                  <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-flyora-blue" />
-                    <input
-                      type="text"
-                      id="search-to"
-                      placeholder="Select destination"
-                      value={searchData.to}
-                      onChange={(e) => setSearchData({ ...searchData, to: e.target.value })}
-                      className="w-full pl-8 pr-2 py-2.5 text-xs bg-flyora-gray-50 border border-flyora-gray-200 rounded-xl text-flyora-navy placeholder-flyora-gray-400 transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Date / Weight */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-flyora-gray-500 uppercase tracking-wider mb-1.5">
-                    Departure Date
-                  </label>
-                  <div className="relative">
-                    <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-flyora-teal" />
-                    <input
-                      type="text"
-                      id="search-date"
-                      placeholder="Select date"
-                      value={searchData.date}
-                      onFocus={(e) => { e.target.type = 'date'; }}
-                      onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
-                      onChange={(e) => setSearchData({ ...searchData, date: e.target.value })}
-                      className="w-full pl-8 pr-2 py-2.5 text-xs bg-flyora-gray-50 border border-flyora-gray-200 rounded-xl text-flyora-navy placeholder-flyora-gray-400 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-flyora-gray-500 uppercase tracking-wider mb-1.5">
-                    Approx. Weight
-                  </label>
-                  <div className="relative">
-                    <Weight size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-flyora-blue" />
-                    <select
-                      id="search-weight"
-                      value={searchData.weight}
-                      onChange={(e) => setSearchData({ ...searchData, weight: e.target.value })}
-                      className="w-full pl-8 pr-6 py-2.5 text-xs bg-flyora-gray-50 border border-flyora-gray-200 rounded-xl text-flyora-navy appearance-none cursor-pointer transition-all"
-                    >
-                      <option value="">Select weight</option>
-                      <option value="1-3">1–3 kg</option>
-                      <option value="3-7">3–7 kg</option>
-                      <option value="7-15">7–15 kg</option>
-                      <option value="15+">15+ kg</option>
-                    </select>
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-flyora-gray-400 pointer-events-none font-medium">kg ▾</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Search Button */}
-              <button
-                type="submit"
-                id="hero-search-btn"
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-flyora-teal to-flyora-teal-light text-white font-bold text-sm rounded-xl shadow-teal hover:shadow-[0_12px_30px_rgba(13,148,136,0.48)] hover:-translate-y-0.5 transition-all duration-300"
-              >
-                Search Travelers
-                <ArrowRight size={16} />
-              </button>
-
-              {/* Escrow Note */}
-              <div className="flex items-center justify-center gap-2">
-                <Shield size={12} className="text-flyora-teal flex-shrink-0" />
-                <p className="text-[11px] text-flyora-gray-500">
-                  Every shipment is protected by{' '}
-                  <span className="font-bold text-flyora-navy">Flyorago Escrow</span>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* The FAB Icon */}
-        {!isSearchOpen && (
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="group hidden lg:flex items-center gap-3 bg-white pl-3 pr-5 py-3 rounded-2xl shadow-[0_12px_40px_rgba(10,22,40,0.18)] hover:-translate-y-1 hover:shadow-[0_16px_50px_rgba(10,22,40,0.25)] transition-all duration-300 border border-flyora-gray-100"
-            aria-label="Open search form"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
-              <Plane size={18} className="text-white -rotate-45" />
-            </div>
-            <div className="text-left">
-              <span className="block text-sm font-black text-flyora-navy tracking-wide group-hover:text-flyora-teal transition-colors">
-                Find Traveler
-              </span>
-              <span className="block text-[10px] text-flyora-gray-500 font-bold uppercase tracking-widest mt-0.5">
-                Ship Package
-              </span>
-            </div>
-          </button>
-        )}
-
-        {/* Mobile FAB */}
-        {!isSearchOpen && (
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="lg:hidden w-14 h-14 bg-flyora-teal rounded-2xl flex items-center justify-center shadow-lg border-2 border-white mb-2 mr-2 z-50 hover:bg-flyora-teal-light transition-colors"
-            aria-label="Open search form"
-          >
-            <Plane size={24} className="text-white -rotate-45" />
-          </button>
-        )}
       </div>
 
       {/* Bottom fade to white */}
