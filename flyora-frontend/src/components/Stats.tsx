@@ -1,122 +1,284 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Users, Globe, Package, Shield, Star } from 'lucide-react';
-import { STATS } from '../constants/stats';
+import { Users, Globe, Package, Shield, Star, Sparkles, CheckCircle2 } from 'lucide-react';
 
-const iconMap: Record<string, React.ReactNode> = {
-  users: <Users size={22} />,
-  globe: <Globe size={22} />,
-  package: <Package size={22} />,
-  shield: <Shield size={22} />,
-  star: <Star size={22} />,
-};
+// ─── Custom Hooks ─────────────────────────────────────────────────────────────
+function useInView(threshold = 0.15): [React.RefObject<HTMLDivElement>, boolean] {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, inView];
+}
 
-const Stats: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+// ─── Animated Number Counter Component ────────────────────────────────────────
+const CountUp: React.FC<{ end: number; suffix?: string; decimals?: number; inView: boolean }> = ({
+  end, suffix = '', decimals = 0, inView
+}) => {
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
+    if (!inView) return;
+    let startTimestamp: number | null = null;
+    const duration = 1800; // ms
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-    return () => observer.disconnect();
-  }, []);
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Ease out cubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setValue(ease * end);
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    requestAnimationFrame(step);
+  }, [inView, end]);
+
+  return (
+    <span>
+      {decimals > 0 ? value.toFixed(decimals) : Math.round(value)}
+      {suffix}
+    </span>
+  );
+};
+
+// ─── Stats Data ───────────────────────────────────────────────────────────────
+const STATS_DATA = [
+  {
+    id: 'stat-users',
+    numeric: 50,
+    suffix: 'K+',
+    decimals: 0,
+    label: 'Happy Users',
+    desc: 'Verified worldwide',
+    icon: Users,
+    color: '#0d9488', // Teal
+    light: 'rgba(13,148,136,0.08)',
+    border: 'rgba(13,148,136,0.2)',
+  },
+  {
+    id: 'stat-countries',
+    numeric: 120,
+    suffix: '+',
+    decimals: 0,
+    label: 'Countries',
+    desc: 'Global coverage',
+    icon: Globe,
+    color: '#4f46e5', // Indigo
+    light: 'rgba(79,70,229,0.08)',
+    border: 'rgba(79,70,229,0.2)',
+  },
+  {
+    id: 'stat-shipments',
+    numeric: 250,
+    suffix: 'K+',
+    decimals: 0,
+    label: 'Shipments',
+    desc: 'Delivered safely',
+    icon: Package,
+    color: '#0284c7', // Sky Blue
+    light: 'rgba(2,132,199,0.08)',
+    border: 'rgba(2,132,199,0.2)',
+  },
+  {
+    id: 'stat-success',
+    numeric: 99.8,
+    suffix: '%',
+    decimals: 1,
+    label: 'Success Rate',
+    desc: 'On-time delivery',
+    icon: Shield,
+    color: '#059669', // Emerald
+    light: 'rgba(5,150,105,0.08)',
+    border: 'rgba(5,150,105,0.2)',
+  },
+  {
+    id: 'stat-rating',
+    numeric: 4.9,
+    suffix: '/5',
+    decimals: 1,
+    label: 'Average Rating',
+    desc: 'Community rated',
+    icon: Star,
+    color: '#d97706', // Gold Amber
+    light: 'rgba(217,119,6,0.08)',
+    border: 'rgba(217,119,6,0.2)',
+  },
+];
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+const Stats: React.FC = () => {
+  const [sectionRef, inView] = useInView(0.12);
+  const [hoveredStat, setHoveredStat] = useState<string | null>(null);
 
   return (
     <section
       ref={sectionRef}
-      className="py-12 lg:py-16 bg-white relative overflow-hidden"
+      className="relative py-20 lg:py-24 overflow-hidden bg-white"
       id="stats"
       aria-label="Flyorago platform statistics"
     >
-      {/* Top border gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-flyora-teal/20 to-transparent" />
-
-      {/* Subtle background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-50/40 via-white to-white pointer-events-none" />
-
-      <div className="container-flyora relative z-10">
-        {/* Section Label */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-flyora-navy/5 border border-flyora-navy/10 rounded-full px-4 py-1.5 mb-4 hover:bg-flyora-navy/10 transition-colors cursor-default">
-            <Star size={12} className="text-amber-500 fill-amber-500" />
-            <span className="text-[10px] font-bold text-flyora-navy tracking-widest uppercase">
-              Built on Trust
-            </span>
-          </div>
-          <h2 className="text-2xl lg:text-3xl font-black text-flyora-navy tracking-tight" id="stats-heading">
-            Numbers That Speak for Themselves
-          </h2>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {STATS.map((stat, index) => (
-            <div
-              key={stat.id}
-              id={stat.id}
-              className={`
-                relative flex flex-col items-center text-center p-5 lg:p-6
-                rounded-3xl border border-flyora-gray-100 bg-white shadow-[0_5px_20px_rgba(10,22,40,0.02)]
-                hover:-translate-y-1 transition-all duration-300 group overflow-hidden
-                ${index === STATS.length - 1 ? 'col-span-2 lg:col-span-1' : ''}
-                ${stat.color === 'teal' 
-                  ? 'hover:border-flyora-teal/30 hover:shadow-[0_15px_30px_rgba(20,184,166,0.12)]' 
-                  : 'hover:border-blue-500/30 hover:shadow-[0_15px_30px_rgba(59,130,246,0.12)]'}
-                ${isVisible ? 'animate-slide-up' : 'opacity-0'}
-              `}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Background Glow on Hover */}
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-b ${stat.color === 'teal' ? 'from-flyora-teal to-transparent' : 'from-blue-500 to-transparent'}`} />
-              
-              {/* Icon */}
-              <div className={`
-                w-10 h-10 lg:w-12 lg:h-12 rounded-2xl flex items-center justify-center mb-4 relative z-10
-                group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 
-                bg-flyora-gray-50 border border-flyora-gray-100 shadow-sm
-                ${stat.color === 'teal' ? 'text-flyora-teal' : 'text-blue-500'}
-              `}>
-                {iconMap[stat.icon]}
-              </div>
-
-              {/* Value */}
-              <div className={`text-3xl lg:text-4xl font-black mb-1 text-flyora-navy relative z-10 ${isVisible ? 'stat-number' : ''}`}
-                style={{ animationDelay: `${index * 120}ms` }}>
-                {stat.value}
-              </div>
-
-              {/* Label */}
-              <p className="text-[11px] lg:text-xs font-black text-flyora-gray-800 tracking-wider uppercase mb-1 relative z-10">{stat.label}</p>
-              <p className="text-[11px] text-flyora-gray-500 relative z-10 hidden sm:block">{stat.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Star Rating Row */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mt-8">
-          <div className="flex items-center gap-0.5">
-            {[1,2,3,4,5].map((s) => (
-              <Star key={s} size={20} className="text-amber-400 fill-amber-400" />
-            ))}
-          </div>
-          <p className="text-flyora-gray-600 font-medium text-sm">
-            <span className="font-bold text-flyora-navy text-lg">4.9/5</span> Average Rating from our community
-          </p>
-        </div>
+      {/* Background Decor */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-teal-500/5 blur-3xl" />
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: 'linear-gradient(#0f172a 1px, transparent 1px), linear-gradient(90deg, #0f172a 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
       </div>
 
-      {/* Bottom border gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-flyora-gray-200 to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        {/* ── Section Header ── */}
+        <div
+          className="text-center mb-12 lg:mb-16"
+          style={{
+            opacity: inView ? 1 : 0,
+            transform: inView ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'all 0.65s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-xs">
+              <Star size={12} className="text-amber-500 fill-amber-500" />
+              BUILT ON TRUST
+            </span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-3 tracking-tight">
+            Numbers That Speak for Themselves
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto font-medium">
+            Real metrics driving trusted international luggage sharing and courier delivery worldwide.
+          </p>
+        </div>
+
+        {/* ── 5-Column Stats Grid ── */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5 mb-12">
+          {STATS_DATA.map((stat, idx) => {
+            const Icon = stat.icon;
+            const isHovered = hoveredStat === stat.id;
+
+            return (
+              <div
+                key={stat.id}
+                id={stat.id}
+                className="group relative rounded-3xl p-5 sm:p-6 text-center cursor-default transition-all duration-400 overflow-hidden flex flex-col justify-between"
+                style={{
+                  opacity: inView ? 1 : 0,
+                  transform: inView ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.96)',
+                  transition: `opacity 0.6s cubic-bezier(0.4,0,0.2,1) ${idx * 90}ms, transform 0.6s cubic-bezier(0.34,1.56,0.64,1) ${idx * 90}ms`,
+                  background: isHovered ? stat.light : '#ffffff',
+                  border: `1.5px solid ${isHovered ? stat.border : 'rgba(226,232,240,0.8)'}`,
+                  boxShadow: isHovered
+                    ? `0 20px 45px rgba(0,0,0,0.06), 0 4px 16px ${stat.light}`
+                    : '0 2px 12px rgba(15,23,42,0.03)',
+                }}
+                onMouseEnter={() => setHoveredStat(stat.id)}
+                onMouseLeave={() => setHoveredStat(null)}
+              >
+                {/* Top Accent Line */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-[3px] transition-all duration-400"
+                  style={{
+                    background: stat.color,
+                    opacity: isHovered ? 1 : 0.6,
+                  }}
+                />
+
+                {/* Icon Box */}
+                <div className="flex justify-center mb-4 pt-1">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-xs"
+                    style={{
+                      background: isHovered ? stat.color : stat.light,
+                      transform: isHovered ? 'scale(1.1) rotate(-3deg)' : 'scale(1)',
+                    }}
+                  >
+                    <Icon
+                      size={22}
+                      style={{
+                        color: isHovered ? '#ffffff' : stat.color,
+                        transition: 'color 0.25s',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Counter Value */}
+                <div className="mb-2">
+                  <div
+                    className="text-3xl sm:text-4xl font-black tracking-tight leading-none"
+                    style={{ color: stat.color }}
+                  >
+                    <CountUp
+                      end={stat.numeric}
+                      suffix={stat.suffix}
+                      decimals={stat.decimals}
+                      inView={inView}
+                    />
+                  </div>
+                </div>
+
+                {/* Labels */}
+                <div>
+                  <p className="text-[12px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1">
+                    {stat.label}
+                  </p>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    {stat.desc}
+                  </p>
+                </div>
+
+                {/* Bottom Shine */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-1 transition-all duration-400"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${stat.color}, transparent)`,
+                    opacity: isHovered ? 1 : 0,
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Community Star Rating Banner ── */}
+        <div
+          className="max-w-xl mx-auto rounded-2xl p-4 sm:p-5 bg-slate-50 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-500 hover:shadow-md"
+          style={{
+            opacity: inView ? 1 : 0,
+            transform: inView ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.65s cubic-bezier(0.4,0,0.2,1) 500ms',
+          }}
+        >
+          {/* Avatar Stack + Stars */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} size={18} className="text-amber-400 fill-amber-400" />
+              ))}
+            </div>
+            <span className="text-lg font-black text-slate-900">4.9/5</span>
+          </div>
+
+          {/* Description Text */}
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+            <CheckCircle2 size={15} className="text-teal-600 shrink-0" />
+            <span>Average Rating from our community</span>
+          </div>
+        </div>
+
+      </div>
     </section>
   );
 };

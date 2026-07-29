@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Plane, Twitter, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, ArrowRight
 } from 'lucide-react';
@@ -6,6 +7,10 @@ import { FOOTER_LINKS } from '../constants/routes';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer className="footer-gradient text-white relative overflow-hidden" id="footer" role="contentinfo">
@@ -22,7 +27,7 @@ const Footer: React.FC = () => {
             
             {/* ─── Brand Column ──────────────────────────────────────────────── */}
             <div className="lg:col-span-2">
-              <a href="/" className="inline-flex items-center gap-2 group mb-4 block" id="footer-logo">
+              <Link to="/" onClick={handleLinkClick} className="inline-flex items-center gap-2 group mb-4 block" id="footer-logo">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal group-hover:shadow-[0_4px_15px_rgba(13,148,136,0.4)] transition-all duration-300">
                   <Plane size={16} className="text-white -rotate-45" />
                 </div>
@@ -34,7 +39,7 @@ const Footer: React.FC = () => {
                     Ship Smarter
                   </span>
                 </div>
-              </a>
+              </Link>
 
               <p className="text-white/55 text-xs leading-relaxed mb-5 max-w-xs">
                 Flyorago connects verified travelers and senders worldwide to share luggage space
@@ -91,13 +96,14 @@ const Footer: React.FC = () => {
                 <ul className="space-y-2.5">
                   {col.links.map((link) => (
                     <li key={link.label}>
-                      <a
-                        href={link.href}
+                      <Link
+                        to={link.href}
+                        onClick={handleLinkClick}
                         className="text-white/50 text-sm hover:text-flyora-teal-bright transition-colors duration-200 inline-flex items-center gap-1 group"
                       >
                         <ArrowRight size={10} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-flyora-teal-bright" />
                         {link.label}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>

@@ -19,7 +19,7 @@ import SenderPage from './pages/SenderPage';
 import TravelerPage from './pages/TravelerPage';
 import ShopperPage from './pages/ShopperPage';
 
-// Import New Pages
+// Import Inner & Support Pages
 import WalletPage from './pages/WalletPage';
 import EarningsPage from './pages/EarningsPage';
 import MessagesPage from './pages/MessagesPage';
@@ -38,6 +38,15 @@ import TrustDashboardPage from './pages/TrustDashboardPage';
 import LuggageSharingPage from './pages/LuggageSharingPage';
 import LuggageAdminPage from './pages/LuggageAdminPage';
 import FlyoraAIPage from './pages/FlyoraAIPage';
+
+// Import Footer Links Pages
+import CareersPage from './pages/CareersPage';
+import PressPage from './pages/PressPage';
+import BlogPage from './pages/BlogPage';
+import SafetyPage from './pages/SafetyPage';
+import EscrowPage from './pages/EscrowPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 
 import { ToastProvider } from './context/ToastContext';
 import { SocketProvider } from './context/SocketContext';
@@ -72,7 +81,7 @@ const App: React.FC = () => {
               <Route path="/traveler" element={<TravelerPage />} />
               <Route path="/shopper" element={<ShopperPage />} />
 
-              {/* New Pages */}
+              {/* Inner Pages */}
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/earnings" element={<EarningsPage />} />
               <Route path="/messages" element={<MessagesPage />} />
@@ -90,6 +99,16 @@ const App: React.FC = () => {
               <Route path="/luggage-sharing" element={<LuggageSharingPage />} />
               <Route path="/admin/luggage" element={<LuggageAdminPage />} />
               <Route path="/ai" element={<FlyoraAIPage />} />
+
+              {/* Footer Company & Legal Pages */}
+              <Route path="/careers" element={<CareersPage />} />
+              <Route path="/press" element={<PressPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/safety" element={<SafetyPage />} />
+              <Route path="/escrow" element={<EscrowPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
 
