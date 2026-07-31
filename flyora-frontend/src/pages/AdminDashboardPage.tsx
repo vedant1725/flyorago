@@ -1798,11 +1798,17 @@ const AdminDashboardPage: React.FC = () => {
   }, []);
 
   const fetchChartPoints = useCallback(async (p: 'day' | 'week' | 'month') => {
+    try {
+      const stored = sessionStorage.getItem(`flyora_admin_chart_${p}`);
+      if (stored) setChartPoints(JSON.parse(stored));
+    } catch (e) {}
+
     setChartLoading(true);
     try {
       const res = await api(`/api/admin/chart/?period=${p}`);
       if (res?.data?.points) {
         setChartPoints(res.data.points);
+        sessionStorage.setItem(`flyora_admin_chart_${p}`, JSON.stringify(res.data.points));
       }
     } catch (e) {
       console.error('Chart fetch error', e);
@@ -1810,6 +1816,7 @@ const AdminDashboardPage: React.FC = () => {
       setChartLoading(false);
     }
   }, []);
+
 
   const handlePeriodChange = (p: 'day' | 'week' | 'month') => {
     setChartPeriod(p);
@@ -1850,92 +1857,51 @@ const AdminDashboardPage: React.FC = () => {
 
   const dataCacheRef = useRef<any>(null);
 
+  // High-Speed Progressive Data Loader (Google/Meta Style SWR Pattern)
+
   const fetchData = useCallback(async () => {
-    if (!dataCacheRef.current) {
+    try {
+      const storedStats = sessionStorage.getItem('flyora_admin_stats');
+      if (storedStats && !stats) setStats(JSON.parse(storedStats));
+    } catch (e) {}
+
+    if (!dataCacheRef.current && !stats) {
       setLoading(true);
     }
+
     try {
-      const [sR, tR, bR, shR, kR, uR, dR, trR, msgR] = await Promise.allSettled([
-        api('/api/admin/stats/'),
-        api('/api/admin/trips/'),
-        api('/api/admin/bookings/'),
-        api('/api/admin/shipments/'),
-        api('/api/kyc/admin/list/'),
-        api('/api/admin/users/'),
-        api('/api/support/admin/disputes'),
-        api('/api/trust/admin/'),
-        api('/api/support/admin/contact-messages'),
-      ]);
+      const res = await api(`/api/admin/dashboard-overview/?period=${chartPeriod}`);
+      const payload = res?.data || {};
 
-      const newCache = { ...dataCacheRef.current };
+      if (payload.stats) {
+        setStats(payload.stats);
+        sessionStorage.setItem('flyora_admin_stats', JSON.stringify(payload.stats));
+      }
+      if (payload.chart?.points) {
+        setChartPoints(payload.chart.points);
+      }
+      if (Array.isArray(payload.trips)) setTrips(payload.trips);
+      if (Array.isArray(payload.bookings)) setBookings(payload.bookings);
+      if (Array.isArray(payload.shipments)) setShipments(payload.shipments);
+      if (Array.isArray(payload.kycUsers)) setKycUsers(payload.kycUsers);
+      if (Array.isArray(payload.users)) setUsers(payload.users);
+      if (Array.isArray(payload.disputes)) setDisputes(payload.disputes);
+      if (Array.isArray(payload.contactMessages)) setContactMessages(payload.contactMessages);
+      if (Array.isArray(payload.trustProfiles)) setTrustProfiles(payload.trustProfiles);
 
-      if (sR.status === 'fulfilled') {
-        const val = sR.value?.data ?? sR.value;
-        setStats(val);
-        newCache.stats = val;
-      }
-      if (tR.status === 'fulfilled') {
-        const d = tR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setTrips(val);
-        newCache.trips = val;
-      }
-      if (bR.status === 'fulfilled') {
-        const d = bR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setBookings(val);
-        newCache.bookings = val;
-      }
-      if (shR.status === 'fulfilled') {
-        const d = shR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setShipments(val);
-        newCache.shipments = val;
-      }
-      if (kR.status === 'fulfilled') {
-        const d = kR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setKycUsers(val);
-        newCache.kycUsers = val;
-      }
-      if (uR.status === 'fulfilled') {
-        const d = uR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setUsers(val);
-        newCache.users = val;
-      }
-      if (dR.status === 'fulfilled') {
-        const d = dR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setDisputes(val);
-        newCache.disputes = val;
-      }
-      if (trR.status === 'fulfilled') {
-        const d = trR.value;
-        const val = Array.isArray(d?.results) ? d.results : Array.isArray(d) ? d : [];
-        setTrustProfiles(val);
-        newCache.trustProfiles = val;
-      }
-      if (msgR.status === 'fulfilled') {
-        const d = msgR.value;
-        const val = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
-        setContactMessages(val);
-        newCache.contactMessages = val;
-      }
-
-      dataCacheRef.current = newCache;
-      fetchChartPoints(chartPeriod);
+      dataCacheRef.current = payload;
     } catch (e) {
-      toast('error', 'Failed to refresh data');
+      console.warn('Dashboard overview fetch warning:', e);
     } finally {
       setLoading(false);
     }
-  }, [toast, fetchChartPoints, chartPeriod]);
+  }, [chartPeriod]);
 
   useEffect(() => {
     if (localStorage.getItem('flyora_admin_authenticated') !== 'true') { navigate('/admin/login'); return; }
     fetchData();
   }, [navigate, fetchData]);
+
 
 
 

@@ -51,28 +51,41 @@ const SenderPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // Get Sender's own requests (stored as Trips with airline SENDER_REQUEST)
-      const tripsRes = await apiFetch('/api/trips/?user_only=true');
-      const tripsData = tripsRes.data || tripsRes.results || (Array.isArray(tripsRes) ? tripsRes : []);
-      const senderReqs = tripsData.filter((t: any) => t.airline === 'SENDER_REQUEST');
-      setRequests(senderReqs);
+      const cachedReqs = sessionStorage.getItem('flyora_sender_requests');
+      if (cachedReqs && requests.length === 0) setRequests(JSON.parse(cachedReqs));
+      const cachedBookings = sessionStorage.getItem('flyora_sender_bookings');
+      if (cachedBookings && bookings.length === 0) setBookings(JSON.parse(cachedBookings));
+    } catch (e) {}
 
-      if (senderReqs.length > 0 && senderReqs[0].traveler_email) {
-        setCurrentUser(prev => ({
-          ...prev,
-          email: senderReqs[0].traveler_email,
-          id: senderReqs[0].user || prev?.id
-        }));
+    try {
+      const overviewRes = await apiFetch('/api/sender/dashboard-overview/');
+      const data = overviewRes?.data || {};
+
+      if (data.user) {
+        setCurrentUser({ id: data.user.id, email: data.user.email });
       }
 
-      // Get Sender's bookings to check for accepted requests
-      const bookingsRes = await apiFetch('/api/bookings/?user_only=true');
-      const bookingsData = bookingsRes.data || bookingsRes.results || (Array.isArray(bookingsRes) ? bookingsRes : []);
+      const tripsData = data.trips || [];
+      const senderReqs = tripsData.filter((t: any) => t.airline === 'SENDER_REQUEST');
+      setRequests(senderReqs);
+      try {
+        sessionStorage.setItem('flyora_sender_requests', JSON.stringify(senderReqs));
+      } catch (e) {}
+
+      const bookingsData = data.bookings || [];
       setBookings(bookingsData);
+      try {
+        sessionStorage.setItem('flyora_sender_bookings', JSON.stringify(bookingsData));
+      } catch (e) {}
+
+      if (data.availableTravelers) {
+        setAllAvailableTrips(data.availableTravelers);
+      }
     } catch (err) {
       console.error(err);
     }
   };
+
 
   const fetchTravelers = async () => {
     try {
