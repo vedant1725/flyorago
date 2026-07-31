@@ -25,40 +25,41 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Connect directly to Django backend
     const wsUrl = `${protocol}//localhost:8000/ws/notifications/${userId}/`;
     let ws: WebSocket;
+    let retryCount = 0;
+    const maxRetries = 3;
 
     const connect = () => {
-      ws = new WebSocket(wsUrl);
+      if (retryCount >= maxRetries) return;
+      try {
+        ws = new WebSocket(wsUrl);
 
-      ws.onopen = () => {
-        console.log('Connected to Flyora Real-Time Socket');
-        setIsConnected(true);
-      };
+        ws.onopen = () => {
+          setIsConnected(true);
+          retryCount = 0;
+        };
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          setLastMessage(data);
-          
-          // Generic toast for updates if it has a message
-          if (data.message && data.type !== 'booking_status_update') {
-             addToast(data.title || 'Update', data.message, 'info');
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            setLastMessage(data);
+            if (data.message && data.type !== 'booking_status_update') {
+               addToast(data.title || 'Update', data.message, 'info');
+            }
+          } catch (e) {}
+        };
+
+        ws.onclose = () => {
+          setIsConnected(false);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            setTimeout(connect, 5000);
           }
-        } catch (e) {
-          console.error('Error parsing socket message:', e);
-        }
-      };
+        };
 
-      ws.onclose = () => {
-        setIsConnected(false);
-        console.log('Socket disconnected, attempting reconnect...');
-        // Auto reconnect
-        setTimeout(connect, 3000);
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket Error:', error);
-        ws.close();
-      };
+        ws.onerror = () => {
+          try { ws.close(); } catch {}
+        };
+      } catch (e) {}
     };
 
     connect();

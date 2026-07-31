@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { Plane, Package, ShieldCheck, TrendingUp, ArrowRight, ChevronRight, Search, X } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useKycValidation } from '../hooks/useKycValidation';
 import { KycValidationModal } from '../components/ui/KycValidationModal';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
 import { NotificationDropdown } from '../components/ui/NotificationDropdown';
+import { useSocket } from '../context/SocketContext';
 
 // ⚡ Ultra-fast Module-level In-Memory Cache (0ms Instant Load)
 let fastCache = {
@@ -19,7 +20,9 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { validateAction, isModalOpen, closeModal, kycStatus } = useKycValidation();
   const rawUserId = localStorage.getItem('flyora_user_id');
-  const userId = rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null' ? rawUserId : null;
+  const userId = (rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null') ? rawUserId : (localStorage.getItem('flyora_access_token') ? 'authenticated_user' : null);
+  const userEmail = localStorage.getItem('flyora_user_email') || localStorage.getItem('flyora_admin_email');
+  const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('flyora_access_token'));
 
   // Initialize from In-Memory Cache (0ms load) or localStorage fallback
   const [trips, setTrips] = useState<any[]>(() => {
@@ -54,45 +57,57 @@ const DashboardPage: React.FC = () => {
     return [];
   };
 
+  const { lastMessage } = useSocket();
+
+  const loadData = useCallback((isMounted = true) => {
+    apiFetch('/api/user/dashboard-overview/')
+      .then(res => {
+        if (!isMounted) return;
+        let data = res?.data || res;
+        if (data?.data && (Array.isArray(data.data.trips) || data.data.trustProfile)) {
+          data = data.data;
+        }
+        if (data) {
+          if (Array.isArray(data.trips)) {
+            setTrips(data.trips);
+            fastCache.trips = data.trips;
+            try { localStorage.setItem('flyora_cache_trips', JSON.stringify(data.trips)); } catch {}
+          }
+          if (Array.isArray(data.bookings)) {
+            setBookings(data.bookings);
+            fastCache.bookings = data.bookings;
+            try { localStorage.setItem('flyora_cache_bookings', JSON.stringify(data.bookings)); } catch {}
+          }
+          if (data.trustProfile && typeof data.trustProfile.score === 'number') {
+            setTrustProfile(data.trustProfile);
+            fastCache.trust = data.trustProfile;
+            try { localStorage.setItem('flyora_cache_trust', JSON.stringify(data.trustProfile)); } catch {}
+          }
+          if (data.kycStatus) {
+            try { localStorage.setItem('flyora_kyc_status', data.kycStatus); } catch {}
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+  }, []);
+
   useEffect(() => {
-    if (!userId) { navigate('/login'); return; }
+    if (!userId && !hasToken) { navigate('/login'); return; }
 
     let isMounted = true;
-
-    // Parallel Background Live Sync (Stale-While-Revalidate)
-    const fetchTrips = apiFetch('/api/trips/?user_only=true').then(r => {
-      if (!isMounted) return;
-      const arr = extractArray(r);
-      const filtered = arr.filter((t: any) => t.airline !== 'SENDER_REQUEST');
-      setTrips(filtered);
-      fastCache.trips = filtered;
-      try { localStorage.setItem('flyora_cache_trips', JSON.stringify(filtered)); } catch { }
-    });
-
-    const fetchBookings = apiFetch('/api/bookings/?user_only=true').then(r => {
-      if (!isMounted) return;
-      const arr = extractArray(r);
-      setBookings(arr);
-      fastCache.bookings = arr;
-      try { localStorage.setItem('flyora_cache_bookings', JSON.stringify(arr)); } catch { }
-    });
-
-    const fetchTrust = apiFetch('/api/trust/profile/').then(r => {
-      if (!isMounted) return;
-      const data = r?.data || r;
-      if (data && typeof data.score === 'number') {
-        setTrustProfile(data);
-        fastCache.trust = data;
-        try { localStorage.setItem('flyora_cache_trust', JSON.stringify(data)); } catch { }
-      }
-    });
-
-    Promise.allSettled([fetchTrips, fetchBookings, fetchTrust]).finally(() => {
-      if (isMounted) setLoading(false);
-    });
+    loadData(true);
 
     return () => { isMounted = false; };
-  }, [userId, navigate]);
+  }, [userId, hasToken, navigate, loadData]);
+
+  useEffect(() => {
+    if (lastMessage && lastMessage.type && lastMessage.type !== 'ping') {
+      loadData(true);
+    }
+  }, [lastMessage, loadData]);
 
   // Global Keyboard Shortcut (Ctrl+K or Cmd+K to search)
   useEffect(() => {
@@ -118,22 +133,47 @@ const DashboardPage: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Filter sender bookings Memoized
+  // Safe Array Wrappers to prevent any runtime rendering crashes
+  const safeTrips = useMemo(() => (Array.isArray(trips) ? trips : []), [trips]);
+  const safeBookings = useMemo(() => (Array.isArray(bookings) ? bookings : []), [bookings]);
+
+  // Separate Traveler Trips vs Sender Requests
+  const travelerTrips = useMemo(() => {
+    return safeTrips.filter((t: any) => t && t.airline !== 'SENDER_REQUEST');
+  }, [safeTrips]);
+
+  const senderRequests = useMemo(() => {
+    return safeTrips.filter((t: any) => t && t.airline === 'SENDER_REQUEST');
+  }, [safeTrips]);
+
   const senderBookings = useMemo(() => {
-    return bookings.filter((b: any) => {
+    return safeBookings.filter((b: any) => {
+      if (!b) return false;
       const senderId = typeof b.sender === 'object' ? b.sender?.id : b.sender;
       return String(senderId) === String(userId);
     });
-  }, [bookings, userId]);
+  }, [safeBookings, userId]);
 
-  // Live stats Memoized
-  const totalTrips = trips.length;
-  const pendingBookings = useMemo(() => senderBookings.filter((b: any) => ['REQUEST_SENT', 'REQUEST_CREATED', 'MATCH_FOUND', 'ACCEPTED', 'PAID'].includes(b.status)).length, [senderBookings]);
-  const deliveredBookings = useMemo(() => senderBookings.filter((b: any) => ['DELIVERED', 'PAYMENT_RELEASED', 'RATED'].includes(b.status)).length, [senderBookings]);
-  const totalSender = senderBookings.length;
+  // Live stats Memoized (100% Synchronized with Sender Page & Traveler Page)
+  const totalTrips = travelerTrips.length;
+  const totalSender = senderRequests.length > 0 ? senderRequests.length : senderBookings.length;
 
-  const activeTrip = useMemo(() => (trips.length > 0 ? trips[0] : null), [trips]);
-  const upcomingTrips = useMemo(() => trips.slice(1, 4), [trips]);
+  const pendingBookings = useMemo(() => {
+    if (senderRequests.length > 0) {
+      return senderRequests.filter((r: any) => r.status === 'Active' || r.status === 'REQUEST_SENT' || r.status === 'Pending').length;
+    }
+    return senderBookings.filter((b: any) => ['REQUEST_SENT', 'REQUEST_CREATED', 'MATCH_FOUND', 'ACCEPTED', 'PAID', 'Waiting Traveller', 'Booking Requested', 'Payment Pending'].includes(b.status)).length;
+  }, [senderRequests, senderBookings]);
+
+  const deliveredBookings = useMemo(() => {
+    if (senderRequests.length > 0) {
+      return senderRequests.filter((r: any) => r.status === 'Completed' || r.status === 'DELIVERED').length;
+    }
+    return senderBookings.filter((b: any) => ['DELIVERED', 'PAYMENT_RELEASED', 'RATED', 'Completed', 'Delivered'].includes(b.status)).length;
+  }, [senderRequests, senderBookings]);
+
+  const activeTrip = useMemo(() => (travelerTrips.length > 0 ? travelerTrips[0] : null), [travelerTrips]);
+  const upcomingTrips = useMemo(() => travelerTrips.slice(1, 4), [travelerTrips]);
 
   // Trust helpers Memoized
   const score = trustProfile?.score ?? 550;
@@ -153,14 +193,14 @@ const DashboardPage: React.FC = () => {
 
   // All searchable items Memoized
   const allItems = useMemo(() => [
-    ...trips.map(t => ({ type: 'Trip', label: `${t.from_location} → ${t.to_location}`, sub: t.departure_date, route: '/traveler', icon: '✈️' })),
-    ...senderBookings.map(b => ({ type: 'Booking', label: b.package_name || `Booking #${b.id}`, sub: b.status?.replace(/_/g, ' '), route: '/sender', icon: '📦' })),
+    ...safeTrips.map((t: any) => ({ type: 'Trip', label: `${t?.from_location || ''} → ${t?.to_location || ''}`, sub: t?.departure_date || '', route: '/traveler', icon: '✈️' })),
+    ...senderBookings.map((b: any) => ({ type: 'Booking', label: b?.package_name || `Booking #${b?.id}`, sub: b?.status?.replace(/_/g, ' ') || '', route: '/sender', icon: '📦' })),
     { type: 'Page', label: 'Trust Score', sub: 'AI Powered Rating', route: '/trust', icon: '🛡️' },
     { type: 'Page', label: 'My Wallet', sub: 'Balance & Transactions', route: '/wallet', icon: '💳' },
     { type: 'Page', label: 'KYC Verification', sub: 'Identity Documents', route: '/kyc', icon: '✅' },
     { type: 'Page', label: 'Settings', sub: 'Profile & Preferences', route: '/settings', icon: '⚙️' },
     { type: 'Page', label: 'Notifications', sub: 'Alerts & Updates', route: '/notifications', icon: '🔔' },
-  ], [trips, senderBookings]);
+  ], [safeTrips, senderBookings]);
 
   const searchResults = useMemo(() => {
     return searchQuery.trim().length >= 1
@@ -172,7 +212,7 @@ const DashboardPage: React.FC = () => {
       : [];
   }, [searchQuery, allItems]);
 
-  if (!userId) return null;
+  if (!userId && !hasToken) return null;
 
   return (
     <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">

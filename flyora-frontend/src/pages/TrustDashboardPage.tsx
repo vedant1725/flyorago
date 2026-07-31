@@ -30,7 +30,10 @@ const TrustDashboardPage: React.FC = () => {
     apiFetch('/api/trust/profile/')
       .then(res => {
         if (!isMounted) return;
-        const data = res?.data || res;
+        let data = res?.data || res;
+        if (data?.data && typeof data.data.score === 'number') {
+          data = data.data;
+        }
         if (data && typeof data.score === 'number') {
           setProfile(data);
           trustCache = data;

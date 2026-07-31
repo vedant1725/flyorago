@@ -31,32 +31,25 @@ const TravelerPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const tripsRes = await apiFetch('/api/trips/?user_only=true');
-      const tripsData = tripsRes.data || tripsRes.results || (Array.isArray(tripsRes) ? tripsRes : []);
-      setTrips(tripsData.filter((t: any) => t.airline === 'TRAVELER_TRIP'));
+      const res = await apiFetch('/api/traveler/dashboard-overview/');
+      const data = res?.data || {};
 
-      const bookingsRes = await apiFetch('/api/bookings/?user_only=true');
-      const bookingsData = bookingsRes.data || bookingsRes.results || (Array.isArray(bookingsRes) ? bookingsRes : []);
-      setBookingRequests(bookingsData);
+      if (Array.isArray(data.trips)) {
+        setTrips(data.trips.filter((t: any) => t.airline !== 'SENDER_REQUEST'));
+      }
+      if (Array.isArray(data.bookings)) {
+        setBookingRequests(data.bookings);
+      }
+      if (Array.isArray(data.availableSenders)) {
+        setAllAvailableSenderRequests(data.availableSenders);
+      }
     } catch (err: any) {
-      alert("Error fetching data: " + err.message);
-      console.error(err);
-    }
-  };
-
-  const fetchSenders = async () => {
-    try {
-      const res = await apiFetch('/api/trips/');
-      const trips = res.data || res.results || (Array.isArray(res) ? res : []);
-      setAllAvailableSenderRequests(trips.filter((t: any) => t.airline === 'SENDER_REQUEST'));
-    } catch (err: any) {
-      console.error(err);
+      console.error("Error fetching traveler overview:", err);
     }
   };
 
   useEffect(() => {
     fetchData();
-    fetchSenders();
   }, []);
 
   const { lastMessage } = useSocket();
@@ -138,7 +131,7 @@ const TravelerPage: React.FC = () => {
 
   const handleOpenFindSender = (trip: any) => {
     setSelectedTripToMatchSender(trip);
-    fetchSenders();
+    fetchData();
   };
 
   const handleOfferToCarry = async (senderReq: any) => {
