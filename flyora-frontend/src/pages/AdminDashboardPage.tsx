@@ -24,7 +24,15 @@ const api = async (path: string, opts: RequestInit = {}) => {
     ...opts,
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d?.message || d?.detail || d?.error || `Error ${r.status}`);
+  if (!r.ok) {
+    if (r.status === 401) {
+      localStorage.removeItem('flyora_admin_authenticated');
+      localStorage.removeItem('flyora_access_token');
+      localStorage.removeItem('flyora_refresh_token');
+      window.location.href = '/admin/login';
+    }
+    throw new Error(d?.message || d?.detail || d?.error || `Error ${r.status}`);
+  }
   return d;
 };
 
@@ -2195,6 +2203,13 @@ const AdminDashboardPage: React.FC = () => {
             <button
               onClick={() => {
                 localStorage.removeItem('flyora_admin_authenticated');
+                localStorage.removeItem('flyora_admin_email');
+                localStorage.removeItem('flyora_access_token');
+                localStorage.removeItem('flyora_refresh_token');
+                localStorage.removeItem('flyora_user_id');
+                localStorage.removeItem('flyora_user_name');
+                localStorage.removeItem('flyora_user_role');
+                sessionStorage.removeItem('flyora_admin_stats');
                 navigate('/admin/login');
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-all"
