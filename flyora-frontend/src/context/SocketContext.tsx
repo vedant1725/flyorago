@@ -23,7 +23,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Use WS for HTTP, WSS for HTTPS
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const wsHost = isLocalhost ? 'localhost:8000' : window.location.host;
+    const wsHost = isLocalhost ? 'localhost:8000' : 'api.flyorago.me';
     const wsUrl = `${protocol}//${wsHost}/ws/notifications/${userId}/`;
     let ws: WebSocket;
     let retryCount = 0;
