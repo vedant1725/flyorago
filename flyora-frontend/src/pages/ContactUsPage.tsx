@@ -8,8 +8,9 @@ import {
   Clock, Globe, Lock, Headphones, ShieldCheck,
   ArrowRight, CheckCircle2, AlertCircle, Loader2
 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const BASE_URL = API_BASE_URL;
 
 const categories = [
   {

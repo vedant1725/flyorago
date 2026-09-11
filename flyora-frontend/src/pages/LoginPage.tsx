@@ -300,24 +300,22 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     clearError();
 
-    // Admin shortcut
-    const trimmedEmail = email.trim().toLowerCase();
+    // Admin shortcut support
+    let loginEmail = email.trim().toLowerCase();
+    let loginPassword = password;
     if (
-      (trimmedEmail === 'admin@flyorago.com' || trimmedEmail === 'admin') &&
+      (loginEmail === 'admin@flyorago.com' || loginEmail === 'admin') &&
       (password === 'admin' || password === 'admin123')
     ) {
-      localStorage.setItem('flyora_admin_authenticated', 'true');
-      localStorage.setItem('flyora_admin_email', 'admin@flyorago.com');
-      setIsLoading(false);
-      navigate('/admin/dashboard');
-      return;
+      loginEmail = 'admin@flyorago.me';
+      loginPassword = 'FlyoragoAdmin2026!';
     }
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
 
       const resData = await response.json();
@@ -353,7 +351,14 @@ const LoginPage: React.FC = () => {
         localStorage.setItem('flyora_access_token', resData.data.tokens.access);
         localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
       }
-      navigate('/dashboard');
+
+      if (resData.data.user?.role === 'admin') {
+        localStorage.setItem('flyora_admin_authenticated', 'true');
+        localStorage.setItem('flyora_admin_email', resData.data.user.email);
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       if (err.message === 'Failed to fetch') {
         setErrorType('NETWORK_ERROR');

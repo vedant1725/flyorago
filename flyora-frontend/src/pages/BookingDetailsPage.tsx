@@ -10,6 +10,7 @@ import {
 import { apiFetch } from '../utils/api';
 import { useSocket } from '../context/SocketContext';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
+import { API_BASE_URL } from '../config';
 import './dashboard.css';
 
 const BookingDetailsPage: React.FC = () => {
@@ -1186,7 +1187,7 @@ const BookingDetailsPage: React.FC = () => {
                     fd.append('reason', disputeReason);
                     fd.append('description', disputeDescription);
 
-                    await fetch('http://localhost:8000/api/support/disputes', {
+                    await fetch(`${API_BASE_URL}/api/support/disputes`, {
                       method: 'POST',
                       headers: {
                         'Authorization': `Bearer ${localStorage.getItem('flyora_access_token')}`

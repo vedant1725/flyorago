@@ -22,8 +22,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Use WS for HTTP, WSS for HTTPS
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Connect directly to Django backend
-    const wsUrl = `${protocol}//localhost:8000/ws/notifications/${userId}/`;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const wsHost = isLocalhost ? 'localhost:8000' : window.location.host;
+    const wsUrl = `${protocol}//${wsHost}/ws/notifications/${userId}/`;
     let ws: WebSocket;
     let retryCount = 0;
     const maxRetries = 3;

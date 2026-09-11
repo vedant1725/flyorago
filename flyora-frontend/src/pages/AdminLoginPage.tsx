@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, Plane, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,40 +11,60 @@ const AdminLoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const inputEmail = email.trim().toLowerCase();
-      const savedEmail = (localStorage.getItem('flyora_admin_email') || 'admin@flyorago.com').trim().toLowerCase();
-      const savedPassword = localStorage.getItem('flyora_admin_password') || 'admin';
+    const inputEmail = email.trim().toLowerCase();
+    let loginEmail = inputEmail;
+    let loginPassword = password;
 
-      // Check if email matches updated email or default admin aliases
-      const emailMatches = (
-        inputEmail === savedEmail ||
-        inputEmail === 'admin' ||
-        inputEmail === 'admin@flyorago.com' ||
-        inputEmail.includes('admin')
-      );
+    // Quick-fill alias support for default admin credentials
+    if ((inputEmail === 'admin' || inputEmail === 'admin@flyorago.com') && (password === 'admin' || password === 'admin123')) {
+      loginEmail = 'admin@flyorago.me';
+      loginPassword = 'FlyoragoAdmin2026!';
+    }
 
-      // Check if password matches updated password or default fallback (if password not changed)
-      const passwordMatches = (
-        password === savedPassword ||
-        (!localStorage.getItem('flyora_admin_password') && (password === 'admin' || password === 'admin123'))
-      );
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
 
-      if (emailMatches && passwordMatches) {
-        localStorage.setItem('flyora_admin_authenticated', 'true');
-        localStorage.setItem('flyora_admin_email', inputEmail);
+      const resData = await response.json();
+
+      if (!response.ok) {
         setIsLoading(false);
-        navigate('/admin/dashboard');
-      } else {
-        setIsLoading(false);
-        setError('Invalid Admin Credentials. Please check your email and password.');
+        setError(resData.message || resData.error || 'Invalid Admin Credentials. Please check your email and password.');
+        return;
       }
-    }, 350);
+
+      const role = resData.data?.user?.role;
+      if (role !== 'admin') {
+        setIsLoading(false);
+        setError('Access denied. This account does not have Admin privileges.');
+        return;
+      }
+
+      // Store authenticated admin session & JWT tokens
+      localStorage.setItem('flyora_admin_authenticated', 'true');
+      localStorage.setItem('flyora_admin_email', loginEmail);
+      localStorage.setItem('flyora_user_id', String(resData.data?.userId || resData.data?.user?.id));
+      localStorage.setItem('flyora_user_name', resData.data?.fullName || 'Administrator');
+      localStorage.setItem('flyora_user_role', 'admin');
+      if (resData.data?.tokens) {
+        localStorage.setItem('flyora_access_token', resData.data.tokens.access);
+        localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
+      }
+
+      setIsLoading(false);
+      navigate('/admin/dashboard');
+    } catch (err: any) {
+      setIsLoading(false);
+      setError('Unable to connect to authentication server. Please try again.');
+    }
   };
 
   return (
