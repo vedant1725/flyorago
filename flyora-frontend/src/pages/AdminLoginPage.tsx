@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, Plane, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { apiFetch } from '../utils/api';
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,40 +11,44 @@ const AdminLoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const inputEmail = email.trim().toLowerCase();
-      const savedEmail = (localStorage.getItem('flyora_admin_email') || 'admin@flyorago.com').trim().toLowerCase();
-      const savedPassword = localStorage.getItem('flyora_admin_password') || 'admin';
+    try {
+      const res = await apiFetch('/api/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password: password,
+        }),
+      });
 
-      // Check if email matches updated email or default admin aliases
-      const emailMatches = (
-        inputEmail === savedEmail ||
-        inputEmail === 'admin' ||
-        inputEmail === 'admin@flyorago.com' ||
-        inputEmail.includes('admin')
-      );
+      const userRole = res.data?.user?.role || res.data?.role;
+      if (userRole === 'admin') {
+        localStorage.setItem('flyora_access_token', res.data.tokens.access);
+        localStorage.setItem('flyora_refresh_token', res.data.tokens.refresh);
+        localStorage.setItem('flyora_user_id', res.data.userId);
+        localStorage.setItem('flyora_user_name', res.data.fullName);
+        localStorage.setItem('flyora_user_role', userRole);
 
-      // Check if password matches updated password or default fallback (if password not changed)
-      const passwordMatches = (
-        password === savedPassword ||
-        (!localStorage.getItem('flyora_admin_password') && (password === 'admin' || password === 'admin123'))
-      );
-
-      if (emailMatches && passwordMatches) {
         localStorage.setItem('flyora_admin_authenticated', 'true');
-        localStorage.setItem('flyora_admin_email', inputEmail);
+        localStorage.setItem('flyora_admin_email', email.trim().toLowerCase());
+
         setIsLoading(false);
         navigate('/admin/dashboard');
       } else {
         setIsLoading(false);
-        setError('Invalid Admin Credentials. Please check your email and password.');
+        setError('Access denied: Unauthorized account role.');
       }
-    }, 350);
+    } catch (err: any) {
+      setIsLoading(false);
+      setError(err.message || 'Invalid admin credentials or connection error.');
+    }
   };
 
   return (

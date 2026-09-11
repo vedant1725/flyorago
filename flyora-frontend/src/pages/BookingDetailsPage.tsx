@@ -185,8 +185,21 @@ const BookingDetailsPage: React.FC = () => {
     }
   };
 
+  const [platformFee, setPlatformFee] = useState<number>(10.00);
+
   useEffect(() => {
     loadBookingData();
+    const fetchPlatformFeeSetting = async () => {
+      try {
+        const res = await apiFetch('/api/payments/settings/');
+        if (res?.data?.platform_fee !== undefined) {
+          setPlatformFee(Number(res.data.platform_fee));
+        }
+      } catch (err) {
+        console.error("Failed to load platform fee", err);
+      }
+    };
+    fetchPlatformFeeSetting();
   }, [id]);
 
   // Execute Payment via Modal & Open Confirmation Success Popup
@@ -808,16 +821,27 @@ const BookingDetailsPage: React.FC = () => {
 
             {/* Modal Body */}
             <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
-              {/* Payment Amount Banner */}
-              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 rounded-2xl p-4 border border-emerald-200/80 flex justify-between items-center shadow-xs">
-                <div>
-                  <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block">Total Reward Amount</span>
-                  <strong className="text-3xl font-black text-emerald-700 block">${booking?.reward}</strong>
-                </div>
-                <span className="bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-2xs">
-                  <Lock size={14} className="text-emerald-600" /> Escrow Protected 🔒
-                </span>
-              </div>
+              {(() => {
+                const travelerReward = Number(booking?.reward) || (Number(booking?.weight) * (Number(booking?.trip_price_per_kg) || 10.0)) || 0;
+                return (
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-3 shadow-xs">
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+                      <span>Traveler Reward:</span>
+                      <span className="text-slate-800 font-black">${travelerReward.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+                      <span>Platform Service Fee:</span>
+                      <span className="text-slate-800 font-black">${platformFee.toFixed(2)}</span>
+                    </div>
+                    <div className="border-t border-slate-200/60 pt-3 flex justify-between items-center text-sm font-black text-slate-800">
+                      <span>Total Escrow Amount:</span>
+                      <span className="text-emerald-600 text-base font-black">
+                        ${(travelerReward + platformFee).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Payment Methods */}
               <div className="space-y-3">
@@ -916,7 +940,7 @@ const BookingDetailsPage: React.FC = () => {
                     Processing Payment...
                   </>
                 ) : (
-                  <>Pay Now (${booking?.reward}) 🔒</>
+                  <>Pay Now (${((Number(booking?.reward) || (Number(booking?.weight) * (Number(booking?.trip_price_per_kg) || 10.0)) || 0) + platformFee).toFixed(2)}) 🔒</>
                 )}
               </button>
             </div>
