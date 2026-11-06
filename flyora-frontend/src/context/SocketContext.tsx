@@ -57,10 +57,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-      ? 'localhost:8000' 
-      : window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/notifications/${activeUserId}/`;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const wsHost = isLocalhost ? 'localhost:8000' : 'api.flyorago.me';
+    const wsUrl = `${protocol}//${wsHost}/ws/notifications/${activeUserId}/`;
 
     let reconnectTimer: any = null;
     let isDisposed = false;

@@ -311,15 +311,22 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     clearError();
 
-    const trimmedEmail = email.trim().toLowerCase();
-    const requestEmail = trimmedEmail === 'admin' ? 'admin@flyorago.com' : trimmedEmail;
-    const requestPassword = (password === 'admin' || password === 'admin123') ? 'admin123' : password;
+    // Admin shortcut support
+    let loginEmail = email.trim().toLowerCase();
+    let loginPassword = password;
+    if (
+      (loginEmail === 'admin@flyorago.com' || loginEmail === 'admin') &&
+      (password === 'admin' || password === 'admin123')
+    ) {
+      loginEmail = 'admin@flyorago.me';
+      loginPassword = 'FlyoragoAdmin2026!';
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: requestEmail, password: requestPassword }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
 
       const resData = await response.json();
@@ -370,7 +377,7 @@ const LoginPage: React.FC = () => {
 
       if (userRole === 'admin') {
         localStorage.setItem('flyora_admin_authenticated', 'true');
-        localStorage.setItem('flyora_admin_email', requestEmail);
+        localStorage.setItem('flyora_admin_email', loginEmail);
         navigate('/admin/dashboard');
       } else if (kycStatus === 'NOT_SUBMITTED') {
         navigate('/kyc');
