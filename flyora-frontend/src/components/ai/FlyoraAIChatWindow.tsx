@@ -140,7 +140,10 @@ export const FlyoraAIChatWindow: React.FC = () => {
       {activeTab === 'chat' ? (
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/40">
           {messages.map((msg) => {
-            const isUser = msg.role === 'user';
+            const isUser = (msg as any).role === 'user' || msg.sender === 'user';
+            const messageText = (msg as any).content || msg.text || '';
+            const actions = msg.actions || [];
+
             return (
               <div
                 key={msg.id}
@@ -159,11 +162,31 @@ export const FlyoraAIChatWindow: React.FC = () => {
                       : 'bg-white border border-slate-200/80 text-slate-800 rounded-bl-none'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
+                  <div className="whitespace-pre-wrap font-medium">{messageText}</div>
+
+                  {/* Action Navigation Pills */}
+                  {!isUser && actions && actions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2.5 pt-2 border-t border-slate-100">
+                      {actions.map((act, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            navigate(act.path);
+                            if (window.innerWidth < 768) closeAI();
+                          }}
+                          className="px-2.5 py-1 rounded-xl bg-teal-50 hover:bg-teal-100 text-flyora-teal font-bold text-[11px] border border-teal-200/60 transition flex items-center gap-1 active:scale-95"
+                        >
+                          <span>{act.label}</span>
+                          <ArrowRight size={11} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {!isUser && (
                     <button
-                      onClick={() => handleCopy(msg.content, msg.id)}
+                      onClick={() => handleCopy(messageText, msg.id)}
                       className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
                       title="Copy text"
                     >
