@@ -202,19 +202,23 @@ export const FlyoraAIChatWindow: React.FC = () => {
           <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider mb-2">
             Suggested Intelligent Prompts
           </h4>
-          {suggestedPrompts.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                handlePromptClick(p);
-                setActiveTab('chat');
-              }}
-              className="w-full text-left p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:bg-teal-50/30 text-xs font-bold text-slate-700 hover:text-teal-900 transition flex items-center justify-between group shadow-sm"
-            >
-              <span>{p}</span>
-              <ArrowRight size={14} className="text-slate-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all" />
-            </button>
-          ))}
+          {suggestedPrompts.map((p, i) => {
+            const promptText = typeof p === 'string' ? p : p.prompt || p.title;
+            const promptTitle = typeof p === 'string' ? p : p.title || p.prompt;
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  handlePromptClick(promptText);
+                  setActiveTab('chat');
+                }}
+                className="w-full text-left p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:bg-teal-50/30 text-xs font-bold text-slate-700 hover:text-teal-900 transition flex items-center justify-between group shadow-sm"
+              >
+                <span>{promptTitle}</span>
+                <ArrowRight size={14} className="text-slate-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all" />
+              </button>
+            );
+          })}
         </div>
       )}
 
