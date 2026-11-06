@@ -8,19 +8,44 @@ export const FlyoraAIFloatingButton: React.FC = () => {
   const location = useLocation();
 
   // Completely hide on all Admin routes (/admin, /admin/dashboard, /admin/kyc, etc.)
-  // so it NEVER overlaps or blocks any admin actions or table buttons!
   if (location.pathname.startsWith('/admin')) {
     return null;
   }
 
+  // Determine if the current page is a dashboard page (has mobile bottom navigation bar)
+  const isDashboardRoute = [
+    '/dashboard',
+    '/trips',
+    '/traveler',
+    '/sender',
+    '/bookings',
+    '/shipments',
+    '/wallet',
+    '/earnings',
+    '/messages',
+    '/support',
+    '/profile',
+    '/settings',
+    '/analytics',
+    '/reports',
+    '/booking',
+    '/trip',
+    '/shipment',
+    '/trust',
+    '/notifications'
+  ].some(route => location.pathname === route || location.pathname.startsWith(route + '/'));
+
+  // On dashboard pages, hide on mobile to never block bottom navigation bar.
+  // On landing / public pages (like /), show on BOTH mobile and desktop!
+  const containerVisibility = isDashboardRoute ? 'hidden lg:flex' : 'flex';
+
   return (
-    // Hidden on mobile (lg:hidden) to ensure it NEVER blocks the mobile bottom menu; active on desktop (lg:flex)
-    <div className="hidden lg:flex fixed bottom-6 right-6 z-[999] items-center gap-3 select-none">
-      {/* Floating Pill Badge (Gemini / Copilot Style) */}
+    <div className={`${containerVisibility} fixed bottom-6 right-5 sm:right-6 z-[999] items-center gap-3 select-none`}>
+      {/* Floating Pill Badge (Gemini / Copilot Style) - visible on tablets/desktops */}
       {!isOpen && (
         <div
           onClick={() => openAI()}
-          className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/95 text-slate-800 font-extrabold text-xs border border-teal-200/80 shadow-2xl shadow-teal-500/10 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all duration-300 group border-l-4 border-l-flyora-teal"
+          className="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/95 text-slate-800 font-extrabold text-xs border border-teal-200/80 shadow-2xl shadow-teal-500/10 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all duration-300 group border-l-4 border-l-flyora-teal"
         >
           <div className="relative flex items-center justify-center">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping absolute"></span>
@@ -39,7 +64,7 @@ export const FlyoraAIFloatingButton: React.FC = () => {
       <button
         onClick={() => (isOpen ? closeAI() : openAI())}
         aria-label="Toggle Flyora AI Assistant"
-        className={`relative group w-16 h-16 rounded-3xl flex items-center justify-center text-white shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+        className={`relative group w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl flex items-center justify-center text-white shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 ${
           isOpen
             ? 'bg-slate-900 border-2 border-slate-700 shadow-slate-900/40 rotate-90'
             : 'bg-gradient-to-tr from-flyora-teal via-teal-600 to-emerald-400 shadow-teal-500/40 hover:shadow-teal-500/60'
