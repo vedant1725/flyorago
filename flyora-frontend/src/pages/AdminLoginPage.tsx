@@ -66,7 +66,6 @@ const AdminLoginPage: React.FC = () => {
       setIsLoading(false);
       setError(err.message || 'Unable to connect to authentication server. Please try again.');
     }
-    }
   };
 
   return (
