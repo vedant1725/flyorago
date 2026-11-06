@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://api.flyorago.me/api/:path*"
+    },
+    {
+      "source": "/media/:path*",
+      "destination": "https://api.flyorago.me/media/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
