@@ -359,7 +359,7 @@ const LoginPage: React.FC = () => {
       // Success
       localStorage.setItem('flyora_user_id', resData.data.userId);
       localStorage.setItem('flyora_user_name', resData.data.fullName);
-      localStorage.setItem('flyora_user_email', resData.data.email || requestEmail);
+      localStorage.setItem('flyora_user_email', resData.data.email || loginEmail);
       localStorage.setItem('flyora_login_time', Date.now().toString());
       
       const userRole = resData.data.user?.role || resData.data.role || 'sender';
