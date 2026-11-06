@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, Plane, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-import { API_BASE_URL } from '../config';
+import { apiFetch } from '../utils/api';
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,54 +16,38 @@ const AdminLoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    const inputEmail = email.trim().toLowerCase();
-    let loginEmail = inputEmail;
-    let loginPassword = password;
-
-    // Quick-fill alias support for default admin credentials
-    if ((inputEmail === 'admin' || inputEmail === 'admin@flyorago.com') && (password === 'admin' || password === 'admin123')) {
-      loginEmail = 'admin@flyorago.me';
-      loginPassword = 'FlyoragoAdmin2026!';
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+      const res = await apiFetch('/api/auth/login/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password: password,
+        }),
       });
 
-      const resData = await response.json();
+      const userRole = res.data?.user?.role || res.data?.role;
+      if (userRole === 'admin') {
+        localStorage.setItem('flyora_access_token', res.data.tokens.access);
+        localStorage.setItem('flyora_refresh_token', res.data.tokens.refresh);
+        localStorage.setItem('flyora_user_id', res.data.userId);
+        localStorage.setItem('flyora_user_name', res.data.fullName);
+        localStorage.setItem('flyora_user_role', userRole);
 
-      if (!response.ok) {
+        localStorage.setItem('flyora_admin_authenticated', 'true');
+        localStorage.setItem('flyora_admin_email', email.trim().toLowerCase());
+
         setIsLoading(false);
-        setError(resData.message || resData.error || 'Invalid Admin Credentials. Please check your email and password.');
-        return;
-      }
-
-      const role = resData.data?.user?.role;
-      if (role !== 'admin') {
+        navigate('/admin/dashboard');
+      } else {
         setIsLoading(false);
-        setError('Access denied. This account does not have Admin privileges.');
-        return;
+        setError('Access denied: Unauthorized account role.');
       }
-
-      // Store authenticated admin session & JWT tokens
-      localStorage.setItem('flyora_admin_authenticated', 'true');
-      localStorage.setItem('flyora_admin_email', loginEmail);
-      localStorage.setItem('flyora_user_id', String(resData.data?.userId || resData.data?.user?.id));
-      localStorage.setItem('flyora_user_name', resData.data?.fullName || 'Administrator');
-      localStorage.setItem('flyora_user_role', 'admin');
-      if (resData.data?.tokens) {
-        localStorage.setItem('flyora_access_token', resData.data.tokens.access);
-        localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
-      }
-
-      setIsLoading(false);
-      navigate('/admin/dashboard');
     } catch (err: any) {
       setIsLoading(false);
-      setError('Unable to connect to authentication server. Please try again.');
+      setError(err.message || 'Invalid admin credentials or connection error.');
     }
   };
 

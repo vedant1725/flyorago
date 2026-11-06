@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plane, Mail, Lock, Eye, EyeOff, ArrowRight, User, ArrowLeft } from 'lucide-react';
+import { Plane, Mail, Lock, Eye, EyeOff, ArrowRight, User, ArrowLeft, RefreshCw } from 'lucide-react';
 import Button from '../components/ui/Button';
 
 interface Country {
@@ -48,6 +48,75 @@ const SignupPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // OTP Verification states
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer: any;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      setOtpError('Please enter a 6-digit OTP code.');
+      return;
+    }
+    setIsVerifyingOtp(true);
+    setOtpError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          otp: otpCode.trim()
+        }),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.message || 'OTP verification failed. Please try again.');
+      }
+
+      // Success: Redirect to KYC page!
+      navigate('/kyc');
+    } catch (err: any) {
+      setOtpError(err.message || 'Verification failed. Please check the code.');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setOtpError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/request-otp/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.message || 'Failed to resend OTP.');
+      }
+      setResendCooldown(60);
+      alert('OTP code has been resent to your email address.');
+    } catch (err: any) {
+      setOtpError(err.message || 'Failed to resend OTP.');
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,9 +170,15 @@ const SignupPage: React.FC = () => {
       } else {
         localStorage.setItem('flyora_user_role', 'sender');
       }
+      if (resData.data.tokens) {
+        localStorage.setItem('flyora_access_token', resData.data.tokens.access);
+        localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
+      }
 
-      // Redirect to kyc page
-      navigate('/kyc');
+      // Instead of direct navigation, open the OTP verification screen
+      setShowOtpScreen(true);
+      setOtpCode('');
+      setOtpError('');
     } catch (err: any) {
       if (err.message === 'Failed to fetch') {
         setErrorMsg('Failed to connect to the backend server. Please verify if the API is running or try again later.');
@@ -177,208 +252,281 @@ const SignupPage: React.FC = () => {
 
         {/* Form Container */}
         <div className="w-full max-w-[420px] px-6 py-8 lg:p-0 bg-white lg:bg-transparent relative z-20 lg:shadow-none flex-1 lg:flex-none flex flex-col justify-center">
-          <div className="text-center mb-10 hidden lg:flex flex-col items-center">
-            {/* Form Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group mb-6 w-fit">
-              <div className="relative">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
-                  <Plane size={18} className="text-white transform -rotate-45" />
+          {showOtpScreen ? (
+            <div className="space-y-6">
+              <div className="text-center mb-8 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal mb-6">
+                  <Mail size={24} className="text-white animate-bounce" />
                 </div>
-                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-flyora-blue rounded-full border-2 border-white" />
+                <h2 className="text-2xl font-bold text-flyora-navy mb-2">Verify Your Email</h2>
+                <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[340px]">
+                  We have sent a 6-digit verification code to <span className="font-extrabold text-flyora-navy">{email}</span>. Please enter it below.
+                </p>
               </div>
-              <div className="flex flex-col leading-none text-left">
-                <span className="text-2xl font-black tracking-tight text-flyora-navy">
-                  fly<span className="text-flyora-teal">orago</span>
-                </span>
-              </div>
-            </Link>
 
-            <h2 className="text-[28px] font-bold text-flyora-navy mb-2">Create an Account</h2>
-            <p className="text-flyora-gray-500 text-sm font-medium">Join us to start your smart shipping journey.</p>
-          </div>
+              <form className="space-y-4" onSubmit={handleVerifyOtp}>
+                {otpError && (
+                  <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-xl animate-shake">
+                    {otpError}
+                  </div>
+                )}
 
-          <form className="space-y-3" onSubmit={handleSignup}>
-            {errorMsg && (
-              <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-xl animate-shake">
-                {errorMsg}
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-flyora-navy">Full Name</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-flyora-gray-400">
-                  <User size={18} />
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-flyora-navy">Verification Code</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center tracking-[1em] text-lg font-black pl-4 py-4 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-300 placeholder:tracking-normal"
+                      placeholder="000000"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
-                  placeholder="Enter your full name"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-flyora-navy">Email Address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-flyora-gray-400">
-                  <Mail size={18} />
+                <div className="pt-2">
+                  <Button
+                    variant="teal"
+                    size="lg"
+                    fullWidth
+                    disabled={isVerifyingOtp || otpCode.length !== 6}
+                    type="submit"
+                    className="py-3.5 rounded-[14px]"
+                  >
+                    {isVerifyingOtp ? 'Verifying...' : 'Verify & Continue'}
+                  </Button>
                 </div>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
+              </form>
 
-            <div className="space-y-1.5 relative">
-              <label className="text-sm font-bold text-flyora-navy">Phone Number</label>
-              <div className="relative flex items-center w-full">
+              <div className="flex flex-col items-center justify-center gap-4 text-center mt-6">
                 <button
                   type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="absolute left-0 inset-y-0 flex items-center gap-2 pl-4 pr-3 hover:bg-gray-50/50 transition-colors focus:outline-none text-sm text-flyora-navy font-bold rounded-l-[14px] z-10"
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0}
+                  className={`text-sm font-bold ${
+                    resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-flyora-teal hover:text-flyora-teal-dark'
+                  } transition-colors flex items-center gap-1.5`}
                 >
-                  <img
-                    src={`https://flagcdn.com/w20/${selectedCountry.code.toLowerCase()}.png`}
-                    alt={selectedCountry.name}
-                    className="w-5 h-3.5 object-contain rounded-sm shadow-sm"
-                  />
-                  <span>{selectedCountry.dial_code}</span>
-                  <span className="text-[10px] text-gray-400">▼</span>
-                  {/* Vertical Divider */}
-                  <div className="w-px h-5 bg-gray-200 ml-1" />
+                  <RefreshCw size={14} className={resendCooldown > 0 ? '' : 'animate-spin-slow'} />
+                  {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : 'Resend Code'}
                 </button>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-[108px] pr-4 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
-                  placeholder="Enter phone number"
-                />
 
-                {isDropdownOpen && (
-                  <>
-                    {/* Backdrop for click-outside closure */}
-                    <div
-                      className="fixed inset-0 bg-black/25 md:bg-transparent z-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                <button
+                  type="button"
+                  onClick={() => setShowOtpScreen(false)}
+                  className="text-xs font-bold text-gray-500 hover:text-flyora-navy transition-colors"
+                >
+                  Back to Signup
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-10 hidden lg:flex flex-col items-center">
+                {/* Form Logo */}
+                <Link to="/" className="flex items-center gap-2.5 group mb-6 w-fit">
+                  <div className="relative">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
+                      <Plane size={18} className="text-white transform -rotate-45" />
+                    </div>
+                    <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-flyora-blue rounded-full border-2 border-white" />
+                  </div>
+                  <div className="flex flex-col leading-none text-left">
+                    <span className="text-2xl font-black tracking-tight text-flyora-navy">
+                      fly<span className="text-flyora-teal">orago</span>
+                    </span>
+                  </div>
+                </Link>
+
+                <h2 className="text-[28px] font-bold text-flyora-navy mb-2">Create an Account</h2>
+                <p className="text-flyora-gray-500 text-sm font-medium">Join us to start your smart shipping journey.</p>
+              </div>
+
+              <form className="space-y-3" onSubmit={handleSignup}>
+                {errorMsg && (
+                  <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-xl animate-shake">
+                    {errorMsg}
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-flyora-navy">Full Name</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-flyora-gray-400">
+                      <User size={18} />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-flyora-navy">Email Address</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-flyora-gray-400">
+                      <Mail size={18} />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 relative">
+                  <label className="text-sm font-bold text-flyora-navy">Phone Number</label>
+                  <div className="relative flex items-center w-full">
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="absolute left-0 inset-y-0 flex items-center gap-2 pl-4 pr-3 hover:bg-gray-50/50 transition-colors focus:outline-none text-sm text-flyora-navy font-bold rounded-l-[14px] z-10"
+                    >
+                      <img
+                        src={`https://flagcdn.com/w20/${selectedCountry.code.toLowerCase()}.png`}
+                        alt={selectedCountry.name}
+                        className="w-5 h-3.5 object-contain rounded-sm shadow-sm"
+                      />
+                      <span>{selectedCountry.dial_code}</span>
+                      <span className="text-[10px] text-gray-400">▼</span>
+                      {/* Vertical Divider */}
+                      <div className="w-px h-5 bg-gray-200 ml-1" />
+                    </button>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full pl-[108px] pr-4 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
+                      placeholder="Enter phone number"
                     />
 
-                    {/* Country List Container */}
-                    <div className="fixed inset-x-4 top-[20%] md:absolute md:inset-auto md:left-0 md:bottom-[100%] md:mb-1 w-auto max-w-[calc(100%-2rem)] md:w-64 max-h-[50vh] md:max-h-60 bg-white border border-gray-200 rounded-xl shadow-2xl z-[60] overflow-y-auto flex flex-col">
-                      <div className="p-2.5 border-b border-gray-100 sticky top-0 bg-white z-10">
-                        <input
-                          type="text"
-                          placeholder="Search country..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-flyora-teal transition-all text-flyora-navy font-medium"
-                          autoFocus
+                    {isDropdownOpen && (
+                      <>
+                        {/* Backdrop for click-outside closure */}
+                        <div
+                          className="fixed inset-0 bg-black/25 md:bg-transparent z-50"
+                          onClick={() => setIsDropdownOpen(false)}
                         />
-                      </div>
-                      <div className="py-1 flex-1">
-                        {countries
-                          .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.dial_code.includes(searchQuery))
-                          .map((country) => (
-                            <button
-                              key={country.code}
-                              type="button"
-                              onClick={() => {
-                                setSelectedCountry(country);
-                                setIsDropdownOpen(false);
-                                setSearchQuery('');
-                              }}
-                              className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 text-left text-xs text-flyora-navy font-semibold transition-colors border-b border-gray-50/50 last:border-0"
-                            >
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
-                                  alt={country.name}
-                                  className="w-5 h-3.5 object-contain rounded-sm shadow-sm"
-                                />
-                                <span className="truncate max-w-[140px]">{country.name}</span>
-                              </div>
-                              <span className="text-gray-400 font-bold">{country.dial_code}</span>
-                            </button>
-                          ))
-                        }
-                      </div>
+
+                        {/* Country List Container */}
+                        <div className="fixed inset-x-4 top-[20%] md:absolute md:inset-auto md:left-0 md:bottom-[100%] md:mb-1 w-auto max-w-[calc(100%-2rem)] md:w-64 max-h-[50vh] md:max-h-60 bg-white border border-gray-200 rounded-xl shadow-2xl z-[60] overflow-y-auto flex flex-col">
+                          <div className="p-2.5 border-b border-gray-100 sticky top-0 bg-white z-10">
+                            <input
+                              type="text"
+                              placeholder="Search country..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-flyora-teal transition-all text-flyora-navy font-medium"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="py-1 flex-1">
+                            {countries
+                              .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.dial_code.includes(searchQuery))
+                              .map((country) => (
+                                <button
+                                  key={country.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedCountry(country);
+                                    setIsDropdownOpen(false);
+                                    setSearchQuery('');
+                                  }}
+                                  className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 text-left text-xs text-flyora-navy font-semibold transition-colors border-b border-gray-50/50 last:border-0"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <img
+                                      src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+                                      alt={country.name}
+                                      className="w-5 h-3.5 object-contain rounded-sm shadow-sm"
+                                    />
+                                    <span className="truncate max-w-[140px]">{country.name}</span>
+                                  </div>
+                                  <span className="text-gray-400 font-bold">{country.dial_code}</span>
+                                </button>
+                              ))
+                            }
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-flyora-navy">Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-flyora-gray-400">
+                      <Lock size={18} />
                     </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-flyora-navy">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-flyora-gray-400">
-                  <Lock size={18} />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-11 pr-12 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
+                      placeholder="Create a password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-flyora-gray-400 hover:text-flyora-navy transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-400 text-sm font-medium"
-                  placeholder="Create a password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-flyora-gray-400 hover:text-flyora-navy transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
 
-            <div className="pt-4">
-              <Button
-                variant="teal"
-                size="lg"
-                fullWidth
-                iconRight={!isLoading && <ArrowRight size={18} />}
-                className="py-3.5 rounded-[14px]"
-                disabled={isLoading}
-                type="submit"
-              >
-                {isLoading ? 'Creating Account...' : 'Sign Up'}
-              </Button>
-            </div>
-          </form>
-
-
-          <p className="text-center mt-8 text-[13px] font-semibold text-gray-500">
-            Already have an account?{' '}
-            <Link to="/login" className="font-bold text-flyora-teal hover:text-flyora-teal-dark transition-colors">
-              Log In
-            </Link>
-          </p>
-
-          {/* Mobile Footer Logo */}
-          <div className="flex lg:hidden justify-center mt-8 pb-4">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
-                  <Plane size={14} className="text-white transform -rotate-45" />
+                <div className="pt-4">
+                  <Button
+                    variant="teal"
+                    size="lg"
+                    fullWidth
+                    iconRight={!isLoading && <ArrowRight size={18} />}
+                    className="py-3.5 rounded-[14px]"
+                    disabled={isLoading}
+                    type="submit"
+                  >
+                    {isLoading ? 'Creating Account...' : 'Sign Up'}
+                  </Button>
                 </div>
-                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-flyora-blue rounded-full border border-flyora-navy" />
+              </form>
+
+              <p className="text-center mt-8 text-[13px] font-semibold text-gray-500">
+                Already have an account?{' '}
+                <Link to="/login" className="font-bold text-flyora-teal hover:text-flyora-teal-dark transition-colors">
+                  Log In
+                </Link>
+              </p>
+
+              {/* Mobile Footer Logo */}
+              <div className="flex lg:hidden justify-center mt-8 pb-4">
+                <Link to="/" className="flex items-center gap-2 group">
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
+                      <Plane size={14} className="text-white transform -rotate-45" />
+                    </div>
+                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-flyora-blue rounded-full border border-flyora-navy" />
+                  </div>
+                  <span className="text-lg font-black tracking-tight text-flyora-navy">
+                    fly<span className="text-flyora-teal">orago</span>
+                  </span>
+                </Link>
               </div>
-              <span className="text-lg font-black tracking-tight text-flyora-navy">
-                fly<span className="text-flyora-teal">orago</span>
-              </span>
-            </Link>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

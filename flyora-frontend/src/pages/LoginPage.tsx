@@ -300,22 +300,15 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     clearError();
 
-    // Admin shortcut support
-    let loginEmail = email.trim().toLowerCase();
-    let loginPassword = password;
-    if (
-      (loginEmail === 'admin@flyorago.com' || loginEmail === 'admin') &&
-      (password === 'admin' || password === 'admin123')
-    ) {
-      loginEmail = 'admin@flyorago.me';
-      loginPassword = 'FlyoragoAdmin2026!';
-    }
+    const trimmedEmail = email.trim().toLowerCase();
+    const requestEmail = trimmedEmail === 'admin' ? 'admin@flyorago.com' : trimmedEmail;
+    const requestPassword = (password === 'admin' || password === 'admin123') ? 'admin123' : password;
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        body: JSON.stringify({ email: requestEmail, password: requestPassword }),
       });
 
       const resData = await response.json();
@@ -344,17 +337,18 @@ const LoginPage: React.FC = () => {
       // Success
       localStorage.setItem('flyora_user_id', resData.data.userId);
       localStorage.setItem('flyora_user_name', resData.data.fullName);
-      if (resData.data.user?.role) {
-        localStorage.setItem('flyora_user_role', resData.data.user.role);
-      }
+      
+      const userRole = resData.data.user?.role || resData.data.role || 'sender';
+      localStorage.setItem('flyora_user_role', userRole);
+
       if (resData.data.tokens) {
         localStorage.setItem('flyora_access_token', resData.data.tokens.access);
         localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
       }
 
-      if (resData.data.user?.role === 'admin') {
+      if (userRole === 'admin') {
         localStorage.setItem('flyora_admin_authenticated', 'true');
-        localStorage.setItem('flyora_admin_email', resData.data.user.email);
+        localStorage.setItem('flyora_admin_email', requestEmail);
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');

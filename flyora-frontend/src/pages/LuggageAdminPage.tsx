@@ -56,6 +56,10 @@ const LuggageAdminPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (localStorage.getItem('flyora_admin_authenticated') !== 'true') {
+      navigate('/admin/login');
+      return;
+    }
     loadAdminData();
   }, []);
 

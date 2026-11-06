@@ -147,7 +147,7 @@ const TravelerPage: React.FC = () => {
         package_category: senderReq.aircraft || 'General',
         package_image: "",
         weight: safeWeight > 0 ? safeWeight : 0.1,
-        reward: 0
+        reward: Number((safeWeight * (parseFloat(selectedTripToMatchSender.price_per_kg) || 10.0)).toFixed(2))
       };
       await apiFetch('/api/bookings/', { method: 'POST', body: JSON.stringify(payload) });
 

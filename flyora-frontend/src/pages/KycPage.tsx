@@ -3,10 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plane, Shield, CheckCircle, AlertCircle, 
   Camera, Upload, Trash2, User, FileText, Check, 
-  ShieldAlert, Loader2, RefreshCw, Lock, Sparkles, Clock
+  ShieldAlert, Loader2, RefreshCw, Lock, Sparkles, Clock, Mail
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { apiFetch } from '../utils/api';
+import { API_BASE_URL } from '../config';
 
 const KycPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +48,22 @@ const KycPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
 
+  // OTP verification states inside KYC flow
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer: any;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
   // Fetch current KYC status
   const fetchStatus = async () => {
     if (!userId) {
@@ -55,15 +72,26 @@ const KycPage: React.FC = () => {
     }
 
     try {
-      const data = await apiFetch(`/api/kyc/status/${userId}`);
-      const status = data.data.status;
-      setKycStatus(status);
-      if (status === 'REJECTED') {
-        setRejectionReason(data.data.rejectionReason || 'Documents did not meet our verification criteria.');
-      }
-      
-      if (status === 'PENDING' || status === 'APPROVED') {
-        setViewMode('STATUS');
+      // 1. Fetch user details and check verification
+      const userMe = await apiFetch('/api/auth/me/');
+      const emailVerified = userMe.data.is_verified;
+      setIsEmailVerified(emailVerified);
+      setUserEmail(userMe.data.email || '');
+
+      // 2. If email is verified, fetch KYC documents status
+      if (emailVerified) {
+        const data = await apiFetch(`/api/kyc/status/${userId}`);
+        const status = data.data.status;
+        setKycStatus(status);
+        if (status === 'REJECTED') {
+          setRejectionReason(data.data.rejectionReason || 'Documents did not meet our verification criteria.');
+        }
+        
+        if (status === 'PENDING' || status === 'APPROVED') {
+          setViewMode('STATUS');
+        } else {
+          setViewMode('SUBMIT');
+        }
       } else {
         setViewMode('SUBMIT');
       }
@@ -71,6 +99,60 @@ const KycPage: React.FC = () => {
       console.error('Failed to fetch KYC status:', error);
     } finally {
       setIsPageLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      setOtpError('Please enter a 6-digit OTP code.');
+      return;
+    }
+    setIsVerifyingOtp(true);
+    setOtpError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail.trim().toLowerCase(),
+          otp: otpCode.trim()
+        }),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.message || 'OTP verification failed. Please try again.');
+      }
+
+      setIsEmailVerified(true);
+      fetchStatus();
+    } catch (err: any) {
+      setOtpError(err.message || 'Verification failed. Please check the code.');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setOtpError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/request-otp/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail.trim().toLowerCase() }),
+      });
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.message || 'Failed to resend OTP.');
+      }
+      setResendCooldown(60);
+      alert('OTP code has been resent to your email address.');
+    } catch (err: any) {
+      setOtpError(err.message || 'Failed to resend OTP.');
     }
   };
 
@@ -248,7 +330,70 @@ const KycPage: React.FC = () => {
 
       {/* Main Container */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 flex flex-col justify-center">
-        {viewMode === 'SUBMIT' ? (
+        {isEmailVerified === false ? (
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden max-w-md mx-auto w-full">
+            <div className="text-center mb-8 flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal mb-6 animate-pulse">
+                <Mail size={24} className="text-white animate-bounce" />
+              </div>
+              <h2 className="text-2xl font-bold text-flyora-navy mb-2">Verify Your Email</h2>
+              <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[340px]">
+                Please enter the 6-digit verification code sent to your registered email <span className="font-extrabold text-flyora-navy">{userEmail}</span> to access the KYC verification page.
+              </p>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleVerifyOtp}>
+              {otpError && (
+                <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-xl animate-shake">
+                  {otpError}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-flyora-navy">Verification Code</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full text-center tracking-[1em] text-lg font-black pl-4 py-4 bg-white border border-gray-200 rounded-[14px] focus:ring-2 focus:ring-flyora-teal/20 focus:border-flyora-teal transition-all outline-none text-flyora-navy placeholder:text-gray-300 placeholder:tracking-normal"
+                    placeholder="000000"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  variant="teal"
+                  size="lg"
+                  fullWidth
+                  disabled={isVerifyingOtp || otpCode.length !== 6}
+                  type="submit"
+                  className="py-3.5 rounded-[14px]"
+                >
+                  {isVerifyingOtp ? 'Verifying...' : 'Verify & Continue to KYC'}
+                </Button>
+              </div>
+            </form>
+
+            <div className="flex flex-col items-center justify-center gap-4 text-center mt-6">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={resendCooldown > 0}
+                className={`text-sm font-bold ${
+                  resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-flyora-teal hover:text-flyora-teal-dark'
+                } transition-colors flex items-center gap-1.5`}
+              >
+                <RefreshCw size={14} className={resendCooldown > 0 ? '' : 'animate-spin-slow'} />
+                {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : 'Resend Code'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          viewMode === 'SUBMIT' ? (
           <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
             {/* Progress indicators */}
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-50">
@@ -620,7 +765,7 @@ const KycPage: React.FC = () => {
               </>
             )}
           </div>
-        )}
+        ))}
       </main>
 
       {/* Simple Footer */}

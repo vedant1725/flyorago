@@ -26,6 +26,7 @@ const SenderPage: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBookingToPay, setSelectedBookingToPay] = useState<any | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id?: any; email?: string } | null>(null);
+  const [platformFee, setPlatformFee] = useState<number>(10.00);
 
   const fetchUserProfile = async () => {
     try {
@@ -101,6 +102,18 @@ const SenderPage: React.FC = () => {
     fetchUserProfile();
     fetchData();
     fetchTravelers();
+
+    const fetchPlatformFeeSetting = async () => {
+      try {
+        const res = await apiFetch('/api/payments/settings/');
+        if (res?.data?.platform_fee !== undefined) {
+          setPlatformFee(Number(res.data.platform_fee));
+        }
+      } catch (err) {
+        console.error("Failed to load platform fee", err);
+      }
+    };
+    fetchPlatformFeeSetting();
   }, []);
 
   const handleOpenFindTraveler = (req: any) => {
@@ -208,7 +221,7 @@ const SenderPage: React.FC = () => {
         package_category: selectedRequestToMatch.aircraft || 'General',
         package_image: JSON.stringify(selectedRequestToMatch.accepted_parcel_types || []),
         weight: safeWeight > 0 ? safeWeight : 0.1, // Ensure it's at least > 0 if there's any anomaly
-        reward: 0
+        reward: Number((safeWeight * (parseFloat(travelerTrip.price_per_kg) || 10.0)).toFixed(2))
       };
       await apiFetch('/api/bookings/', { method: 'POST', body: JSON.stringify(payload) });
 
@@ -664,10 +677,27 @@ const SenderPage: React.FC = () => {
             </div>
 
             <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="text-4xl font-black text-slate-800 mb-1">$25.00</div>
-                <div className="text-sm text-slate-500">Total amount to pay</div>
-              </div>
+              {(() => {
+                const travelerReward = Number(selectedBookingToPay.reward) || (Number(selectedBookingToPay.weight) * (Number(selectedBookingToPay.trip_price_per_kg) || 10.0)) || 0;
+                return (
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-6 space-y-2">
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+                      <span>Traveler Reward:</span>
+                      <span className="text-slate-800 font-black">${travelerReward.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+                      <span>Platform Service Fee:</span>
+                      <span className="text-slate-800 font-black">${platformFee.toFixed(2)}</span>
+                    </div>
+                    <div className="border-t border-slate-200/60 pt-2 flex justify-between items-center text-sm font-black text-slate-800">
+                      <span>Total Escrow Amount:</span>
+                      <span className="text-flyora-teal text-base font-black">
+                        ${(travelerReward + platformFee).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="space-y-4 mb-6">
                 <div>
