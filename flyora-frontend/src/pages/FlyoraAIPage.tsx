@@ -52,7 +52,7 @@ const FlyoraAIPage: React.FC = () => {
                   Enterprise AI
                 </span>
               </div>
-              <p className="text-xs text-slate-500">Intelligent travel logistics assistant for Luggage Sharing, Parcels & Escrow</p>
+              <p className="text-xs text-slate-500">Intelligent travel logistics assistant for Parcels & Escrow</p>
             </div>
           </div>
 
@@ -164,7 +164,7 @@ const FlyoraAIPage: React.FC = () => {
             >
               <input
                 type="text"
-                placeholder="Ask Flyora AI about Luggage Sharing, Parcels, Wallet & Escrow..."
+                placeholder="Ask Flyora AI about Parcels, Trips, Wallet & Escrow..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 style={{ border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' }}

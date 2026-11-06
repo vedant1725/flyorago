@@ -54,7 +54,7 @@ const defaultFilters = {
 
 const ShipmentsPage: React.FC = () => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
   
   const [isLoading, setIsLoading] = useState(true);
@@ -234,7 +234,7 @@ const ShipmentsPage: React.FC = () => {
     { icon: Package, title: 'Active Shipments', value: activeCount.toString(), trend: '+16% this month' },
     { icon: Truck, title: 'IN_TRANSIT', value: inTransitCount.toString(), trend: '+8% this month' },
     { icon: BadgeCheck, title: 'DELIVERED', value: deliveredCount.toString(), trend: '+22% this month' },
-    { icon: Wallet, title: 'Total Earnings', value: `$${deliveredCount * 85}`, trend: '+18.6% this month' },
+    { icon: Wallet, title: 'Total Earnings', value: `₹${deliveredCount * 85}`, trend: '+18.6% this month' },
   ];
 
   const totalPages = Math.max(1, Math.ceil(filteredShipments.length / pageSize));

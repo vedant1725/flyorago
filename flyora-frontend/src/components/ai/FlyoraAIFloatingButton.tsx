@@ -1,17 +1,26 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useFlyoraAI } from '../../context/FlyoraAIContext';
-import { Sparkles, Bot, X, MessageSquare, Zap } from 'lucide-react';
+import { Sparkles, Bot, X, Zap } from 'lucide-react';
 
 export const FlyoraAIFloatingButton: React.FC = () => {
   const { isOpen, openAI, closeAI } = useFlyoraAI();
+  const location = useLocation();
+
+  // Completely hide on all Admin routes (/admin, /admin/dashboard, /admin/kyc, etc.)
+  // so it NEVER overlaps or blocks any admin actions or table buttons!
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[999] flex items-center gap-3 select-none">
+    // Hidden on mobile (lg:hidden) to ensure it NEVER blocks the mobile bottom menu; active on desktop (lg:flex)
+    <div className="hidden lg:flex fixed bottom-6 right-6 z-[999] items-center gap-3 select-none">
       {/* Floating Pill Badge (Gemini / Copilot Style) */}
       {!isOpen && (
         <div
           onClick={() => openAI()}
-          className="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/95 text-slate-800 font-extrabold text-xs border border-teal-200/80 shadow-2xl shadow-teal-500/10 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all duration-300 group border-l-4 border-l-flyora-teal"
+          className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/95 text-slate-800 font-extrabold text-xs border border-teal-200/80 shadow-2xl shadow-teal-500/10 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all duration-300 group border-l-4 border-l-flyora-teal"
         >
           <div className="relative flex items-center justify-center">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping absolute"></span>
@@ -48,9 +57,8 @@ export const FlyoraAIFloatingButton: React.FC = () => {
           <X size={26} className="text-white transition-transform duration-300" />
         ) : (
           <div className="relative flex items-center justify-center">
-            <Bot size={28} className="text-white drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
-            <Sparkles size={14} className="absolute -top-2 -right-2 text-amber-300 animate-pulse drop-shadow-sm" />
-            <Zap size={10} className="absolute -bottom-1 -left-1 text-cyan-200 animate-bounce" />
+            <Bot size={28} className="text-white drop-shadow-md group-hover:rotate-12 transition-transform duration-300" />
+            <Sparkles size={14} className="absolute -top-1 -right-1 text-amber-300 animate-bounce" />
           </div>
         )}
       </button>

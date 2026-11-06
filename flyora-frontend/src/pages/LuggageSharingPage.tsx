@@ -1,6 +1,9 @@
+import { LocationAutocomplete } from '../components/ui/LocationAutocomplete';
 import React, { useEffect, useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { useToast } from '../context/ToastContext';
+import { useKycValidation } from '../hooks/useKycValidation';
+import { KycValidationModal } from '../components/ui/KycValidationModal';
 import { apiFetch } from '../utils/api';
 import {
   Luggage, Search, Plus, CheckCircle2, ShieldCheck, Clock, MapPin,
@@ -276,6 +279,7 @@ const LuggageSharingPage: React.FC = () => {
 
   // Handle Booking Creation Request (Traveller B -> Traveller A)
   const handleCreateBooking = async () => {
+    if (!validateAction()) return;
     if (!selectedListing) return;
     try {
       const res = await apiFetch('/api/luggage/bookings/', {
@@ -443,7 +447,7 @@ const LuggageSharingPage: React.FC = () => {
             </div>
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Earnings</span>
-              <div className="text-lg font-black text-emerald-600 mt-0.5">${stats.earnings}</div>
+              <div className="text-lg font-black text-emerald-600 mt-0.5">₹{stats.earnings}</div>
             </div>
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Sharings</span>
@@ -513,22 +517,18 @@ const LuggageSharingPage: React.FC = () => {
               <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Departure Airport</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. JFK"
+                  <LocationAutocomplete
                     value={searchParams.departure_airport}
-                    onChange={e => setSearchParams({ ...searchParams, departure_airport: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    onChange={(val) => setSearchParams({ ...searchParams, departure_airport: val })}
+                    placeholder="Search city/airport (e.g. AMD, BOM)..."
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Destination Airport</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. DXB"
+                  <LocationAutocomplete
                     value={searchParams.arrival_airport}
-                    onChange={e => setSearchParams({ ...searchParams, arrival_airport: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    onChange={(val) => setSearchParams({ ...searchParams, arrival_airport: val })}
+                    placeholder="Search city/airport (e.g. DEL, BLR)..."
                   />
                 </div>
                 <div>
@@ -632,7 +632,7 @@ const LuggageSharingPage: React.FC = () => {
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 mb-4 space-y-2">
                         <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                           <span>✈️ {listing.airline} ({listing.flight_number})</span>
-                          <span className="text-emerald-600 font-black text-sm">${listing.price_per_kg} / KG</span>
+                          <span className="text-emerald-600 font-black text-sm">₹{listing.price_per_kg} / KG</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-700 font-bold">
                           <span>{listing.departure_airport}</span>
@@ -718,22 +718,20 @@ const LuggageSharingPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Departure Airport</label>
-                  <input
-                    type="text"
-                    required
+                  <LocationAutocomplete
                     value={hostForm.departure_airport}
-                    onChange={e => setHostForm({ ...hostForm, departure_airport: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    onChange={(val) => setHostForm({ ...hostForm, departure_airport: val })}
+                    placeholder="Search Indian departure airport (e.g. Ahmedabad AMD)..."
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Arrival Airport</label>
-                  <input
-                    type="text"
-                    required
+                  <LocationAutocomplete
                     value={hostForm.arrival_airport}
-                    onChange={e => setHostForm({ ...hostForm, arrival_airport: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold focus:outline-none focus:border-flyora-teal"
+                    onChange={(val) => setHostForm({ ...hostForm, arrival_airport: val })}
+                    placeholder="Search Indian arrival airport (e.g. Mumbai BOM)..."
+                    required
                   />
                 </div>
               </div>
@@ -990,7 +988,7 @@ const LuggageSharingPage: React.FC = () => {
                         </div>
 
                         <div className="text-right">
-                          <div className="text-2xl font-black text-emerald-600">${b.total_price}</div>
+                          <div className="text-2xl font-black text-emerald-600">₹{b.total_price}</div>
                           <span className="text-xs text-slate-400 font-bold">Escrow: {b.escrow_status}</span>
                         </div>
                       </div>
@@ -1440,6 +1438,7 @@ const LuggageSharingPage: React.FC = () => {
         )}
 
       </main>
+      <KycValidationModal isOpen={isModalOpen} onClose={closeModal} kycStatus={kycStatus} />
     </div>
   );
 };

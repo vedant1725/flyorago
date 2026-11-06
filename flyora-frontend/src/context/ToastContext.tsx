@@ -15,6 +15,7 @@ export interface ToastItem {
 
 interface ToastContextType {
   showToast: (toast: Omit<ToastItem, 'id'>) => void;
+  addToast: (title: string, message?: string, type?: ToastType) => void;
   success: (title: string, message?: string) => void;
   error: (title: string, message?: string) => void;
   warning: (title: string, message?: string) => void;
@@ -31,11 +32,31 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  const recentToastsRef = React.useRef<Map<string, number>>(new Map());
+
   const showToast = useCallback((toast: Omit<ToastItem, 'id'>) => {
+    // Deduplication check: prevent identical title+message from showing multiple times within 2.5 seconds
+    const key = `${(toast.title || '').trim()}:::${(toast.message || '').trim()}`;
+    const now = Date.now();
+    const lastSeen = recentToastsRef.current.get(key) || 0;
+    if (now - lastSeen < 2500) {
+      return; // Skip duplicate toast
+    }
+    recentToastsRef.current.set(key, now);
+
+    // Housekeeping: clean up keys older than 10 seconds
+    if (recentToastsRef.current.size > 20) {
+      for (const [k, time] of recentToastsRef.current.entries()) {
+        if (now - time > 10000) {
+          recentToastsRef.current.delete(k);
+        }
+      }
+    }
+
     const id = Math.random().toString(36).substring(2, 9);
     const newToast: ToastItem = { ...toast, id, duration: toast.duration || 4500 };
     
-    setToasts(prev => [newToast, ...prev].slice(0, 5)); // Keep max 5 active popups
+    setToasts(prev => [newToast, ...prev].slice(0, 4)); // Keep max 4 active popups
 
     if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
@@ -43,6 +64,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }, newToast.duration);
     }
   }, [removeToast]);
+
+  const addToast = useCallback((title: string, message: string = '', type: ToastType = 'info') => {
+    showToast({ type, title, message });
+  }, [showToast]);
 
   const success = useCallback((title: string, message: string = '') => {
     showToast({ type: 'success', title, message });
@@ -88,7 +113,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [showToast]);
 
   return (
-    <ToastContext.Provider value={{ showToast, success, error, warning, info, removeToast }}>
+    <ToastContext.Provider value={{ showToast, addToast, success, error, warning, info, removeToast }}>
       {children}
 
       {/* Floating Dark Popup Toast Container (Top Right Position) */}

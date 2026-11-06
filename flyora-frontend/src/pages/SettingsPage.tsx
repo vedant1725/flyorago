@@ -14,9 +14,9 @@ const SettingsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Saved user profile values from localStorage
-  const savedFullName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const savedFullName = localStorage.getItem('flyora_user_name') || 'User';
   const nameParts = savedFullName.trim().split(/\s+/);
-  const defaultFirst = nameParts[0] || 'Vedant';
+  const defaultFirst = nameParts[0] || 'User';
   const defaultLast = nameParts.slice(1).join(' ') || 'Sharma';
 
   const [activeSubTab, setActiveSubTab] = useState<'profile' | 'notifications' | 'invite' | 'guidelines' | 'support'>('profile');
@@ -24,7 +24,7 @@ const SettingsPage: React.FC = () => {
   // Profile Form State
   const [firstName, setFirstName] = useState(defaultFirst);
   const [lastName, setLastName] = useState(defaultLast);
-  const [email, setEmail] = useState(localStorage.getItem('flyora_user_email') || 'vedant.sharma@example.com');
+  const [email, setEmail] = useState(localStorage.getItem('flyora_user_email') || '');
   const [phone, setPhone] = useState(localStorage.getItem('flyora_user_phone') || '+91 98765 43210');
   const [userAvatar, setUserAvatar] = useState(localStorage.getItem('flyora_user_avatar') || '');
   const [successMsg, setSuccessMsg] = useState('');
@@ -412,7 +412,7 @@ const SettingsPage: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-[#FFFDFB]">
+        <div className="flex-1 overflow-y-auto bg-[#FFFDFB] pb-28 lg:pb-0">
           {activeSubTab === 'profile' && renderProfile()}
           {activeSubTab === 'notifications' && renderNotifications()}
           {activeSubTab === 'invite' && renderInvite()}

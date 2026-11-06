@@ -38,7 +38,7 @@ const ShipmentDetailsDrawer: React.FC<Props> = ({ shipment, onClose }) => {
               <ShipmentStatusBadge status={shipment.status} />
             </div>
             <div className="shipment-drawer__hero-metrics">
-              <div><span>Reward</span><strong>${shipment.reward}</strong></div>
+              <div><span>Reward</span><strong>₹{shipment.reward}</strong></div>
               <div><span>Escrow</span><strong>{shipment.escrow}</strong></div>
               <div><span>Insurance</span><strong>{shipment.insurance}</strong></div>
             </div>

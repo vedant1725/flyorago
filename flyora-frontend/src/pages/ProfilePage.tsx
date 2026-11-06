@@ -28,8 +28,8 @@ const ProfilePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Local storage profile state
-  const [userName, setUserName] = useState(localStorage.getItem('flyora_user_name') || 'Vedant Sharma');
-  const [userEmail, setUserEmail] = useState(localStorage.getItem('flyora_user_email') || 'vedant.sharma@example.com');
+  const [userName, setUserName] = useState(localStorage.getItem('flyora_user_name') || 'User');
+  const [userEmail, setUserEmail] = useState(localStorage.getItem('flyora_user_email') || '');
   const [userPhone, setUserPhone] = useState(localStorage.getItem('flyora_user_phone') || '+91 98765 43210');
   const [userAvatar, setUserAvatar] = useState(localStorage.getItem('flyora_user_avatar') || '');
   const [userBio, setUserBio] = useState(localStorage.getItem('flyora_user_bio') || 'Passionate international traveler and tech enthusiast. Happy to carry safe documents and verified items.');
@@ -262,7 +262,7 @@ const ProfilePage: React.FC = () => {
         </header>
 
         {/* Scrollable Main Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 pb-28 lg:pb-8">
 
           {/* User Profile Header */}
           <section className="bg-white rounded-[16px] border border-slate-200 p-6 sm:p-8 mb-6 flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 shadow-sm">

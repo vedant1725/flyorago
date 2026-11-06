@@ -89,7 +89,22 @@ const SignupPage: React.FC = () => {
         throw new Error(resData.message || 'OTP verification failed. Please try again.');
       }
 
-      // Success: Redirect to KYC page!
+      // Store authentic verified user details in localStorage
+      if (resData.data) {
+        if (resData.data.userId) localStorage.setItem('flyora_user_id', resData.data.userId);
+        if (resData.data.fullName) localStorage.setItem('flyora_user_name', resData.data.fullName);
+        if (resData.data.email) localStorage.setItem('flyora_user_email', resData.data.email);
+        localStorage.setItem('flyora_kyc_status', 'NOT_SUBMITTED');
+        localStorage.setItem('flyora_user_role', resData.data.role || 'sender');
+        localStorage.setItem('flyora_login_time', Date.now().toString());
+
+        if (resData.data.tokens) {
+          localStorage.setItem('flyora_access_token', resData.data.tokens.access);
+          localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
+        }
+      }
+
+      // Success: Redirect to KYC verification page!
       navigate('/kyc');
     } catch (err: any) {
       setOtpError(err.message || 'Verification failed. Please check the code.');
@@ -160,24 +175,10 @@ const SignupPage: React.FC = () => {
         throw new Error(errorDetail);
       }
 
-      // Store user details in localStorage
-      localStorage.setItem('flyora_user_id', resData.data.userId);
-      localStorage.setItem('flyora_user_name', resData.data.fullName);
-      if (resData.data.role) {
-        localStorage.setItem('flyora_user_role', resData.data.role);
-      } else if (resData.data.user && resData.data.user.role) {
-        localStorage.setItem('flyora_user_role', resData.data.user.role);
-      } else {
-        localStorage.setItem('flyora_user_role', 'sender');
-      }
-      if (resData.data.tokens) {
-        localStorage.setItem('flyora_access_token', resData.data.tokens.access);
-        localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
-      }
-
-      // Instead of direct navigation, open the OTP verification screen
+      // Top MNC Strict Verification Flow:
+      // Keep session in memory and transition to 6-digit Email OTP confirmation screen
       setShowOtpScreen(true);
-      setOtpCode('');
+      setResendCooldown(60);
       setOtpError('');
     } catch (err: any) {
       if (err.message === 'Failed to fetch') {

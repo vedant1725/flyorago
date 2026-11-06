@@ -89,7 +89,7 @@ const ShipmentCard: React.FC<Props> = ({ shipment, onViewDetails, onEdit, onDupl
         <div className="shipment-card__package-grid">
           <div><span>Weight</span><strong>{shipment.weight}</strong></div>
           <div><span>Dimensions</span><strong>{shipment.dimensions}</strong></div>
-          <div><span>Reward</span><strong>${shipment.reward}</strong></div>
+          <div><span>Reward</span><strong>₹{shipment.reward}</strong></div>
           <div><span>Insurance</span><strong>{shipment.insurance}</strong></div>
           <div><span>Escrow</span><strong>{shipment.escrow}</strong></div>
           <div><span>Status</span><strong>{shipment.status}</strong></div>

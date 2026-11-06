@@ -57,7 +57,7 @@ const defaultFilters = {
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

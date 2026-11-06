@@ -38,6 +38,7 @@ const AdminLoginPage: React.FC = () => {
 
         localStorage.setItem('flyora_admin_authenticated', 'true');
         localStorage.setItem('flyora_admin_email', email.trim().toLowerCase());
+        localStorage.setItem('flyora_login_time', Date.now().toString());
 
         setIsLoading(false);
         navigate('/admin/dashboard');

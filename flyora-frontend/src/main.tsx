@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { registerServiceWorker } from './utils/webNotification';
+
+// Initialize background worker for native mobile shutter & desktop tray notifications
+registerServiceWorker();
 
 const rootElement = document.getElementById('root');
 

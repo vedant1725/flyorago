@@ -6,6 +6,7 @@ import AboutUsPage from './pages/AboutUsPage';
 import ContactUsPage from './pages/ContactUsPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SignupPage from './pages/SignupPage';
 import KycPage from './pages/KycPage';
 import KycAdminPage from './pages/KycAdminPage';
@@ -17,7 +18,8 @@ import BookingsPage from './pages/BookingsPage';
 import ShipmentsPage from './pages/ShipmentsPage';
 import SenderPage from './pages/SenderPage';
 import TravelerPage from './pages/TravelerPage';
-import ShopperPage from './pages/ShopperPage';
+import CreateSenderRequestPage from './pages/CreateSenderRequestPage';
+import CreateTravelerTripPage from './pages/CreateTravelerTripPage';
 
 // Import Inner & Support Pages
 import WalletPage from './pages/WalletPage';
@@ -53,6 +55,7 @@ import { SocketProvider } from './context/SocketContext';
 import { FlyoraAIProvider } from './context/FlyoraAIContext';
 import { FlyoraAIFloatingButton } from './components/ai/FlyoraAIFloatingButton';
 import { FlyoraAIChatWindow } from './components/ai/FlyoraAIChatWindow';
+import { SessionWatchdog } from './components/common/SessionWatchdog';
 
 const App: React.FC = () => {
   return (
@@ -67,6 +70,7 @@ const App: React.FC = () => {
               <Route path="/contact" element={<ContactUsPage />} />
               <Route path="/how-it-works" element={<HowItWorksPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/kyc" element={<KycPage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -78,8 +82,9 @@ const App: React.FC = () => {
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/shipments" element={<ShipmentsPage />} />
               <Route path="/sender" element={<SenderPage />} />
+              <Route path="/sender/new" element={<CreateSenderRequestPage />} />
               <Route path="/traveler" element={<TravelerPage />} />
-              <Route path="/shopper" element={<ShopperPage />} />
+              <Route path="/traveler/new" element={<CreateTravelerTripPage />} />
 
               {/* Inner Pages */}
               <Route path="/wallet" element={<WalletPage />} />
@@ -96,8 +101,6 @@ const App: React.FC = () => {
               <Route path="/wallet/transaction/:id" element={<TransactionDetailsPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/trust" element={<TrustDashboardPage />} />
-              <Route path="/luggage-sharing" element={<LuggageSharingPage />} />
-              <Route path="/admin/luggage" element={<LuggageAdminPage />} />
               <Route path="/ai" element={<FlyoraAIPage />} />
 
               {/* Footer Company & Legal Pages */}
@@ -115,6 +118,7 @@ const App: React.FC = () => {
             {/* Global Flyora AI Floating Assistant */}
             <FlyoraAIChatWindow />
             <FlyoraAIFloatingButton />
+            <SessionWatchdog />
           </Router>
         </FlyoraAIProvider>
       </SocketProvider>

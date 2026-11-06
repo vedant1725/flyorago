@@ -1,3 +1,4 @@
+import { LocationAutocomplete } from '../components/ui/LocationAutocomplete';
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { WeatherWidget } from '../components/WeatherWidget';
@@ -185,7 +186,7 @@ const TripsPage: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
 
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
   const [isRegisterTripOpen, setIsRegisterTripOpen] = useState(false);
   const [tripsList, setTripsList] = useState<any[]>([]);
@@ -236,7 +237,7 @@ const TripsPage: React.FC = () => {
           terminalFrom: t.terminal_from || 'T3',
           terminalTo: t.terminal_to || 'T1',
           space: `${t.available_weight} KG`,
-          price: `$${t.price_per_kg || '8.5'}`,
+          price: `₹${t.price_per_kg || '8.5'}`,
           seats: t.seats || '2 Seats',
           bookings: `${t.bookings_count} / 12`,
           progress: t.progress || 0,
@@ -287,7 +288,7 @@ const TripsPage: React.FC = () => {
     { icon: PlaneTakeoff, title: 'Upcoming Trips', value: upcomingTripsCount.toString(), trend: 'Active' },
     { icon: Luggage, title: 'Active Bookings', value: activeBookingsCount.toString(), trend: 'Active' },
     { icon: Package, title: 'Available Luggage Space', value: `${availableSpace} KG`, trend: 'Available' },
-    { icon: Wallet, title: 'Total Earnings', value: `$${wallet.available.toFixed(2)}`, trend: 'Available' },
+    { icon: Wallet, title: 'Total Earnings', value: `₹${wallet.available.toFixed(2)}`, trend: 'Available' },
   ];
 
 
@@ -497,7 +498,7 @@ const TripsPage: React.FC = () => {
             <div className="trip-bottom__stats fly-stat-grid">
               <article className="fly-card trip-mini-stat">
                 <div className="trip-mini-stat__title">Monthly Earnings</div>
-                <div className="trip-mini-stat__value">${wallet.available.toFixed(2)}</div>
+                <div className="trip-mini-stat__value">₹{wallet.available.toFixed(2)}</div>
                 <div className="trip-mini-stat__trend">Active</div>
               </article>
               <article className="fly-card trip-mini-stat">
@@ -576,9 +577,9 @@ const TripsPage: React.FC = () => {
 
           <article className="fly-card fly-utility-card trips-widget trips-widget--wallet">
             <div className="fly-card-title">Wallet Summary</div>
-            <div className="fly-summary-row"><span>Available Balance</span><strong>${wallet.available.toFixed(2)}</strong></div>
-            <div className="fly-summary-row"><span>Pending</span><strong>${wallet.pending.toFixed(2)}</strong></div>
-            <div className="fly-summary-row"><span>Escrow</span><strong>${wallet.escrow.toFixed(2)}</strong></div>
+            <div className="fly-summary-row"><span>Available Balance</span><strong>₹{wallet.available.toFixed(2)}</strong></div>
+            <div className="fly-summary-row"><span>Pending</span><strong>₹{wallet.pending.toFixed(2)}</strong></div>
+            <div className="fly-summary-row"><span>Escrow</span><strong>₹{wallet.escrow.toFixed(2)}</strong></div>
             <button type="button" className="fly-link-button fly-link-inline" onClick={() => navigate('/wallet')}>Go to Wallet <ArrowRight size={13} strokeWidth={2.3} /></button>
           </article>
 
@@ -638,14 +639,26 @@ const TripsPage: React.FC = () => {
                     onChange={handleInputChange}
                   />
                 </label>
-                <label>
-                  <span>From City</span>
-                  <input type="text" name="from_location" required placeholder="e.g. Mumbai" value={formData.from_location} onChange={handleInputChange} />
-                </label>
-                <label>
-                  <span>To City</span>
-                  <input type="text" name="to_location" required placeholder="e.g. Dubai" value={formData.to_location} onChange={handleInputChange} />
-                </label>
+                <div className="trip-modal__field">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">From City / Airport</span>
+                  <LocationAutocomplete
+                    name="from_location"
+                    value={formData.from_location}
+                    onChange={(val) => setFormData(prev => ({ ...prev, from_location: val }))}
+                    placeholder="Type city or airport (e.g. Mumbai, AMD)..."
+                    required
+                  />
+                </div>
+                <div className="trip-modal__field">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">To City / Airport</span>
+                  <LocationAutocomplete
+                    name="to_location"
+                    value={formData.to_location}
+                    onChange={(val) => setFormData(prev => ({ ...prev, to_location: val }))}
+                    placeholder="Type city or airport (e.g. Delhi, DEL)..."
+                    required
+                  />
+                </div>
                 <label>
                   <span>Departure Time</span>
                   <input type="time" name="departure_time" required value={formData.departure_time} onChange={handleInputChange} />

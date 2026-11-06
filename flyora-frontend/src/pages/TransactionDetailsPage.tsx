@@ -27,7 +27,7 @@ const TransactionDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
 
   const [tx, setTx] = useState<any>(null);
