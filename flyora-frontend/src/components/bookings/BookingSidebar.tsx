@@ -40,9 +40,9 @@ const BookingSidebar: React.FC = () => {
 
       <article className="fly-card fly-utility-card bookings-widget bookings-widget--wallet">
         <div className="fly-card-title">Wallet Summary</div>
-        <div className="fly-summary-row"><span>Available Balance</span><strong>$1,250.00</strong></div>
-        <div className="fly-summary-row"><span>Pending</span><strong>$180.00</strong></div>
-        <div className="fly-summary-row"><span>Escrow</span><strong>$540.00</strong></div>
+        <div className="fly-summary-row"><span>Available Balance</span><strong>₹1,250.00</strong></div>
+        <div className="fly-summary-row"><span>Pending</span><strong>₹180.00</strong></div>
+        <div className="fly-summary-row"><span>Escrow</span><strong>₹540.00</strong></div>
         <button type="button" className="fly-link-button fly-link-inline">Go to Wallet <ArrowRight size={13} strokeWidth={2.3} /></button>
       </article>
 
@@ -51,7 +51,7 @@ const BookingSidebar: React.FC = () => {
         <div className="bookings-quick-stats">
           <div><Wallet size={15} strokeWidth={2} /><span>Total Bookings</span><strong>227</strong></div>
           <div><Cloud size={15} strokeWidth={2} /><span>Success Rate</span><strong>98%</strong></div>
-          <div><SunMedium size={15} strokeWidth={2} /><span>Avg. Reward</span><strong>$62.45</strong></div>
+          <div><SunMedium size={15} strokeWidth={2} /><span>Avg. Reward</span><strong>₹62.45</strong></div>
           <div><MapPin size={15} strokeWidth={2} /><span>Routes Active</span><strong>156</strong></div>
         </div>
       </article>

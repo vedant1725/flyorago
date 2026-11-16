@@ -4,14 +4,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Plane, Package, Wallet, Bell, ShieldCheck, ArrowLeft, CheckCircle2,
   XCircle, Eye, X, UserCheck, Clock, Camera, KeyRound, Truck, MapPin,
-  Upload, ShieldAlert, QrCode
+  Upload, ShieldAlert, QrCode, User, Phone
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
+import { NotificationDropdown } from '../components/ui/NotificationDropdown';
+import { useToast } from '../context/ToastContext';
 
 const TripDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [trip, setTrip] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +82,7 @@ const TripDetailsPage: React.FC = () => {
           terminalTo: 'T-1',
           totalWeight: t.capacity_weight || 15,
           availableWeight: t.available_weight || 10,
-          price: `$${t.price_per_kg || 15}`,
+          price: `₹${t.price_per_kg || 15}`,
           status: t.status || 'Active',
           bookings: mergedBookings,
         });
@@ -104,7 +107,7 @@ const TripDetailsPage: React.FC = () => {
             terminalTo: 'T-1',
             totalWeight: b.weight || 15,
             availableWeight: b.weight || 10,
-            price: `$${b.reward || 15}`,
+            price: `₹${b.reward || 15}`,
             status: b.status || 'Active',
             bookings: [b],
           });
@@ -127,10 +130,10 @@ const TripDetailsPage: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({ action: actionName })
       });
-      alert(`Booking request ${actionName.toLowerCase()}ed successfully!`);
+      addToast('Request Updated', `Booking request ${actionName.toLowerCase()}ed successfully!`, 'success');
       fetchTripDetails();
     } catch (err: any) {
-      alert(`Action failed: ${err.message}`);
+      addToast('Action Failed', err.message || 'Server error occurred. Please try again.', 'error');
     }
   };
 
@@ -214,7 +217,7 @@ const TripDetailsPage: React.FC = () => {
       <main className="flex-1 lg:ml-[240px] flex flex-col min-h-screen overflow-y-auto pb-24 lg:pb-10">
         
         {/* Top Header */}
-        <header className="h-[70px] lg:h-[80px] bg-white border-b border-slate-100 flex items-center justify-between px-4 lg:px-8 shrink-0 sticky top-0 z-30 shadow-xs">
+        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0 sticky top-0 z-30 shadow-xs">
           <button
             type="button"
             onClick={() => navigate('/traveler')}
@@ -224,19 +227,22 @@ const TripDetailsPage: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/notifications')}
-              className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
+            <NotificationDropdown />
             <HeaderProfileDropdown />
           </div>
         </header>
 
         {/* Content Container */}
         <div className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
+          <div className="lg:hidden flex items-center justify-between pb-2">
+            <button
+              type="button"
+              onClick={() => navigate('/traveler')}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-flyora-teal bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
+            >
+              <ArrowLeft size={14} /> Back to Traveler
+            </button>
+          </div>
 
           {loading ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs">
@@ -382,6 +388,51 @@ const TripDetailsPage: React.FC = () => {
                           </div>
                         )}
 
+                        {/* Designated Receiver Details Card */}
+                        {(b.receiver_name || b.receiver?.name || b.receiver_phone || b.receiver?.phone) && (
+                          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-slate-50 border border-emerald-200/80 shadow-2xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-sm shrink-0">
+                                  <User size={16} />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-300/60">
+                                      Parcel Recipient
+                                    </span>
+                                    <span className="text-[11px] font-semibold text-slate-400">Delivery Contact</span>
+                                  </div>
+                                  <h5 className="text-sm font-black text-slate-800 mt-0.5">
+                                    {b.receiver_name || b.receiver?.name || 'Designated Receiver'}
+                                  </h5>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {(b.receiver_phone || b.receiver?.phone) && (
+                                  <a
+                                    href={`tel:${b.receiver_phone || b.receiver?.phone}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-extrabold text-xs hover:bg-emerald-600 hover:text-white transition shadow-xs"
+                                    title="Call Receiver"
+                                  >
+                                    <Phone size={13} />
+                                    <span>{b.receiver_phone || b.receiver?.phone}</span>
+                                  </a>
+                                )}
+                                {(b.receiver_address || b.receiver?.address) && (
+                                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 border border-slate-200 text-slate-600 text-xs font-semibold">
+                                    <MapPin size={13} className="text-emerald-600 shrink-0" />
+                                    <span className="truncate max-w-[220px]" title={b.receiver_address || b.receiver?.address}>
+                                      {b.receiver_address || b.receiver?.address}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Specs & Actions */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-100">
                           <div className="grid grid-cols-3 gap-3 flex-1 text-xs">
@@ -395,7 +446,7 @@ const TripDetailsPage: React.FC = () => {
                             </div>
                             <div>
                               <span className="text-[10px] font-bold text-slate-400 uppercase block">Reward</span>
-                              <strong className="text-emerald-600 font-bold">${b.reward || b.agreed_price || 0}</strong>
+                              <strong className="text-emerald-600 font-bold">₹{b.reward || b.agreed_price || 0}</strong>
                             </div>
                           </div>
 
@@ -563,7 +614,7 @@ const TripDetailsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-600 font-medium leading-relaxed">
-              Ask the Sender for their <strong>6-digit Delivery Handover OTP</strong> or scan their <strong>QR Code</strong> upon receiving the parcel. Entering the correct code will release <strong>${selectedBookingForOtp?.reward}</strong> Escrow reward to your wallet!
+              Ask the Sender for their <strong>6-digit Delivery Handover OTP</strong> or scan their <strong>QR Code</strong> upon receiving the parcel. Entering the correct code will release <strong>₹{selectedBookingForOtp?.reward}</strong> Escrow reward to your wallet!
             </p>
 
             <div className="space-y-3">

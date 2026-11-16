@@ -5,7 +5,7 @@ import {
   Plane, Package, Wallet, Bell, ShieldCheck, ArrowLeft, CheckCircle2,
   XCircle, Eye, X, UserCheck, Clock, Search, Lock, KeyRound, Truck,
   MapPin, Check, ArrowRight, ShieldAlert, Sparkles, CreditCard, Camera,
-  Upload, CheckCircle, ArrowUpRight, AlertTriangle
+  Upload, CheckCircle, ArrowUpRight, AlertTriangle, User, Phone
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { useSocket } from '../context/SocketContext';
@@ -113,7 +113,9 @@ const BookingDetailsPage: React.FC = () => {
           packageImage: senderTrip.package_image,
           acceptedParcelTypes: senderTrip.accepted_parcel_types || [],
           weight: senderTrip.capacity_weight || senderTrip.available_weight || 1,
-          reward: parseFloat(senderTrip.price_per_kg || linkedBooking?.reward || 50),
+          reward: linkedBooking?.reward !== undefined && linkedBooking?.reward !== null 
+            ? parseFloat(linkedBooking.reward) 
+            : (parseFloat(senderTrip.capacity_weight || senderTrip.available_weight || 1) * parseFloat(senderTrip.price_per_kg || 10)),
           deliveryOtp: rawOtp,
           route: {
             from: senderTrip.from_location,
@@ -132,6 +134,11 @@ const BookingDetailsPage: React.FC = () => {
           linkedBookingId: linkedBooking?.id || senderTrip.id,
           paymentStatus: linkedBooking?.payment_status || 'Unpaid',
           escrowStatus: linkedBooking?.escrow_status || (isPaid ? 'Active Hold' : 'Not Locked'),
+          receiver: {
+            name: linkedBooking?.receiver_name || linkedBooking?.receiver?.name || (senderTrip?.terminal_from !== 'N/A' ? senderTrip?.terminal_from : '') || 'Receiver',
+            phone: linkedBooking?.receiver_phone || linkedBooking?.receiver?.phone || (senderTrip?.terminal_to !== 'N/A' ? senderTrip?.terminal_to : '') || '',
+            address: linkedBooking?.receiver_address || linkedBooking?.receiver?.address || senderTrip?.to_location || ''
+          },
         });
       } else if (b) {
         const rawOtp = b.delivery_otp || b.deliveryOtp || String((b.id * 3791 + 100000) % 900000 + 100000);
@@ -177,6 +184,11 @@ const BookingDetailsPage: React.FC = () => {
           linkedBookingId: b.id,
           paymentStatus: isPaid ? 'PAID' : (b.payment_status || 'Unpaid'),
           escrowStatus: b.escrow_status || (isPaid ? 'Active Hold' : 'Not Locked'),
+          receiver: {
+            name: b.receiver_name || b.receiver?.name || 'Receiver',
+            phone: b.receiver_phone || b.receiver?.phone || '',
+            address: b.receiver_address || b.receiver?.address || (b.trip?.to_location || '')
+          },
         });
       }
     } catch (err) {
@@ -187,6 +199,8 @@ const BookingDetailsPage: React.FC = () => {
   };
 
   const [platformFee, setPlatformFee] = useState<number>(10.00);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [paymentError, setPaymentError] = useState<string>('');
 
   useEffect(() => {
     loadBookingData();
@@ -195,6 +209,14 @@ const BookingDetailsPage: React.FC = () => {
         const res = await apiFetch('/api/payments/settings/');
         if (res?.data?.platform_fee !== undefined) {
           setPlatformFee(Number(res.data.platform_fee));
+        }
+        try {
+          const wRes = await apiFetch('/api/wallet/summary/');
+          if (wRes?.data?.balance_available !== undefined) {
+            setWalletBalance(parseFloat(wRes.data.balance_available) || 0);
+          }
+        } catch (wErr) {
+          console.error("Wallet summary note:", wErr);
         }
       } catch (err) {
         console.error("Failed to load platform fee", err);
@@ -206,12 +228,16 @@ const BookingDetailsPage: React.FC = () => {
   // Execute Payment via Modal & Open Confirmation Success Popup
   const handleConfirmPayment = async () => {
     if (!booking) return;
+    setPaymentError('');
     setIsProcessingPayment(true);
     const bookingId = booking.linkedBookingId || booking.rawId;
     try {
       await apiFetch(`/api/bookings/${bookingId}/action`, {
         method: 'POST',
-        body: JSON.stringify({ action: 'PAY' })
+        body: JSON.stringify({ 
+          action: 'PAY',
+          payment_method: selectedPaymentMethod 
+        })
       });
       const mockRef = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
       setTxnRef(mockRef);
@@ -219,7 +245,7 @@ const BookingDetailsPage: React.FC = () => {
       setShowSuccessModal(true);
       loadBookingData();
     } catch (err: any) {
-      alert("Payment failed: " + err.message);
+      setPaymentError(err.message || 'Payment execution failed.');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -308,7 +334,7 @@ const BookingDetailsPage: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({ action: 'CONFIRM_DELIVERY' })
       });
-      alert("🎉 Handover OTP Verified! Parcel status marked as Completed & $" + booking.reward + " Escrow released to Traveler Wallet!");
+      alert("🎉 Handover OTP Verified! Parcel status marked as Completed & ₹" + booking.reward + " Escrow released to Traveler Wallet!");
       setShowOtpModal(false);
       setInputOtp('');
       loadBookingData();
@@ -374,7 +400,7 @@ const BookingDetailsPage: React.FC = () => {
       <main className="flex-1 lg:ml-[240px] flex flex-col min-h-screen overflow-y-auto pb-24 lg:pb-10">
 
         {/* Top Header */}
-        <header className="h-[70px] lg:h-[80px] bg-white border-b border-slate-100 flex items-center justify-between px-4 lg:px-8 shrink-0 sticky top-0 z-30 shadow-xs">
+        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0 sticky top-0 z-30 shadow-xs">
           <button
             type="button"
             onClick={() => navigate('/sender')}
@@ -397,6 +423,15 @@ const BookingDetailsPage: React.FC = () => {
 
         {/* Content Container */}
         <div className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
+          <div className="lg:hidden flex items-center justify-between pb-2">
+            <button
+              type="button"
+              onClick={() => navigate('/sender')}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-flyora-teal bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
+            >
+              <ArrowLeft size={14} /> Back to Sender
+            </button>
+          </div>
 
           {loading ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs">
@@ -445,7 +480,7 @@ const BookingDetailsPage: React.FC = () => {
                       onClick={() => setShowPaymentModal(true)}
                       className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-2xl shadow-xl shadow-emerald-500/25 transition flex items-center gap-2 animate-bounce"
                     >
-                      <Wallet size={16} /> Pay Now (${booking.reward})
+                      <Wallet size={16} /> Pay Now (₹{booking.reward})
                     </button>
                   )}
 
@@ -558,7 +593,7 @@ const BookingDetailsPage: React.FC = () => {
                     Offered Reward & Payment Status
                   </h3>
                   <div className="text-center py-2">
-                    <div className="text-3xl font-black text-emerald-600">${booking.reward}</div>
+                    <div className="text-3xl font-black text-emerald-600">₹{booking.reward}</div>
                     <p className="text-xs text-slate-500 mt-1 font-bold">Reward Offered to Traveler</p>
                     <div className="mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5 text-xs">
                       <div className="flex justify-between">
@@ -573,6 +608,44 @@ const BookingDetailsPage: React.FC = () => {
                   </div>
                 </div>
               </section>
+
+              {/* Designated Receiver Information */}
+              {booking.receiver && (booking.receiver.name || booking.receiver.phone) && (
+                <section className="bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-slate-50 rounded-3xl p-6 border-2 border-emerald-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-md shrink-0">
+                      <User size={22} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-300/60">
+                          Designated Receiver
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500">Destination Contact</span>
+                      </div>
+                      <h4 className="text-base font-extrabold text-slate-900 mt-1">
+                        {booking.receiver.name || 'Recipient'}
+                      </h4>
+                      {booking.receiver.address && (
+                        <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-0.5">
+                          <MapPin size={13} className="text-emerald-600 shrink-0" />
+                          <span>{booking.receiver.address}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {booking.receiver.phone && (
+                    <a
+                      href={`tel:${booking.receiver.phone}`}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition"
+                    >
+                      <Phone size={15} />
+                      <span>Call Receiver: {booking.receiver.phone}</span>
+                    </a>
+                  )}
+                </section>
+              )}
 
               {/* If completed, show success banner */}
               {(booking.status === 'DELIVERED' || booking.status === 'PAYMENT_RELEASED' || booking.status === 'DISPUTED' || booking.status === 'DISPUTE_RESOLVED' || booking.status === 'DISPUTE_REJECTED') && (
@@ -767,7 +840,7 @@ const BookingDetailsPage: React.FC = () => {
                           onClick={() => setShowPaymentModal(true)}
                           className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2"
                         >
-                          <Wallet size={16} /> Pay Now (${booking.reward})
+                          <Wallet size={16} /> Pay Now (₹{booking.reward})
                         </button>
                       </div>
                     )}
@@ -828,16 +901,16 @@ const BookingDetailsPage: React.FC = () => {
                   <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-3 shadow-xs">
                     <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
                       <span>Traveler Reward:</span>
-                      <span className="text-slate-800 font-black">${travelerReward.toFixed(2)}</span>
+                      <span className="text-slate-800 font-black">₹{travelerReward.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
                       <span>Platform Service Fee:</span>
-                      <span className="text-slate-800 font-black">${platformFee.toFixed(2)}</span>
+                      <span className="text-slate-800 font-black">₹{platformFee.toFixed(2)}</span>
                     </div>
                     <div className="border-t border-slate-200/60 pt-3 flex justify-between items-center text-sm font-black text-slate-800">
                       <span>Total Escrow Amount:</span>
                       <span className="text-emerald-600 text-base font-black">
-                        ${(travelerReward + platformFee).toFixed(2)}
+                        ₹{(travelerReward + platformFee).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -907,7 +980,16 @@ const BookingDetailsPage: React.FC = () => {
               ) : (
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs flex justify-between items-center">
                   <span className="text-slate-500 font-medium">Available Wallet Balance:</span>
-                  <strong className="text-emerald-600 font-black text-sm">$450.00 USD</strong>
+                  <strong className={`font-black text-sm ${walletBalance < ((Number(booking?.reward) || 0) + platformFee) ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    ₹{walletBalance.toFixed(2)} INR
+                  </strong>
+                </div>
+              )}
+
+              {paymentError && (
+                <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-800 font-bold flex items-start gap-2 animate-in fade-in">
+                  <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                  <span>{paymentError}</span>
                 </div>
               )}
 
@@ -941,7 +1023,7 @@ const BookingDetailsPage: React.FC = () => {
                     Processing Payment...
                   </>
                 ) : (
-                  <>Pay Now (${((Number(booking?.reward) || (Number(booking?.weight) * (Number(booking?.trip_price_per_kg) || 10.0)) || 0) + platformFee).toFixed(2)}) 🔒</>
+                  <>Pay Now (₹{((Number(booking?.reward) || (Number(booking?.weight) * (Number(booking?.trip_price_per_kg) || 10.0)) || 0) + platformFee).toFixed(2)}) 🔒</>
                 )}
               </button>
             </div>
@@ -972,7 +1054,7 @@ const BookingDetailsPage: React.FC = () => {
               </span>
               <h2 className="text-2xl font-black text-slate-800 mt-2 tracking-tight">Payment Successful!</h2>
               <p className="text-xs text-slate-500 font-medium mt-1">
-                Your payment of <strong>${booking?.reward}</strong> was confirmed successfully and is held safely in Escrow. Status updated to <strong>Paid ✅</strong>.
+                Your payment of <strong>₹{booking?.reward}</strong> was confirmed successfully and is held safely in Escrow. Status updated to <strong>Paid ✅</strong>.
               </p>
             </div>
 
@@ -1098,7 +1180,7 @@ const BookingDetailsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-600 font-medium leading-relaxed">
-              Ask the Sender for their <strong>4-digit Delivery Handover OTP</strong> upon receiving the parcel. Entering the correct code will release <strong>${booking?.reward}</strong> Escrow reward to your wallet!
+              Ask the Sender for their <strong>4-digit Delivery Handover OTP</strong> upon receiving the parcel. Entering the correct code will release <strong>₹{booking?.reward}</strong> Escrow reward to your wallet!
             </p>
 
             <div className="space-y-2">

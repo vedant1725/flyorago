@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
-import { Plane, Search, Plus, Filter, Bell, ChevronDown, Edit2, Trash2, X, CalendarDays, Package, CreditCard, ShieldCheck, CheckCircle2, XCircle, Eye, User, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { Plane, Search, Plus, Filter, Bell, ChevronDown, Edit2, Trash2, X, CalendarDays, Package, CreditCard, ShieldCheck, CheckCircle2, XCircle, Eye, User, Mail, Phone, MapPin, ArrowRight, Wallet } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { useKycValidation } from '../hooks/useKycValidation';
 import { KycValidationModal } from '../components/ui/KycValidationModal';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
 import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { useSocket } from '../context/SocketContext';
+import { useToast } from '../context/ToastContext';
 import '../pages/dashboard.css';
 
 const TravelerPage: React.FC = () => {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const { validateAction, isModalOpen: isKycModalOpen, closeModal: closeKycModal, kycStatus } = useKycValidation();
   const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2);
@@ -28,6 +30,9 @@ const TravelerPage: React.FC = () => {
 
   const [allAvailableSenderRequests, setAllAvailableSenderRequests] = useState<any[]>([]);
   const [selectedTripToMatchSender, setSelectedTripToMatchSender] = useState<any | null>(null);
+  const [totalEarnings, setTotalEarnings] = useState<number>(0);
+  const [completedCount, setCompletedCount] = useState<number>(0);
+  const [deliveredCount, setDeliveredCount] = useState<number>(0);
 
   const fetchData = async () => {
     try {
@@ -42,6 +47,15 @@ const TravelerPage: React.FC = () => {
       }
       if (Array.isArray(data.availableSenders)) {
         setAllAvailableSenderRequests(data.availableSenders);
+      }
+      if (typeof data.total_earnings === 'number') {
+        setTotalEarnings(data.total_earnings);
+      }
+      if (typeof data.completed_trips === 'number') {
+        setCompletedCount(data.completed_trips);
+      }
+      if (typeof data.delivered_packages === 'number') {
+        setDeliveredCount(data.delivered_packages);
       }
     } catch (err: any) {
       console.error("Error fetching traveler overview:", err);
@@ -119,13 +133,13 @@ const TravelerPage: React.FC = () => {
   const handleBookingAction = async (bookingId: number, action: string) => {
     try {
       await apiFetch(`/api/bookings/${bookingId}/action`, { method: 'POST', body: JSON.stringify({ action }) });
-      alert(`Booking ${action.toLowerCase()}ed!`);
+      addToast('Request Updated', `Booking ${action.toLowerCase()}ed successfully!`, 'success');
       fetchData();
       if (action === 'ACCEPT') {
         setSelectedTripForRequests(null);
       }
     } catch (err: any) {
-      alert("Action failed: " + err.message);
+      addToast('Action Failed', err.message || 'Server error occurred. Please try again.', 'error');
     }
   };
 
@@ -172,47 +186,83 @@ const TravelerPage: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="mb-8">
-            <h1 className="text-2xl font-extrabold text-flyora-teal tracking-tight mb-1">Trip <span className="text-slate-800">& Earn</span></h1>
-            <p className="text-sm text-slate-500 font-medium">Manage your logistics, track active routes, and review your earnings profile.</p>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
+          <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight mb-1.5">
+                Trip <span className="text-transparent bg-clip-text bg-gradient-to-r from-flyora-teal to-teal-500">& Earn</span>
+              </h1>
+              <p className="text-sm font-bold text-slate-500 max-w-md leading-relaxed">
+                Manage your logistics, track active routes, and maximize your earnings with our advanced dashboard.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+              <div className="relative w-full sm:w-[320px]">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search routes, weight..."
+                  className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200/80 rounded-2xl text-sm font-semibold text-slate-700 outline-none focus:border-flyora-teal focus:ring-4 focus:ring-teal-500/10 transition-all shadow-sm placeholder:text-slate-400"
+                />
+              </div>
+              <button
+                onClick={() => validateAction(() => navigate('/traveler/new'))}
+                className="w-full sm:w-auto bg-gradient-to-r from-flyora-teal to-teal-600 text-white px-6 py-3.5 rounded-2xl text-sm font-black shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Plus size={18} strokeWidth={3} />
+                New Trip
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-            <div className="relative w-full md:w-[400px]">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by routes, weight, price/kg"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-full text-sm outline-none focus:border-flyora-teal transition shadow-sm"
-              />
-            </div>
-            <button
-              onClick={() => validateAction(() => setIsModalOpen(true))}
-              className="bg-flyora-teal text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg shadow-teal-500/20 hover:bg-teal-600 transition flex items-center gap-2 shrink-0"
-            >
-              <Plus size={16} />
-              Create Request
-            </button>
-          </div>
+          {/* Premium MNC-style Earnings Dashboard Card */}
+          <div className="relative rounded-[32px] p-8 md:p-10 mb-10 overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#0D1C33] to-[#0A1628] shadow-[0_20px_60px_rgba(10,22,40,0.15)] border border-slate-800">
+            {/* Abstract Decorative Background */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-flyora-teal/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+            
+            {/* Glossy Overlay Line */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
-          <div className="bg-flyora-teal rounded-[24px] p-8 text-white mb-10 relative overflow-hidden shadow-xl shadow-teal-500/20 flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
-            <div className="absolute -right-20 -top-40 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl"></div>
-
-            <div className="relative z-10 text-center md:text-left">
-              <div className="text-[10px] font-black tracking-widest text-white/70 mb-1 uppercase">TOTAL EARNINGS</div>
-              <div className="text-4xl md:text-5xl font-black tracking-tight">$6,000.00</div>
-            </div>
-
-            <div className="relative z-10 flex items-center gap-12 bg-white/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
-              <div className="text-center">
-                <div className="text-[10px] font-black tracking-widest text-white/70 mb-1 uppercase">TOTAL COMPLETED</div>
-                <div className="text-3xl font-black">1</div>
+            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
+              
+              {/* Earnings Section */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
+                    <Wallet size={12} className="text-teal-400" />
+                  </div>
+                  <span className="text-[11px] font-black tracking-[0.2em] text-teal-100 uppercase">Total Earnings</span>
+                </div>
+                <div className="text-5xl md:text-6xl font-black text-white tracking-tight flex items-baseline gap-2">
+                  <span className="text-teal-400 text-4xl md:text-5xl">₹</span>{Math.floor(totalEarnings).toLocaleString()}<span className="text-2xl md:text-3xl text-slate-400">.{(totalEarnings % 1).toFixed(2).substring(2)}</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-[10px] font-black tracking-widest text-white/70 mb-1 uppercase">TOTAL DELIVERED</div>
-                <div className="text-3xl font-black">0</div>
+
+              {/* Stats Section */}
+              <div className="flex items-center gap-4 w-full lg:w-auto">
+                <div className="flex-1 lg:flex-none flex flex-col items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
+                  <div className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Completed</div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle2 size={16} className="text-emerald-400" />
+                    </div>
+                    <span className="text-3xl font-black text-white">{completedCount}</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 lg:flex-none flex flex-col items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
+                  <div className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Delivered</div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <Package size={16} className="text-blue-400" />
+                    </div>
+                    <span className="text-3xl font-black text-white">{deliveredCount}</span>
+                  </div>
+                </div>
               </div>
+              
             </div>
           </div>
 
@@ -247,68 +297,126 @@ const TravelerPage: React.FC = () => {
               {trips
                 .filter(t => filterText === '' || t.status === filterText)
                 .map(t => {
-                  const tripReqs = bookingRequests.filter(r => 
-                    (r.trip === t.id || String(r.trip?.id) === String(t.id) || (r.from_location === t.from_location && r.to_location === t.to_location)) &&
+                  const allTripReqs = (t.bookings && t.bookings.length > 0) 
+                    ? t.bookings 
+                    : bookingRequests.filter(r => 
+                        r.trip === t.id || String(r.trip?.id) === String(t.id) || 
+                        (!r.trip && r.from_location === t.from_location && r.to_location === t.to_location)
+                      );
+                  
+                  const tripReqs = allTripReqs.filter((r: any) => 
                     r.status !== 'CANCELLED' && r.status !== 'REJECTED'
                   );
 
+                  let displayStatus = (t.status || 'ACTIVE').toUpperCase();
+                  if (allTripReqs.length > 0) {
+                    if (allTripReqs.some((r: any) => ['PAYMENT_RELEASED', 'COMPLETED', 'DELIVERED', 'RATED'].includes((r.status || '').toUpperCase()))) {
+                      displayStatus = 'COMPLETED';
+                    } else if (allTripReqs.some((r: any) => ['ACCEPTED', 'IN_TRANSIT', 'PAID', 'PARCEL_VERIFIED', 'ARRIVED', 'OUT_FOR_DELIVERY'].includes((r.status || '').toUpperCase()))) {
+                      displayStatus = allTripReqs.some((r: any) => (r.status || '').toUpperCase() === 'ACCEPTED') ? 'ACCEPTED' : 'ACTIVE';
+                    } else if (allTripReqs.every((r: any) => ['REJECTED', 'CANCELLED'].includes((r.status || '').toUpperCase()))) {
+                      displayStatus = 'REJECTED';
+                    } else if (allTripReqs.some((r: any) => ['PENDING', 'REQUEST_SENT', 'REQUEST_RECEIVED', 'WAITING_TRAVELLER'].includes((r.status || '').toUpperCase()))) {
+                      displayStatus = 'PENDING';
+                    }
+                  }
+
+                  const getStatusStyle = (status: string) => {
+                    const s = (status || '').toUpperCase();
+                    if (s === 'ACTIVE') return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                    if (s === 'ACCEPTED') return 'bg-teal-50 text-teal-700 border-teal-200';
+                    if (s === 'PAYMENT_RELEASED' || s === 'COMPLETED') return 'bg-blue-50 text-blue-600 border-blue-200';
+                    if (s === 'PENDING') return 'bg-amber-50 text-amber-600 border-amber-200';
+                    if (s === 'CANCELLED' || s === 'REJECTED') return 'bg-rose-50 text-rose-600 border-rose-200';
+                    return 'bg-slate-50 text-slate-600 border-slate-200';
+                  };
+
                   return (
-                    <div key={t.id} className="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm hover:shadow-md transition">
-                      <div className="flex justify-between items-center mb-6">
-                        <span className="text-xs font-semibold text-slate-400">Trip Id - #{t.id}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="bg-flyora-teal text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">{t.status || 'Active'}</span>
-                          <button className="text-slate-400 hover:text-flyora-teal"><ChevronDown className="-rotate-90" size={16} /></button>
+                    <div key={t.id} className="group bg-white rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(13,148,136,0.08)] transition-all duration-300 relative overflow-hidden flex flex-col">
+                      {/* Decorative top border gradient based on status */}
+                      <div className={`h-1.5 w-full bg-gradient-to-r ${
+                        displayStatus.toUpperCase() === 'ACTIVE' ? 'from-emerald-400 to-emerald-500' : 
+                        displayStatus.toUpperCase() === 'ACCEPTED' ? 'from-teal-400 to-teal-500' :
+                        (displayStatus.toUpperCase() === 'PAYMENT_RELEASED' || displayStatus.toUpperCase() === 'COMPLETED') ? 'from-blue-400 to-blue-500' :
+                        displayStatus.toUpperCase() === 'PENDING' ? 'from-amber-400 to-amber-500' :
+                        (displayStatus.toUpperCase() === 'REJECTED' || displayStatus.toUpperCase() === 'CANCELLED') ? 'from-rose-400 to-rose-500' :
+                        'from-slate-300 to-slate-400'
+                      }`}></div>
+
+                      <div className="p-6 flex-1 flex flex-col">
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                              <Plane size={14} className="text-slate-400 transform -rotate-45" />
+                            </div>
+                            <span className="text-xs font-black text-slate-700 tracking-tight">TRIP #{t.id}</span>
+                          </div>
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border shadow-sm ${getStatusStyle(displayStatus)}`}>
+                            {displayStatus}
+                          </span>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 mb-6">
-                        <CalendarDays size={14} className="text-flyora-teal" />
-                        {t.departure_date}
-                      </div>
+                        {/* Date */}
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-xs font-bold text-slate-600 mb-6 w-fit border border-slate-100 shadow-sm">
+                          <CalendarDays size={14} className="text-flyora-teal" />
+                          {t.departure_date}
+                        </div>
 
-                      <div className="flex flex-col gap-4 relative mb-6">
-                        <div className="absolute left-[5px] top-2 bottom-2 w-px border-l-2 border-dashed border-flyora-teal/30"></div>
-
-                        <div className="flex items-start gap-4">
-                          <div className="w-3 h-3 rounded-full border-2 border-flyora-teal bg-white mt-0.5 z-10"></div>
-                          <div className="w-full">
-                            <div className="text-[9px] font-black text-flyora-teal uppercase tracking-wider mb-0.5">From</div>
-                            <div className="text-sm font-bold text-slate-800 flex justify-between items-center">{t.from_location} <ChevronDown size={14} className="text-slate-400" /></div>
+                        {/* Route Timeline */}
+                        <div className="flex items-center justify-between relative mb-8">
+                          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-slate-200 border-t-2 border-dashed border-slate-200 z-0"></div>
+                          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full flex items-center justify-center z-10 text-flyora-teal border border-teal-100 shadow-sm">
+                            <Plane size={12} className="transform rotate-90" />
+                          </div>
+                          
+                          <div className="relative z-10 flex flex-col items-start bg-white pr-4">
+                            <div className="text-[10px] font-black text-flyora-teal uppercase tracking-widest mb-1">Departure</div>
+                            <div className="text-sm font-extrabold text-slate-800 capitalize">{t.from_location}</div>
+                          </div>
+                          
+                          <div className="relative z-10 flex flex-col items-end bg-white pl-4">
+                            <div className="text-[10px] font-black text-flyora-teal uppercase tracking-widest mb-1">Arrival</div>
+                            <div className="text-sm font-extrabold text-slate-800 capitalize">{t.to_location}</div>
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-4">
-                          <div className="w-3 h-3 rounded-full bg-flyora-teal mt-0.5 z-10"></div>
-                          <div className="w-full">
-                            <div className="text-[9px] font-black text-flyora-teal uppercase tracking-wider mb-0.5">To</div>
-                            <div className="text-sm font-bold text-slate-800 flex justify-between items-center">{t.to_location} <ChevronDown size={14} className="text-slate-400" /></div>
+                        {/* Stats/Details */}
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                          <div className="flex flex-col gap-1 p-3 rounded-xl bg-teal-50/50 border border-teal-100/50 hover:bg-teal-50 transition-colors">
+                            <span className="text-[10px] font-bold text-teal-600/70 uppercase">Available Space</span>
+                            <div className="flex items-center gap-1.5 text-xs font-black text-teal-800">
+                              <Package size={14} /> {t.available_weight} KG
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1 p-3 rounded-xl bg-teal-50/50 border border-teal-100/50 hover:bg-teal-50 transition-colors">
+                            <span className="text-[10px] font-bold text-teal-600/70 uppercase">Price per KG</span>
+                            <div className="flex items-center gap-1.5 text-xs font-black text-teal-800">
+                              <CreditCard size={14} /> ₹{t.price_per_kg}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-flyora-teal/20 text-flyora-teal bg-flyora-teal/5 text-xs font-bold">
-                          <Package size={14} /> {t.available_weight}kg
-                        </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-flyora-teal/20 text-flyora-teal bg-flyora-teal/5 text-xs font-bold">
-                          <CreditCard size={14} /> ${t.price_per_kg}/kg
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-5">
-                        <button
-                          onClick={() => navigate(`/trip/${t.id}`)}
-                          className="bg-flyora-teal hover:bg-teal-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-1.5"
-                        >
-                          <Eye size={13} /> View Trip & Requests ({tripReqs.length})
-                        </button>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => navigate(`/trip/${t.id}`)} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-flyora-teal hover:bg-slate-100 transition" title="View Details">
-                            <Eye size={13} />
+                        {/* Actions */}
+                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                          <button
+                            onClick={() => navigate(`/trip/${t.id}`)}
+                            className="flex-1 bg-slate-900 hover:bg-flyora-teal text-white text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-xl shadow-md hover:shadow-teal-500/25 transition-all duration-300 flex items-center justify-center gap-2 group-hover:bg-flyora-teal"
+                          >
+                            <Eye size={14} /> Manage Requests
+                            {tripReqs.length > 0 && (
+                              <span className="bg-white text-flyora-teal w-5 h-5 rounded-full flex items-center justify-center text-[10px] ml-1">
+                                {tripReqs.length}
+                              </span>
+                            )}
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTrip(t.id); }} className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition" title="Delete Trip">
-                            <X size={14} strokeWidth={3} />
+                          
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteTrip(t.id); }} 
+                            className="w-11 h-11 shrink-0 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300 shadow-sm" 
+                            title="Delete Trip"
+                          >
+                            <Trash2 size={16} strokeWidth={2.5} />
                           </button>
                         </div>
                       </div>
@@ -436,8 +544,17 @@ const TravelerPage: React.FC = () => {
                               Sender: {br.sender_name || br.sender?.name || 'Verified Sender'}
                             </div>
                             <div className="text-xs text-slate-500 mt-0.5 font-medium">
-                              Offered Reward: <strong className="text-emerald-600">${br.reward || br.agreed_price || 0}</strong>
+                              Offered Reward: <strong className="text-emerald-600">₹{br.reward || br.agreed_price || 0}</strong>
                             </div>
+                            {(br.receiver_name || br.receiver?.name || br.receiver_phone || br.receiver?.phone) && (
+                              <div className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 rounded-md px-2 py-1 mt-1.5 flex items-center gap-1.5 w-fit">
+                                <User size={12} className="text-emerald-600" />
+                                <span>Receiver: <strong>{br.receiver_name || br.receiver?.name || 'Receiver'}</strong></span>
+                                {(br.receiver_phone || br.receiver?.phone) && (
+                                  <span className="text-emerald-700 font-mono text-[11px] font-bold">({br.receiver_phone || br.receiver?.phone})</span>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -590,9 +707,44 @@ const TravelerPage: React.FC = () => {
                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Weight & Offered Reward</p>
                   <p className="text-sm font-black text-slate-800">{selectedBookingToInspect.weight} KG Space Required</p>
-                  <p className="text-xs font-bold text-emerald-600">${selectedBookingToInspect.reward || selectedBookingToInspect.agreed_price || 0} Reward Payment</p>
+                  <p className="text-xs font-bold text-emerald-600">₹{selectedBookingToInspect.reward || selectedBookingToInspect.agreed_price || 0} Reward Payment</p>
                 </div>
               </div>
+
+              {/* Designated Receiver Details */}
+              {(selectedBookingToInspect.receiver_name || selectedBookingToInspect.receiver?.name || selectedBookingToInspect.receiver_phone || selectedBookingToInspect.receiver?.phone) && (
+                <div className="bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-slate-50 rounded-2xl p-4 border border-emerald-200/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-300/60">
+                      <User size={12} /> Designated Receiver
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-400">Delivery Contact</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-800">
+                        {selectedBookingToInspect.receiver_name || selectedBookingToInspect.receiver?.name || 'Receiver'}
+                      </h4>
+                      {(selectedBookingToInspect.receiver_address || selectedBookingToInspect.receiver?.address) && (
+                        <p className="text-xs text-slate-600 flex items-center gap-1 mt-1 font-medium">
+                          <MapPin size={12} className="text-emerald-600 shrink-0" />
+                          <span>{selectedBookingToInspect.receiver_address || selectedBookingToInspect.receiver?.address}</span>
+                        </p>
+                      )}
+                    </div>
+                    {(selectedBookingToInspect.receiver_phone || selectedBookingToInspect.receiver?.phone) && (
+                      <a
+                        href={`tel:${selectedBookingToInspect.receiver_phone || selectedBookingToInspect.receiver?.phone}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs hover:bg-emerald-700 transition shadow-sm w-fit"
+                        title="Call Receiver"
+                      >
+                        <Phone size={13} />
+                        <span>{selectedBookingToInspect.receiver_phone || selectedBookingToInspect.receiver?.phone}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
             </div>
 

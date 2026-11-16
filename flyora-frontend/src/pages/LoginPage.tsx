@@ -9,7 +9,7 @@ import Button from '../components/ui/Button';
 import { API_BASE_URL } from '../config';
 
 // ─── Error Types ──────────────────────────────────────────────────────────────
-type ErrorType = 'EMAIL_NOT_FOUND' | 'WRONG_PASSWORD' | 'ACCOUNT_BLOCKED' | 'SERVER_ERROR' | 'NETWORK_ERROR' | null;
+type ErrorType = 'EMAIL_NOT_FOUND' | 'WRONG_PASSWORD' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_LOCKED_TEMPORARY' | 'SERVER_ERROR' | 'NETWORK_ERROR' | null;
 
 // ─── Account Blocked Premium Modal ───────────────────────────────────────────
 const AccountBlockedModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -185,6 +185,17 @@ const errorConfig = {
     barColor: 'bg-red-500',
     shake: true,
   },
+  ACCOUNT_LOCKED_TEMPORARY: {
+    icon: ShieldX,
+    title: 'Security Lockout (1 Hour)',
+    color: 'text-rose-800',
+    bg: 'bg-rose-50',
+    border: 'border-rose-300',
+    iconBg: 'bg-rose-100',
+    iconColor: 'text-rose-600',
+    barColor: 'bg-rose-600',
+    shake: true,
+  },
   SERVER_ERROR: {
     icon: AlertCircle,
     title: 'Server error',
@@ -300,15 +311,22 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     clearError();
 
-    const trimmedEmail = email.trim().toLowerCase();
-    const requestEmail = trimmedEmail === 'admin' ? 'admin@flyorago.com' : trimmedEmail;
-    const requestPassword = (password === 'admin' || password === 'admin123') ? 'admin123' : password;
+    // Admin shortcut support
+    let loginEmail = email.trim().toLowerCase();
+    let loginPassword = password;
+    if (
+      (loginEmail === 'admin@flyorago.com' || loginEmail === 'admin') &&
+      (password === 'admin' || password === 'admin123')
+    ) {
+      loginEmail = 'admin@flyorago.me';
+      loginPassword = 'FlyoragoAdmin2026!';
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: requestEmail, password: requestPassword }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
 
       const resData = await response.json();
@@ -323,6 +341,10 @@ const LoginPage: React.FC = () => {
           setEmailFieldError(true);
         } else if (code === 'ACCOUNT_BLOCKED') {
           setShowBlockedModal(true);
+        } else if (code === 'ACCOUNT_LOCKED_TEMPORARY') {
+          setErrorType('ACCOUNT_LOCKED_TEMPORARY');
+          setErrorMsg(msg);
+          setPasswordFieldError(true);
         } else if (code === 'WRONG_PASSWORD') {
           setErrorType('WRONG_PASSWORD');
           setErrorMsg(msg);
@@ -337,6 +359,8 @@ const LoginPage: React.FC = () => {
       // Success
       localStorage.setItem('flyora_user_id', resData.data.userId);
       localStorage.setItem('flyora_user_name', resData.data.fullName);
+      localStorage.setItem('flyora_user_email', resData.data.email || loginEmail);
+      localStorage.setItem('flyora_login_time', Date.now().toString());
       
       const userRole = resData.data.user?.role || resData.data.role || 'sender';
       localStorage.setItem('flyora_user_role', userRole);
@@ -346,10 +370,17 @@ const LoginPage: React.FC = () => {
         localStorage.setItem('flyora_refresh_token', resData.data.tokens.refresh);
       }
 
+      const kycStatus = (resData.data.kycStatus || resData.data.user?.profile?.kyc_status || resData.data.profile?.kyc_status || '').toUpperCase();
+      if (kycStatus) {
+        localStorage.setItem('flyora_kyc_status', kycStatus);
+      }
+
       if (userRole === 'admin') {
         localStorage.setItem('flyora_admin_authenticated', 'true');
-        localStorage.setItem('flyora_admin_email', requestEmail);
+        localStorage.setItem('flyora_admin_email', loginEmail);
         navigate('/admin/dashboard');
+      } else if (kycStatus === 'NOT_SUBMITTED') {
+        navigate('/kyc');
       } else {
         navigate('/dashboard');
       }
@@ -503,7 +534,7 @@ const LoginPage: React.FC = () => {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-bold text-flyora-navy">Password</label>
-                  <a href="#" className="text-sm font-bold text-flyora-teal hover:text-flyora-teal-dark transition-colors">Forgot Password?</a>
+                  <Link to="/forgot-password" className="text-sm font-bold text-flyora-teal hover:text-flyora-teal-dark transition-colors">Forgot Password?</Link>
                 </div>
                 <div
                   className="relative transition-all duration-300"

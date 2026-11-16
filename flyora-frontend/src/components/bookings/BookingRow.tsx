@@ -69,7 +69,7 @@ const BookingRow: React.FC<Props> = ({ booking, onViewDetails, onEdit, onDuplica
           </div>
         </td>
         <td><span className="booking-metric">{booking.weight}</span></td>
-        <td><span className="booking-metric booking-metric--reward">${booking.reward}</span></td>
+        <td><span className="booking-metric booking-metric--reward">₹{booking.reward}</span></td>
         <td>
           <div className="booking-payment">
             <BookingStatusBadge label={booking.paymentStatus} kind="payment" />
@@ -127,7 +127,7 @@ const BookingRow: React.FC<Props> = ({ booking, onViewDetails, onEdit, onDuplica
         </div>
 
         <div className="booking-row__mobile-stats">
-          <div><span>Reward</span><strong>${booking.reward}</strong></div>
+          <div><span>Reward</span><strong>₹{booking.reward}</strong></div>
           <div><span>Payment</span><BookingStatusBadge label={booking.paymentStatus} kind="payment" /></div>
         </div>
 

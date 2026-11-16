@@ -173,7 +173,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
 
           <section className="fly-hero-card fly-card">
             <div className="fly-hero-copy">
-              <h1>Welcome back, {userName.split(' ')[0] || 'Vedant'} 👋</h1>
+              <h1>Welcome back, {userName.split(' ')[0] || 'User'} 👋</h1>
               <p>Manage your trips, shipments and earnings from one place.</p>
               <button type="button" className="fly-btn fly-btn-primary" onClick={onRegisterTrip}>
                 <span className="fly-btn-icon"><ArrowRight size={14} strokeWidth={2.3} /></span>
@@ -235,15 +235,15 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
                 <Wallet size={18} strokeWidth={2} className="fly-wallet-card-icon" />
               </div>
               <div className="fly-wallet-summary-label">Available Balance</div>
-              <div className="fly-wallet-amount">${walletSummary ? walletSummary.balance_available.toFixed(2) : '1,250.00'}</div>
+              <div className="fly-wallet-amount">₹{walletSummary ? walletSummary.balance_available.toFixed(2) : '1,250.00'}</div>
               <div className="fly-wallet-split">
                 <div>
                   <span>Pending</span>
-                  <strong>${walletSummary ? walletSummary.balance_pending.toFixed(2) : '180.00'}</strong>
+                  <strong>₹{walletSummary ? walletSummary.balance_pending.toFixed(2) : '180.00'}</strong>
                 </div>
                 <div>
                   <span>Escrow</span>
-                  <strong>${walletSummary ? walletSummary.balance_escrow.toFixed(2) : '540.00'}</strong>
+                  <strong>₹{walletSummary ? walletSummary.balance_escrow.toFixed(2) : '540.00'}</strong>
                 </div>
               </div>
               <div className="fly-wallet-actions">
@@ -376,18 +376,18 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
               <div className="fly-section-head fly-earnings-head">
                 <div>
                   <div className="fly-card-title">Earnings Overview</div>
-                  <div className="fly-card-subtitle">$4,680.00 <span className="fly-positive">+18.6%</span> vs last month</div>
+                  <div className="fly-card-subtitle">₹4,680.00 <span className="fly-positive">+18.6%</span> vs last month</div>
                 </div>
                 <button type="button" className="fly-pill-button">This Month</button>
               </div>
 
               <div className="fly-chart-wrap">
                 <div className="fly-chart-axis">
-                  <span>$4K</span>
-                  <span>$3K</span>
-                  <span>$2K</span>
-                  <span>$1K</span>
-                  <span>$0</span>
+                  <span>₹4K</span>
+                  <span>₹3K</span>
+                  <span>₹2K</span>
+                  <span>₹1K</span>
+                  <span>₹0</span>
                 </div>
                 <svg className="fly-chart" viewBox="0 0 100 54" preserveAspectRatio="none" aria-hidden="true">
                   <defs>
@@ -413,7 +413,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
             <div className="fly-stat-grid">
               <article className="fly-card fly-mini-stat-card">
                 <div className="fly-mini-stat-label">Total Earnings</div>
-                <div className="fly-mini-stat-value">$4,680.00</div>
+                <div className="fly-mini-stat-value">₹4,680.00</div>
                 <ArrowUpRight size={15} strokeWidth={2.4} className="fly-mini-stat-icon" />
               </article>
               <article className="fly-card fly-mini-stat-card">

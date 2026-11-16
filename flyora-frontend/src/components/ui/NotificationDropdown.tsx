@@ -38,6 +38,12 @@ export const NotificationDropdown: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
+
+    const handleCustomNotif = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('flyora:notification', handleCustomNotif);
+    return () => window.removeEventListener('flyora:notification', handleCustomNotif);
   }, []);
 
   // Listen for real-time WebSocket notifications & prepend live
@@ -163,7 +169,16 @@ export const NotificationDropdown: React.FC = () => {
                     </div>
                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{n.message}</p>
                     <span className="text-[10px] font-semibold text-slate-400 mt-1 block">
-                      {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {(() => {
+                        if (!n.created_at) return 'Recently';
+                        try {
+                          const d = new Date(n.created_at);
+                          if (isNaN(d.getTime())) return 'Recently';
+                          return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } catch {
+                          return 'Recently';
+                        }
+                      })()}
                     </span>
                   </div>
                 </div>

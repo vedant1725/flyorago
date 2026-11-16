@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Home, LogOut, ChevronDown, User, ShieldCheck, BadgeCheck, Clock, ShieldAlert } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
@@ -18,6 +19,7 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [userName, setUserName] = useState(propName || localStorage.getItem('flyora_user_name') || 'User Account');
@@ -114,8 +116,13 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
     navigate('/');
   };
 
-  const handleLogout = () => {
+  const initiateLogout = () => {
     setIsOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
     localStorage.removeItem('flyora_user_id');
     localStorage.removeItem('flyora_user_name');
     localStorage.removeItem('flyora_user_role');
@@ -223,7 +230,7 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
 
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={initiateLogout}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all text-left"
             >
               <div className="w-7 h-7 rounded-lg bg-rose-100/80 text-rose-600 flex items-center justify-center">
@@ -233,6 +240,54 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
             </button>
           </div>
         </div>
+      )}
+
+      {/* ─── Advanced Logout Confirmation Modal (Portal) ─── */}
+      {showLogoutModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop with strong blur and fade-in animation */}
+          <div 
+            className="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setShowLogoutModal(false)}
+          ></div>
+          
+          {/* Modal Content with advanced pop animation */}
+          <div className="relative bg-white w-full max-w-sm rounded-[32px] p-8 shadow-[0_32px_64px_rgba(10,22,40,0.3)] border border-slate-100 animate-in zoom-in-[0.95] fade-in slide-in-from-bottom-4 duration-300 flex flex-col items-center text-center overflow-hidden">
+            {/* Decorative Top Gradient */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-400 to-rose-600"></div>
+            
+            {/* Animated Icon Circle */}
+            <div className="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center mb-6 relative group">
+              <div className="absolute inset-0 bg-rose-100 rounded-full scale-[1.2] opacity-50 animate-pulse"></div>
+              <LogOut size={36} strokeWidth={2.5} className="text-rose-500 relative z-10 transform transition-transform duration-500 group-hover:-translate-x-1" />
+            </div>
+            
+            {/* Text Content */}
+            <h3 className="text-2xl font-black text-slate-800 mb-2">Leaving so soon?</h3>
+            <p className="text-sm font-bold text-slate-500 mb-8 leading-relaxed">
+              Are you sure you want to log out of your FlyoraGo account? You'll need to log back in to manage your trips.
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row w-full gap-3">
+              <button
+                type="button"
+                className="flex-1 py-3.5 px-4 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 py-3.5 px-4 rounded-xl text-sm font-bold bg-rose-500 text-white shadow-lg shadow-rose-500/30 hover:bg-rose-600 transition-colors"
+                onClick={confirmLogout}
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -85,7 +85,7 @@ const DashboardOverview: React.FC<Props> = ({ overview, userName, onRefresh, onN
               <ArrowUpRight size={10} /> Live
             </span>
           </div>
-          <div className="stat-value">${totalEarnings.toFixed(0)}</div>
+          <div className="stat-value">₹{totalEarnings.toFixed(0)}</div>
           <div className="stat-label mt-1">Total Portfolio</div>
         </div>
 
@@ -97,7 +97,7 @@ const DashboardOverview: React.FC<Props> = ({ overview, userName, onRefresh, onN
               <Wallet size={22} className="text-indigo-500" />
             </div>
           </div>
-          <div className="stat-value">${overview.stats.walletBalance.toFixed(0)}</div>
+          <div className="stat-value">₹{overview.stats.walletBalance.toFixed(0)}</div>
           <div className="stat-label mt-1">Wallet Balance</div>
         </div>
 

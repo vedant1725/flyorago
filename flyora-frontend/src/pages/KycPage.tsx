@@ -74,24 +74,20 @@ const KycPage: React.FC = () => {
     try {
       // 1. Fetch user details and check verification
       const userMe = await apiFetch('/api/auth/me/');
-      const emailVerified = userMe.data.is_verified;
-      setIsEmailVerified(emailVerified);
+      // Bypass email verification check
+      setIsEmailVerified(true);
       setUserEmail(userMe.data.email || '');
 
-      // 2. If email is verified, fetch KYC documents status
-      if (emailVerified) {
-        const data = await apiFetch(`/api/kyc/status/${userId}`);
-        const status = data.data.status;
-        setKycStatus(status);
-        if (status === 'REJECTED') {
-          setRejectionReason(data.data.rejectionReason || 'Documents did not meet our verification criteria.');
-        }
-        
-        if (status === 'PENDING' || status === 'APPROVED') {
-          setViewMode('STATUS');
-        } else {
-          setViewMode('SUBMIT');
-        }
+      // Fetch KYC documents status directly
+      const data = await apiFetch(`/api/kyc/status/${userId}`);
+      const status = data.data.status;
+      setKycStatus(status);
+      if (status === 'REJECTED') {
+        setRejectionReason(data.data.rejectionReason || 'Documents did not meet our verification criteria.');
+      }
+      
+      if (status === 'PENDING' || status === 'APPROVED') {
+        setViewMode('STATUS');
       } else {
         setViewMode('SUBMIT');
       }
@@ -255,10 +251,10 @@ const KycPage: React.FC = () => {
       });
 
       setSubmitProgress(100);
+      localStorage.setItem('flyora_kyc_status', 'PENDING');
       setTimeout(() => {
-        setKycStatus('PENDING');
-        setViewMode('STATUS');
         setIsSubmitting(false);
+        navigate('/dashboard?kyc_submitted=true');
       }, 500);
     } catch (error: any) {
       console.error(error);
@@ -317,13 +313,10 @@ const KycPage: React.FC = () => {
               <Shield size={14} className="text-flyora-teal" />
               <span>Secure 256-bit Encryption</span>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="text-xs font-bold text-slate-700 hover:text-flyora-teal bg-slate-100 hover:bg-teal-50 border border-slate-200 px-4 py-2 rounded-full transition-all flex items-center gap-1 shadow-sm"
-            >
-              <span>Skip for now</span> &rarr;
-            </button>
+            <div className="flex items-center gap-1.5 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-full shadow-xs">
+              <Shield size={13} className="text-amber-600" />
+              <span>Mandatory KYC</span>
+            </div>
           </div>
         </div>
       </header>
@@ -462,13 +455,10 @@ const KycPage: React.FC = () => {
                 </div>
 
                 <div className="pt-4 flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => navigate('/dashboard')}
-                    className="text-xs font-bold text-slate-500 hover:text-flyora-teal underline"
-                  >
-                    Skip for now
-                  </button>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                    <Lock size={13} />
+                    <span>Verification required before dashboard</span>
+                  </div>
                   <Button variant="teal" className="px-8 py-3" onClick={() => setStep(2)}>
                     Start Uploads &rarr;
                   </Button>

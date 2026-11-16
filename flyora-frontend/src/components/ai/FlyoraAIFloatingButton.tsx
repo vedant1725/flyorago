@@ -1,13 +1,47 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useFlyoraAI } from '../../context/FlyoraAIContext';
-import { Sparkles, Bot, X, MessageSquare, Zap } from 'lucide-react';
+import { Sparkles, Bot, X, Zap } from 'lucide-react';
 
 export const FlyoraAIFloatingButton: React.FC = () => {
   const { isOpen, openAI, closeAI } = useFlyoraAI();
+  const location = useLocation();
+
+  // Completely hide on all Admin routes (/admin, /admin/dashboard, /admin/kyc, etc.)
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
+  // Determine if the current page is a dashboard page (has mobile bottom navigation bar)
+  const isDashboardRoute = [
+    '/dashboard',
+    '/trips',
+    '/traveler',
+    '/sender',
+    '/bookings',
+    '/shipments',
+    '/wallet',
+    '/earnings',
+    '/messages',
+    '/support',
+    '/profile',
+    '/settings',
+    '/analytics',
+    '/reports',
+    '/booking',
+    '/trip',
+    '/shipment',
+    '/trust',
+    '/notifications'
+  ].some(route => location.pathname === route || location.pathname.startsWith(route + '/'));
+
+  // On dashboard pages, hide on mobile to never block bottom navigation bar.
+  // On landing / public pages (like /), show on BOTH mobile and desktop!
+  const containerVisibility = isDashboardRoute ? 'hidden lg:flex' : 'flex';
 
   return (
-    <div className="fixed bottom-6 right-6 z-[999] flex items-center gap-3 select-none">
-      {/* Floating Pill Badge (Gemini / Copilot Style) */}
+    <div className={`${containerVisibility} fixed bottom-6 right-5 sm:right-6 z-[999] items-center gap-3 select-none`}>
+      {/* Floating Pill Badge (Gemini / Copilot Style) - visible on tablets/desktops */}
       {!isOpen && (
         <div
           onClick={() => openAI()}
@@ -30,7 +64,7 @@ export const FlyoraAIFloatingButton: React.FC = () => {
       <button
         onClick={() => (isOpen ? closeAI() : openAI())}
         aria-label="Toggle Flyora AI Assistant"
-        className={`relative group w-16 h-16 rounded-3xl flex items-center justify-center text-white shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+        className={`relative group w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl flex items-center justify-center text-white shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 ${
           isOpen
             ? 'bg-slate-900 border-2 border-slate-700 shadow-slate-900/40 rotate-90'
             : 'bg-gradient-to-tr from-flyora-teal via-teal-600 to-emerald-400 shadow-teal-500/40 hover:shadow-teal-500/60'
@@ -48,9 +82,8 @@ export const FlyoraAIFloatingButton: React.FC = () => {
           <X size={26} className="text-white transition-transform duration-300" />
         ) : (
           <div className="relative flex items-center justify-center">
-            <Bot size={28} className="text-white drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
-            <Sparkles size={14} className="absolute -top-2 -right-2 text-amber-300 animate-pulse drop-shadow-sm" />
-            <Zap size={10} className="absolute -bottom-1 -left-1 text-cyan-200 animate-bounce" />
+            <Bot size={28} className="text-white drop-shadow-md group-hover:rotate-12 transition-transform duration-300" />
+            <Sparkles size={14} className="absolute -top-1 -right-1 text-amber-300 animate-bounce" />
           </div>
         )}
       </button>

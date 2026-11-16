@@ -49,7 +49,7 @@ const sidebarItems = [
 
 const SupportPage: React.FC = () => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
 
   const [activeTab, setActiveTab] = useState<'faq' | 'tickets' | 'contact'>('faq');

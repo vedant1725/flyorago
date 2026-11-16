@@ -71,7 +71,7 @@ const ShipmentAnalytics: React.FC = () => {
         </article>
         <article className="fly-card shipment-mini-stat">
           <div className="shipment-mini-stat__title">Average Reward</div>
-          <div className="shipment-mini-stat__value">$62.45</div>
+          <div className="shipment-mini-stat__value">₹62.45</div>
           <div className="shipment-mini-stat__trend">+18.6%</div>
         </article>
         <article className="fly-card shipment-mini-stat">

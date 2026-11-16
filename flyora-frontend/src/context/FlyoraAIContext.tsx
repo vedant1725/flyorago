@@ -70,10 +70,9 @@ export const FlyoraAIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const welcomeMsg: AIMessage = {
       id: 'welcome-1',
       sender: 'ai',
-      text: "Hello! 👋 I am **Flyora AI**, your personal assistant for FlyoraGo.\n\nHow can I help you today? Ask me about **Luggage Sharing**, **Parcel Delivery**, **Wallet & Escrow**, or general travel tips!",
+      text: "Hello! 👋 I am **Flyora AI**, your personal assistant for FlyoraGo.\n\nHow can I help you today? Ask me about **Parcel Delivery**, **Wallet & Escrow**, or general travel logistics!",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       actions: [
-        { label: "🧳 Luggage Sharing", path: "/luggage-sharing" },
         { label: "📦 Send Package", path: "/sender" },
         { label: "💰 Wallet & Escrow", path: "/wallet" }
       ]
@@ -82,14 +81,12 @@ export const FlyoraAIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [suggestedPrompts, setSuggestedPrompts] = useState<{ id: number; title: string; prompt: string }[]>([
-    { id: 1, title: "🧳 How does Luggage Sharing work?", prompt: "How does Luggage Sharing work?" },
     { id: 2, title: "📦 How do I send a parcel?", prompt: "How do I send a parcel?" },
     { id: 3, title: "💰 Is my payment safe in Escrow?", prompt: "How is my payment protected in Escrow?" },
     { id: 4, title: "🛡️ What is Trust Score & KYC?", prompt: "What is Trust Score & KYC?" },
   ]);
 
   const [quickActions, setQuickActions] = useState<AIAction[]>([
-    { label: "🧳 Luggage Sharing", path: "/luggage-sharing" },
     { label: "💰 Open Wallet", path: "/wallet" },
     { label: "📦 Send Package", path: "/sender" },
     { label: "✈️ Publish Trip", path: "/trips" },

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
@@ -57,7 +58,7 @@ const defaultFilters = {
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -269,121 +270,121 @@ const BookingsPage: React.FC = () => {
       <Sidebar activeItem="Bookings" />
 
       <main className="flex-1 lg:ml-[240px] flex flex-col min-h-screen overflow-y-auto pb-24 lg:pb-10 p-4 sm:p-6 lg:p-8 space-y-6">
-          <div className="fly-topbar">
-            <label className="fly-search">
-              <Search size={16} strokeWidth={2} />
-              <input type="text" placeholder="Search trips, shipments, users..." />
-            </label>
+        <div className="fly-topbar">
+          <label className="fly-search">
+            <Search size={16} strokeWidth={2} />
+            <input type="text" placeholder="Search trips, shipments, users..." />
+          </label>
 
-            <div className="fly-topbar-actions">
-              <button type="button" className="fly-icon-button fly-bell-button" aria-label="Notifications" onClick={() => navigate('/notifications')}>
-                <Bell size={17} strokeWidth={2} />
-                <span className="fly-badge-dot">3</span>
-              </button>
+          <div className="fly-topbar-actions">
+            <button type="button" className="fly-icon-button fly-bell-button" aria-label="Notifications" onClick={() => navigate('/notifications')}>
+              <Bell size={17} strokeWidth={2} />
+              <span className="fly-badge-dot">3</span>
+            </button>
 
-              <button type="button" className="fly-profile-pill" onClick={() => navigate('/profile')}>
-                <div className="fly-profile-avatar">{initials}</div>
-                <div className="fly-profile-copy">
-                  <span className="fly-profile-name">{userName}</span>
-                  <span className="fly-profile-role">Traveler</span>
-                </div>
-                <ChevronDown size={14} strokeWidth={2.2} className="fly-profile-chevron" />
-              </button>
-            </div>
+            <button type="button" className="fly-profile-pill" onClick={() => navigate('/profile')}>
+              <div className="fly-profile-avatar">{initials}</div>
+              <div className="fly-profile-copy">
+                <span className="fly-profile-name">{userName}</span>
+                <span className="fly-profile-role">Traveler</span>
+              </div>
+              <ChevronDown size={14} strokeWidth={2.2} className="fly-profile-chevron" />
+            </button>
           </div>
+        </div>
 
-          <section className="bookings-header fly-card">
-            <div>
-              <h1 className="bookings-header__title">Bookings</h1>
-              <p className="bookings-header__subtitle">Manage all package booking requests, confirmations and completed deliveries.</p>
+        <section className="bookings-header fly-card">
+          <div>
+            <h1 className="bookings-header__title">Bookings</h1>
+            <p className="bookings-header__subtitle">Manage all package booking requests, confirmations and completed deliveries.</p>
+          </div>
+          <button type="button" className="fly-btn fly-btn-primary bookings-header__cta" onClick={() => setIsNewBookingOpen(true)}>
+            <span className="fly-btn-icon"><ArrowRight size={14} strokeWidth={2.3} /></span>
+            New Booking
+          </button>
+        </section>
+
+        <section className="bookings-summary-grid fly-grid">
+          {summaryCardsStats.map((card) => (
+            <BookingStatsCard key={card.title} icon={card.icon} title={card.title} value={card.value} trend={card.trend} />
+          ))}
+        </section>
+
+        <BookingFilter
+          search={filters.search}
+          bookingId={filters.bookingId}
+          sender={filters.sender}
+          traveler={filters.traveler}
+          category={filters.category}
+          bookingStatus={filters.bookingStatus}
+          paymentStatus={filters.paymentStatus}
+          dateStart={filters.dateStart}
+          dateEnd={filters.dateEnd}
+          sortBy={filters.sortBy}
+          onSearchChange={(value) => setFilter('search', value)}
+          onBookingIdChange={(value) => setFilter('bookingId', value)}
+          onSenderChange={(value) => setFilter('sender', value)}
+          onTravelerChange={(value) => setFilter('traveler', value)}
+          onCategoryChange={(value) => setFilter('category', value)}
+          onBookingStatusChange={(value) => setFilter('bookingStatus', value)}
+          onPaymentStatusChange={(value) => setFilter('paymentStatus', value)}
+          onDateStartChange={(value) => setFilter('dateStart', value)}
+          onDateEndChange={(value) => setFilter('dateEnd', value)}
+          onSortByChange={(value) => setFilter('sortBy', value)}
+          onReset={resetFilters}
+          onApply={() => setPage(1)}
+        />
+
+        <section className="bookings-state-wrap">
+          {isLoading ? (
+            <div className="bookings-skeleton fly-card">
+              <div className="bookings-skeleton__line bookings-skeleton__line--wide" />
+              <div className="bookings-skeleton__line" />
+              <div className="bookings-skeleton__line" />
+              <div className="bookings-skeleton__line" />
+              <div className="bookings-skeleton__line bookings-skeleton__line--wide" />
             </div>
-            <button type="button" className="fly-btn fly-btn-primary bookings-header__cta" onClick={() => setIsNewBookingOpen(true)}>
-              <span className="fly-btn-icon"><ArrowRight size={14} strokeWidth={2.3} /></span>
-              New Booking
-            </button>
-          </section>
+          ) : error ? (
+            <div className="bookings-state fly-card">
+              <div className="bookings-state__title">Unable to load bookings</div>
+              <p>{error}</p>
+            </div>
+          ) : visibleBookings.length === 0 ? (
+            <div className="bookings-state fly-card">
+              <div className="bookings-state__title">No bookings found</div>
+              <p>Try adjusting your filters or reset them to see the full list.</p>
+              <button type="button" className="fly-btn fly-btn-primary" onClick={resetFilters}>Reset Filters</button>
+            </div>
+          ) : (
+            <BookingTable
+              bookings={visibleBookings}
+              onViewDetails={(b) => navigate('/booking/' + b.rawId)}
+              onEdit={handleBookingAction('ACCEPT')} // Bind row controls to accept/reject/cancel API calls
+              onDuplicate={handleBookingAction('REJECT')}
+              onCancel={handleBookingAction('CANCEL')}
+              onDelete={handleBookingAction('RELEASE_ESCROW')}
+            />
+          )}
+        </section>
 
-          <section className="bookings-summary-grid fly-grid">
-            {summaryCardsStats.map((card) => (
-              <BookingStatsCard key={card.title} icon={card.icon} title={card.title} value={card.value} trend={card.trend} />
+        <section className="bookings-pagination fly-card">
+          <button type="button" className="bookings-pagination__button" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>
+            Previous
+          </button>
+          <div className="bookings-pagination__pages">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button key={pageNumber} type="button" className={`bookings-pagination__page ${page === pageNumber ? 'is-active' : ''}`} onClick={() => setPage(pageNumber)}>
+                {pageNumber}
+              </button>
             ))}
-          </section>
+          </div>
+          <button type="button" className="bookings-pagination__button" disabled={page === totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>
+            Next
+          </button>
+        </section>
 
-          <BookingFilter
-            search={filters.search}
-            bookingId={filters.bookingId}
-            sender={filters.sender}
-            traveler={filters.traveler}
-            category={filters.category}
-            bookingStatus={filters.bookingStatus}
-            paymentStatus={filters.paymentStatus}
-            dateStart={filters.dateStart}
-            dateEnd={filters.dateEnd}
-            sortBy={filters.sortBy}
-            onSearchChange={(value) => setFilter('search', value)}
-            onBookingIdChange={(value) => setFilter('bookingId', value)}
-            onSenderChange={(value) => setFilter('sender', value)}
-            onTravelerChange={(value) => setFilter('traveler', value)}
-            onCategoryChange={(value) => setFilter('category', value)}
-            onBookingStatusChange={(value) => setFilter('bookingStatus', value)}
-            onPaymentStatusChange={(value) => setFilter('paymentStatus', value)}
-            onDateStartChange={(value) => setFilter('dateStart', value)}
-            onDateEndChange={(value) => setFilter('dateEnd', value)}
-            onSortByChange={(value) => setFilter('sortBy', value)}
-            onReset={resetFilters}
-            onApply={() => setPage(1)}
-          />
-
-          <section className="bookings-state-wrap">
-            {isLoading ? (
-              <div className="bookings-skeleton fly-card">
-                <div className="bookings-skeleton__line bookings-skeleton__line--wide" />
-                <div className="bookings-skeleton__line" />
-                <div className="bookings-skeleton__line" />
-                <div className="bookings-skeleton__line" />
-                <div className="bookings-skeleton__line bookings-skeleton__line--wide" />
-              </div>
-            ) : error ? (
-              <div className="bookings-state fly-card">
-                <div className="bookings-state__title">Unable to load bookings</div>
-                <p>{error}</p>
-              </div>
-            ) : visibleBookings.length === 0 ? (
-              <div className="bookings-state fly-card">
-                <div className="bookings-state__title">No bookings found</div>
-                <p>Try adjusting your filters or reset them to see the full list.</p>
-                <button type="button" className="fly-btn fly-btn-primary" onClick={resetFilters}>Reset Filters</button>
-              </div>
-            ) : (
-              <BookingTable
-                bookings={visibleBookings}
-                onViewDetails={(b) => navigate('/booking/' + b.rawId)}
-                onEdit={handleBookingAction('ACCEPT')} // Bind row controls to accept/reject/cancel API calls
-                onDuplicate={handleBookingAction('REJECT')}
-                onCancel={handleBookingAction('CANCEL')}
-                onDelete={handleBookingAction('RELEASE_ESCROW')}
-              />
-            )}
-          </section>
-
-          <section className="bookings-pagination fly-card">
-            <button type="button" className="bookings-pagination__button" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>
-              Previous
-            </button>
-            <div className="bookings-pagination__pages">
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-                <button key={pageNumber} type="button" className={`bookings-pagination__page ${page === pageNumber ? 'is-active' : ''}`} onClick={() => setPage(pageNumber)}>
-                  {pageNumber}
-                </button>
-              ))}
-            </div>
-            <button type="button" className="bookings-pagination__button" disabled={page === totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>
-              Next
-            </button>
-          </section>
-
-          <BookingAnalytics />
-        </main>
+        <BookingAnalytics />
+      </main>
 
       {isNewBookingOpen && (
         <div className="booking-modal-overlay" onClick={(event) => { if (event.target === event.currentTarget) setIsNewBookingOpen(false); }}>

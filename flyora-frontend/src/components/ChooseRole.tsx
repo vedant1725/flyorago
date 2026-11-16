@@ -138,7 +138,7 @@ const ChooseRole: React.FC = () => {
 
                   <span className="px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-teal-700 font-extrabold text-[11px] uppercase tracking-wider flex items-center gap-1 shadow-xs">
                     <TrendingUp size={12} />
-                    Earn Up to $350/trip
+                    Earn Up to ₹350/trip
                   </span>
                 </div>
 
@@ -181,7 +181,7 @@ const ChooseRole: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between text-sm font-bold">
                     <span>NYC ✈ London</span>
-                    <span className="text-teal-400 font-black">$280 Est. Earnings</span>
+                    <span className="text-teal-400 font-black">₹280 Est. Earnings</span>
                   </div>
                 </div>
               </div>

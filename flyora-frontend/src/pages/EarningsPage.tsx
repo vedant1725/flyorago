@@ -23,7 +23,7 @@ const monthlyEarningsData: {month: string, earnings: number}[] = [
 
 const EarningsPage: React.FC = () => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
   const [timePeriod, setTimePeriod] = useState('6_months');
   const [walletStats, setWalletStats] = useState({
@@ -133,7 +133,7 @@ const EarningsPage: React.FC = () => {
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-black text-flyora-navy">${earningsBreakdown.netEarnings.toFixed(2)}</div>
+                <div className="text-3xl font-black text-flyora-navy">₹{earningsBreakdown.netEarnings.toFixed(2)}</div>
                 <p className="text-[11px] text-gray-400 mt-2 font-medium">After deduction of platform commission.</p>
               </div>
             </article>
@@ -147,7 +147,7 @@ const EarningsPage: React.FC = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-black text-flyora-navy">${earningsBreakdown.tripsEarnings.toFixed(2)}</div>
+                <div className="text-3xl font-black text-flyora-navy">₹{earningsBreakdown.tripsEarnings.toFixed(2)}</div>
                 <p className="text-[11px] text-gray-400 mt-2 font-medium">Earned from carrying 24 package shipments.</p>
               </div>
             </article>
@@ -161,7 +161,7 @@ const EarningsPage: React.FC = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-black text-gray-500">${earningsBreakdown.platformCommission.toFixed(2)}</div>
+                <div className="text-3xl font-black text-gray-500">₹{earningsBreakdown.platformCommission.toFixed(2)}</div>
                 <p className="text-[11px] text-gray-400 mt-2 font-medium">Flyorago global matching & security service fee.</p>
               </div>
             </article>
@@ -179,10 +179,10 @@ const EarningsPage: React.FC = () => {
 
             <div className="fly-chart-wrap mt-6 h-56">
               <div className="fly-chart-axis">
-                <span>$1.5K</span>
-                <span>$1K</span>
-                <span>$500</span>
-                <span>$0</span>
+                <span>₹1.5K</span>
+                <span>₹1K</span>
+                <span>₹500</span>
+                <span>₹0</span>
               </div>
               <svg className="fly-chart" viewBox="0 0 100 50" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
@@ -228,7 +228,7 @@ const EarningsPage: React.FC = () => {
                         <td className="py-3.5 text-gray-500 font-medium">{wth.method}</td>
                         <td className="py-3.5 text-gray-400 font-medium">{wth.requestDate}</td>
                         <td className="py-3.5 text-gray-400 font-medium">{wth.completeDate}</td>
-                        <td className="py-3.5 text-right font-bold">${wth.amount.toFixed(2)}</td>
+                        <td className="py-3.5 text-right font-bold">₹{wth.amount.toFixed(2)}</td>
                         <td className="py-3.5 text-center pr-2">
                           <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black ${
                             wth.status === 'PAYMENT_RELEASED' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
@@ -282,11 +282,11 @@ const EarningsPage: React.FC = () => {
           <article className="fly-card fly-utility-card">
             <div className="fly-card-title text-sm font-bold uppercase tracking-wider mb-3">Revenues breakdown</div>
             <div className="space-y-3 font-semibold text-xs text-slate-500">
-              <div className="flex justify-between"><span>Trips</span><strong className="text-flyora-navy">${earningsBreakdown.tripsEarnings.toFixed(2)}</strong></div>
-              <div className="flex justify-between"><span>Shipments</span><strong className="text-flyora-navy">${earningsBreakdown.shipmentsEarnings.toFixed(2)}</strong></div>
-              <div className="flex justify-between"><span>Referral Bonus</span><strong className="text-flyora-navy">${earningsBreakdown.referralsEarnings.toFixed(2)}</strong></div>
+              <div className="flex justify-between"><span>Trips</span><strong className="text-flyora-navy">₹{earningsBreakdown.tripsEarnings.toFixed(2)}</strong></div>
+              <div className="flex justify-between"><span>Shipments</span><strong className="text-flyora-navy">₹{earningsBreakdown.shipmentsEarnings.toFixed(2)}</strong></div>
+              <div className="flex justify-between"><span>Referral Bonus</span><strong className="text-flyora-navy">₹{earningsBreakdown.referralsEarnings.toFixed(2)}</strong></div>
               <div className="h-px bg-slate-100 my-2" />
-              <div className="flex justify-between text-sm font-black text-flyora-teal"><span>Total Net</span><strong>${earningsBreakdown.netEarnings.toFixed(2)}</strong></div>
+              <div className="flex justify-between text-sm font-black text-flyora-teal"><span>Total Net</span><strong>₹{earningsBreakdown.netEarnings.toFixed(2)}</strong></div>
             </div>
           </article>
         </aside>

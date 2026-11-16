@@ -21,7 +21,7 @@ const DashboardWallet: React.FC<Props> = ({ overview, walletHistory }) => (
             <Wallet size={18} className="text-flyora-teal-light" />
             <span className="text-[10px] font-black uppercase tracking-wider text-white/40">Available Balance</span>
           </div>
-          <div className="text-3xl font-black text-white">${overview.stats.walletBalance.toFixed(2)}</div>
+          <div className="text-3xl font-black text-white">₹{overview.stats.walletBalance.toFixed(2)}</div>
           <p className="text-[10px] text-white/30 mt-2 font-medium">Withdrawable to your bank account</p>
         </div>
       </div>
@@ -32,7 +32,7 @@ const DashboardWallet: React.FC<Props> = ({ overview, walletHistory }) => (
           <Lock size={16} className="text-blue-500" />
           <span className="stat-label">Escrow Locked</span>
         </div>
-        <div className="stat-value">${overview.stats.escrowBalance.toFixed(2)}</div>
+        <div className="stat-value">₹{overview.stats.escrowBalance.toFixed(2)}</div>
         <p className="text-[9px] text-gray-400 mt-2">Awaiting delivery confirmation</p>
       </div>
 

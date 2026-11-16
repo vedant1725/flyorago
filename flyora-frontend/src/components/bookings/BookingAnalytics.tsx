@@ -35,7 +35,7 @@ const BookingAnalytics: React.FC = () => {
       <div className="bookings-analytics__stats fly-stat-grid">
         <article className="fly-card bookings-mini-stat">
           <div className="bookings-mini-stat__title">Revenue Earned</div>
-          <div className="bookings-mini-stat__value">$62.45K</div>
+          <div className="bookings-mini-stat__value">₹62.45K</div>
           <div className="bookings-mini-stat__trend">+48%</div>
         </article>
         <article className="fly-card bookings-mini-stat">

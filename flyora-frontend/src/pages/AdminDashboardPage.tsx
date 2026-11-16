@@ -533,6 +533,251 @@ const KycModal: React.FC<{
   );
 };
 
+// ─── User Inspection Modal (Identical to KYC Popup Architecture) ───────────────
+const UserDetailsModal: React.FC<{
+  user: AppUser;
+  kycRecord?: KycUser;
+  trustScore: number;
+  tripsCount: number;
+  bookingsCount: number;
+  onClose: () => void;
+  onToggleActive: (u: AppUser) => void;
+  onDelete: (u: AppUser) => void;
+  onViewKyc: (k: KycUser) => void;
+}> = ({
+  user,
+  kycRecord,
+  trustScore,
+  tripsCount,
+  bookingsCount,
+  onClose,
+  onToggleActive,
+  onDelete,
+  onViewKyc
+}) => {
+  return (
+    <div 
+      className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-[300] flex items-center justify-center p-4 sm:p-6 transition-all duration-300"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white/95 rounded-[28px] border border-slate-200/80 shadow-2xl shadow-slate-900/20 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden backdrop-blur-xl animate-in zoom-in-95 fade-in duration-300"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0 bg-white/50 backdrop-blur-md gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-100 relative overflow-hidden flex-shrink-0">
+              <span className="relative z-10">{(user.fullName?.[0] || 'U').toUpperCase()}</span>
+              <div className="absolute inset-0 bg-white/10 opacity-40 mix-blend-overlay" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="font-black text-slate-900 text-base leading-none">{user.fullName || 'User Profile'}</h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                  ID: #{user.id}
+                </span>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  user.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  {user.isActive ? 'Active' : 'Blocked'}
+                </span>
+                {user.isStaff && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-900">
+                    STAFF
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 mt-2 flex-wrap text-xs font-semibold text-slate-400">
+                <span className="flex items-center gap-1.5"><Mail size={12} className="text-teal-650" /> {user.email}</span>
+                <span className="w-1 h-1 rounded-full bg-slate-355" />
+                <span className="flex items-center gap-1.5"><Phone size={12} className="text-teal-650" /> {user.phone || 'No phone'}</span>
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2.5 hover:bg-slate-100/80 rounded-2xl transition-all self-end sm:self-auto text-slate-450 hover:text-slate-800">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* 4 Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Status</p>
+              <p className={`text-xs font-black capitalize mt-1.5 flex items-center gap-1.5 ${user.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                {user.isActive ? 'Active Account' : 'Restricted'}
+              </p>
+            </div>
+
+            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Role</p>
+              <p className="text-xs font-black text-slate-800 capitalize mt-1.5 flex items-center gap-1.5">
+                <User size={13} className="text-indigo-500" />
+                {user.role || 'General'}
+              </p>
+            </div>
+
+            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trust Score</p>
+              <p className="text-xs font-black text-amber-600 mt-1.5 flex items-center gap-1.5">
+                <Star size={13} className="fill-amber-400 text-amber-500" />
+                {trustScore} / 1000
+              </p>
+            </div>
+
+            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</p>
+              <div className="mt-1">
+                <StatusBadge status={user.kycStatus || 'NOT_SUBMITTED'} />
+              </div>
+            </div>
+          </div>
+
+          {/* Details 2-Column Split */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Account & Contact Dossier */}
+            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-4 space-y-3">
+              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                <User size={13} className="text-teal-600" /> Contact & Account Dossier
+              </h4>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                  <span className="text-slate-400 font-bold">Email:</span>
+                  <span className="font-mono font-extrabold text-slate-800 select-all truncate max-w-[200px]" title={user.email}>{user.email}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                  <span className="text-slate-400 font-bold">Phone:</span>
+                  <span className="font-bold text-slate-800">{user.phone || 'Not provided'}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                  <span className="text-slate-400 font-bold">Joined Platform:</span>
+                  <span className="font-bold text-slate-700">
+                    {user.dateJoined ? new Date(user.dateJoined).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-1">
+                  <span className="text-slate-400 font-bold">Access Level:</span>
+                  <span className="font-bold text-slate-800">{user.isStaff ? 'Administrator & Staff' : 'Standard Platform User'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* KYC & Identity Status */}
+            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <ShieldCheck size={13} className="text-teal-600" /> Identity & Verification
+                </h4>
+                {kycRecord && (
+                  <button
+                    onClick={() => onViewKyc(kycRecord)}
+                    className="text-[11px] font-black text-teal-600 hover:text-teal-700 underline"
+                  >
+                    View Documents
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                  <span className="text-slate-400 font-bold">Verification Status:</span>
+                  <StatusBadge status={user.kycStatus || 'NOT_SUBMITTED'} />
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                  {user.kycStatus === 'APPROVED' 
+                    ? '✅ User identity document has been fully reviewed and verified by admin.' 
+                    : user.kycStatus === 'PENDING' 
+                    ? '⏳ Documents submitted and awaiting administrative review in KYC queue.' 
+                    : user.kycStatus === 'REJECTED' 
+                    ? '❌ Identity verification was declined. User may resubmit.' 
+                    : '⚠️ User has not submitted identity documents yet.'}
+                </p>
+                {kycRecord?.documentType && (
+                  <div className="pt-1 text-[11px] font-bold text-slate-700 border-t border-slate-200/40">
+                    Submitted Doc: <span className="capitalize">{kycRecord.documentType.replace(/_/g, ' ')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Activity Footprint Section */}
+          <div className="space-y-2.5">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Activity & Footprint</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
+                  <Plane size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Traveler Trips</span>
+                  <span className="text-sm font-black text-slate-900">{tripsCount} Trips Listed</span>
+                </div>
+              </div>
+
+              <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <Package size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Parcel Bookings</span>
+                  <span className="text-sm font-black text-slate-900">{bookingsCount} Orders</span>
+                </div>
+              </div>
+
+              <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                  <Shield size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Safety Tier</span>
+                  <span className="text-sm font-black text-slate-900">
+                    {trustScore >= 750 ? 'Tier 1 (High Trust)' : trustScore >= 600 ? 'Tier 2 (Good)' : 'Tier 3 (Standard)'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Actions (Matching KycModal layout) */}
+        <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 flex-shrink-0 bg-slate-50/50 backdrop-blur-md rounded-b-3xl">
+          <button
+            onClick={() => onToggleActive(user)}
+            className={`flex-1 text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] ${
+              user.isActive 
+                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200' 
+                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+            }`}
+          >
+            {user.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
+            {user.isActive ? 'Block / Restrict This Account' : 'Reactivate / Unblock Account'}
+          </button>
+
+          {!user.isStaff && (
+            <button
+              onClick={() => onDelete(user)}
+              className="bg-white hover:bg-rose-50/50 text-rose-600 border border-rose-200 hover:border-rose-300 text-xs font-black py-3 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]"
+            >
+              <Trash2 size={15} /> Delete Account
+            </button>
+          )}
+
+          <button
+            onClick={onClose}
+            className="py-3 px-6 rounded-xl border border-slate-200 text-xs font-black text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Sender Request Inspection Modal ─────────────────────────────────────────
 const BookingModal: React.FC<{
   booking: Booking;
@@ -660,7 +905,7 @@ const BookingModal: React.FC<{
               <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Weight & Price</p>
                 <p className="text-sm font-bold text-slate-800">{booking.weight} kg</p>
-                <p className="text-xs font-bold text-emerald-600">${booking.agreed_price || booking.reward || 0} Offered Reward</p>
+                <p className="text-xs font-bold text-emerald-600">₹{booking.agreed_price || booking.reward || 0} Offered Reward</p>
               </div>
 
               <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
@@ -804,7 +1049,7 @@ const TripModal: React.FC<{
               </div>
               <div className="bg-white p-2 rounded-xl border border-slate-100">
                 <p className="text-[10px] text-slate-400 font-bold uppercase">Price / kg</p>
-                <p className="text-sm font-extrabold text-amber-600">${trip.price_per_kg}</p>
+                <p className="text-sm font-extrabold text-amber-600">₹{trip.price_per_kg}</p>
               </div>
             </div>
           </div>
@@ -1722,10 +1967,10 @@ const SettingsTab: React.FC<{
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                Platform Service Fee (USD)
+                Admin Platform Service Fee (INR per Transaction)
               </label>
               <div className="relative max-w-xs">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-extrabold text-xs">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-extrabold text-xs">₹</span>
                 <input
                   type="number"
                   step="0.01"
@@ -1737,17 +1982,19 @@ const SettingsTab: React.FC<{
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8 pr-4 py-3 text-xs font-semibold text-slate-900 focus:bg-white focus:border-flyora-teal outline-none transition-all"
                 />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                This flat fee is automatically added to the Sender's escrow payment during booking checkout.
+              <p className="text-[10px] text-slate-500 mt-1.5 font-medium leading-relaxed">
+                ⚡ <strong>Dual-Deduction Engine:</strong> This fee is charged automatically:
+                <br />• <strong>Sender Side:</strong> Added during escrow booking checkout.
+                <br />• <strong>Traveler Side:</strong> Deducted from reward payout upon QR delivery verification.
               </p>
             </div>
           </div>
 
-          <div className="pt-4 flex items-center justify-end">
+          <div className="pt-2 flex items-center justify-end">
             <button
               type="submit"
               disabled={savingFee || loadingFee}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-xs px-7 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/10 transition-all flex items-center gap-2"
+              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-xs px-7 py-3 rounded-2xl shadow-lg shadow-emerald-600/10 transition-all flex items-center gap-2"
             >
               {savingFee ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
               {savingFee ? 'Saving Configurations...' : 'Update Platform Configurations'}
@@ -1865,7 +2112,7 @@ const ContactMessageModal: React.FC<{
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  type Tab = 'overview' | 'users' | 'trips' | 'bookings' | 'shipments' | 'kyc' | 'disputes' | 'trust' | 'ai_knowledge' | 'contact_messages' | 'settings';
+  type Tab = 'overview' | 'users' | 'trips' | 'bookings' | 'shipments' | 'kyc' | 'disputes' | 'trust' | 'transactions' | 'ai_knowledge' | 'contact_messages' | 'settings';
   const [tab, setTab] = useState<Tab>('overview');
   const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
@@ -1878,6 +2125,7 @@ const AdminDashboardPage: React.FC = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [kycUsers, setKycUsers] = useState<KycUser[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
+  const [platformRevenues, setPlatformRevenues] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [selectedContactMsg, setSelectedContactMsg] = useState<ContactMessage | null>(null);
@@ -1942,6 +2190,23 @@ const AdminDashboardPage: React.FC = () => {
   const [overrideModal, setOverrideModal] = useState<{ userId: number; current: number } | null>(null);
   const [blockUserModal, setBlockUserModal] = useState<AppUser | null>(null);
   const [blockUserLoading, setBlockUserLoading] = useState(false);
+
+  // ─── Advanced Top-MNC User Management State ─────────────────────────────────
+  const [userSearchInput, setUserSearchInput] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'sender' | 'traveler' | 'user' | 'admin'>('ALL');
+  const [userKycFilter, setUserKycFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED' | 'NOT_SUBMITTED'>('ALL');
+  const [userStatusFilter, setUserStatusFilter] = useState<'ALL' | 'active' | 'blocked'>('ALL');
+  const [userSortBy, setUserSortBy] = useState<'newest' | 'oldest' | 'name' | 'trust'>('newest');
+  const [userPage, setUserPage] = useState(1);
+  const [userPageSize, setUserPageSize] = useState(10);
+  const [viewUserDrawer, setViewUserDrawer] = useState<AppUser | null>(null);
+
+  // ─── Advanced Top-MNC KYC Verification State ─────────────────────────────────
+  const [kycSearchInput, setKycSearchInput] = useState('');
+  const [kycDocTypeFilter, setKycDocTypeFilter] = useState<string>('ALL');
+  const [kycSortBy, setKycSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
+  const [kycPage, setKycPage] = useState(1);
+  const [kycPageSize, setKycPageSize] = useState(10);
 
   const [aiFaqs, setAiFaqs] = useState<any[]>([]);
   const [newFaqQuestion, setNewFaqQuestion] = useState('');
@@ -2067,6 +2332,7 @@ const AdminDashboardPage: React.FC = () => {
       if (Array.isArray(payload.disputes)) setDisputes(payload.disputes);
       if (Array.isArray(payload.contactMessages)) setContactMessages(payload.contactMessages);
       if (Array.isArray(payload.trustProfiles)) setTrustProfiles(payload.trustProfiles);
+      if (Array.isArray(payload.platformRevenues)) setPlatformRevenues(payload.platformRevenues);
 
       dataCacheRef.current = payload;
     } catch (e) {
@@ -2222,8 +2488,78 @@ const AdminDashboardPage: React.FC = () => {
   const allSenderBookings = [...bookings, ...senderTripsAsBookings];
   const fBookings = allSenderBookings.filter(b => !S || String(b.id).includes(S) || b.sender?.first_name?.toLowerCase().includes(S) || b.sender_name?.toLowerCase().includes(S) || b.status?.toLowerCase().includes(S));
   const fShipments = shipments.filter(s => !S || String(s.id).includes(S));
-  const fKyc = kycUsers.filter(u => (kycFilter === 'ALL' || u.status === kycFilter) && (!S || u.fullName.toLowerCase().includes(S) || u.email.toLowerCase().includes(S)));
-  const fUsers = users.filter(u => !S || u.fullName.toLowerCase().includes(S) || u.email.toLowerCase().includes(S) || u.role.toLowerCase().includes(S));
+
+  // ─── Advanced Top-MNC KYC Verification Filtering, Sorting & Pagination ────────
+  const kSearch = (kycSearchInput || S).toLowerCase().trim();
+  const filteredKycUsers = kycUsers.filter(u => {
+    // 1. Omni Search across Name, Email, Phone, User ID, Doc Type
+    if (kSearch) {
+      const matchName = (u.fullName || '').toLowerCase().includes(kSearch);
+      const matchEmail = (u.email || '').toLowerCase().includes(kSearch);
+      const matchPhone = (u.phone || '').toLowerCase().includes(kSearch);
+      const matchId = String(u.userId || '').toLowerCase().includes(kSearch);
+      const matchDoc = (u.documentType || '').toLowerCase().includes(kSearch);
+      if (!matchName && !matchEmail && !matchPhone && !matchId && !matchDoc) return false;
+    }
+    // 2. KYC Status Filter
+    if (kycFilter !== 'ALL' && (u.status || 'NOT_SUBMITTED').toUpperCase() !== kycFilter.toUpperCase()) {
+      return false;
+    }
+    // 3. Document Type Filter
+    if (kycDocTypeFilter !== 'ALL' && (u.documentType || '').toLowerCase() !== kycDocTypeFilter.toLowerCase()) {
+      return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (kycSortBy === 'name') return (a.fullName || '').localeCompare(b.fullName || '');
+    if (kycSortBy === 'oldest') return new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime();
+    return new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime(); // newest
+  });
+
+  const totalKycPages = Math.max(1, Math.ceil(filteredKycUsers.length / kycPageSize));
+  const paginatedKycUsers = filteredKycUsers.slice((kycPage - 1) * kycPageSize, kycPage * kycPageSize);
+  const fKyc = paginatedKycUsers;
+  
+  // Advanced Top-MNC User Management Filtering & Sorting
+  const uSearch = (userSearchInput || S).toLowerCase().trim();
+  const filteredUsers = users.filter(u => {
+    // 1. Text Search across Name, Email, Phone, ID, Role
+    if (uSearch) {
+      const matchName = (u.fullName || '').toLowerCase().includes(uSearch);
+      const matchEmail = (u.email || '').toLowerCase().includes(uSearch);
+      const matchPhone = (u.phone || '').toLowerCase().includes(uSearch);
+      const matchId = String(u.id || '').toLowerCase().includes(uSearch);
+      const matchRole = (u.role || '').toLowerCase().includes(uSearch);
+      if (!matchName && !matchEmail && !matchPhone && !matchId && !matchRole) return false;
+    }
+    // 2. Role Filter
+    if (userRoleFilter !== 'ALL' && (u.role || '').toLowerCase() !== userRoleFilter.toLowerCase()) {
+      return false;
+    }
+    // 3. KYC Status Filter
+    if (userKycFilter !== 'ALL' && (u.kycStatus || 'NOT_SUBMITTED').toUpperCase() !== userKycFilter.toUpperCase()) {
+      return false;
+    }
+    // 4. Status Filter (Active vs Blocked)
+    if (userStatusFilter !== 'ALL') {
+      if (userStatusFilter === 'active' && !u.isActive) return false;
+      if (userStatusFilter === 'blocked' && u.isActive) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (userSortBy === 'name') return (a.fullName || '').localeCompare(b.fullName || '');
+    if (userSortBy === 'oldest') return new Date(a.dateJoined || 0).getTime() - new Date(b.dateJoined || 0).getTime();
+    if (userSortBy === 'trust') {
+      const pA = trustProfiles.find(tp => String(tp.user) === String(a.id) || tp.user_email?.toLowerCase() === a.email?.toLowerCase());
+      const pB = trustProfiles.find(tp => String(tp.user) === String(b.id) || tp.user_email?.toLowerCase() === b.email?.toLowerCase());
+      return (pB?.score || 550) - (pA?.score || 550);
+    }
+    return new Date(b.dateJoined || 0).getTime() - new Date(a.dateJoined || 0).getTime(); // newest
+  });
+
+  const totalUserPages = Math.max(1, Math.ceil(filteredUsers.length / userPageSize));
+  const paginatedUsers = filteredUsers.slice((userPage - 1) * userPageSize, userPage * userPageSize);
+  const fUsers = paginatedUsers;
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -2260,6 +2596,7 @@ const AdminDashboardPage: React.FC = () => {
     { label: 'Sender', icon: Package, tab: 'bookings', badge: stats?.bookingBreakdown?.pending ?? bookings.filter(b => b.status === 'REQUEST_SENT').length },
     { label: 'Shipments', icon: Truck, tab: 'shipments', badge: stats?.inTransitShipments ?? shipments.filter(s => s.status === 'IN_TRANSIT').length },
     { label: 'KYC Approvals', icon: ShieldCheck, tab: 'kyc', badge: stats?.pendingKyc ?? kycUsers.filter(u => u.status === 'PENDING').length },
+    { label: 'Transactions & Revenue', icon: DollarSign, tab: 'transactions', badge: platformRevenues.length },
     { label: 'Disputes', icon: AlertTriangle, tab: 'disputes', badge: disputes.filter(d => d.status === 'Under Review' || d.status === 'Open').length },
     { label: 'Trust & Risk', icon: ShieldCheck, tab: 'trust' },
     { label: 'Contact Messages', icon: MessageSquare, tab: 'contact_messages', badge: contactMessages.filter(m => m.status === 'New').length },
@@ -2996,7 +3333,7 @@ const AdminDashboardPage: React.FC = () => {
         </header>
 
         {/* Content */}
-        <main className="admin-main admin-section-bg flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 min-w-0">
+        <main className="admin-main admin-section-bg flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 space-y-6 min-w-0">
 
           {/* ─── OVERVIEW ─────────────────────────────────────────────────── */}
           {tab === 'overview' && (
@@ -3524,7 +3861,7 @@ const AdminDashboardPage: React.FC = () => {
                             {b.trip?.from_location || b.route?.from || 'Origin'} → {b.trip?.to_location || b.route?.to || 'Destination'}
                           </td>
                           <td className="whitespace-nowrap font-semibold" style={{color:'#475569'}}>{b.weight} kg</td>
-                          <td className="whitespace-nowrap" style={{color:'#059669',fontWeight:'900'}}>${b.agreed_price || b.reward || 0}</td>
+                          <td className="whitespace-nowrap" style={{color:'#059669',fontWeight:'900'}}>₹{b.agreed_price || b.reward || 0}</td>
                           <td className="whitespace-nowrap"><StatusBadge status={b.status} /></td>
                           <td className="whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
@@ -3586,137 +3923,969 @@ const AdminDashboardPage: React.FC = () => {
             </div>
           )}
 
-          {/* ─── USERS ────────────────────────────────────────────────────── */}
+          {/* ─── USERS (Advanced Top MNC Platform) ───────────────────────── */}
           {tab === 'users' && (
-            <div className="admin-tab-content space-y-5">
-              <div>
-                <h2 className="admin-section-title">User Management</h2>
-                <p className="admin-section-sub">{users.length} registered users on the platform</p>
+            <div className="admin-tab-content space-y-6">
+              
+              {/* Header with Title and Live Stats Banner */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="admin-section-title !mb-0">User Directory & Management</h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-900 text-white shadow-xs">
+                      {filteredUsers.length} of {users.length} Users
+                    </span>
+                  </div>
+                  <p className="admin-section-sub mt-1">
+                    Enterprise search, role-based controls, instant account management, and KYC oversight for millions of accounts.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setUserSearchInput('');
+                      setUserRoleFilter('ALL');
+                      setUserKycFilter('ALL');
+                      setUserStatusFilter('ALL');
+                      setUserPage(1);
+                      fetchData();
+                    }}
+                    className="admin-btn-ghost flex items-center gap-1.5 text-xs py-2 px-3"
+                    title="Reload User Directory"
+                  >
+                    <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                    <span>Refresh</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Quick CSV Export of current filtered list
+                      const rows = filteredUsers.map(u => [
+                        u.id,
+                        `"₹${u.fullName.replace(/"/g, '""')}"`,
+                        u.email,
+                        u.phone || '',
+                        u.role,
+                        u.kycStatus,
+                        u.isActive ? 'Active' : 'Blocked',
+                        u.dateJoined ? new Date(u.dateJoined).toLocaleDateString() : ''
+                      ]);
+                      const csvContent = "data:text/csv;charset=utf-8," + ["ID,Full Name,Email,Phone,Role,KYC Status,Account Status,Joined Date", ...rows.map(e => e.join(","))].join("\n");
+                      const encodedUri = encodeURI(csvContent);
+                      const link = document.createElement("a");
+                      link.setAttribute("href", encodedUri);
+                      link.setAttribute("download", `flyorago_users_export_${new Date().toISOString().slice(0,10)}.csv`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      toast('success', `Exported ${filteredUsers.length} users to CSV!`);
+                    }}
+                    className="admin-btn-primary flex items-center gap-1.5 text-xs py-2 px-3.5 shadow-sm"
+                  >
+                    <Download size={13} />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
               </div>
-              <div className="admin-table-card overflow-x-auto">
-                <table className="w-full text-sm min-w-[800px]">
-                  <thead><tr className="admin-table-head">
-                    <th>User</th><th>Email</th><th>Role</th><th>KYC</th><th>Joined</th><th>Status</th><th style={{textAlign:'center'}}>Actions</th>
-                  </tr></thead>
+
+              {/* Quick Metrics Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div 
+                  onClick={() => { setUserRoleFilter('ALL'); setUserStatusFilter('ALL'); setUserKycFilter('ALL'); setUserPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${userRoleFilter === 'ALL' && userStatusFilter === 'ALL' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${userRoleFilter === 'ALL' && userStatusFilter === 'ALL' ? 'text-slate-400' : 'text-slate-500'}`}>Total Accounts</div>
+                  <div className="text-2xl font-black mt-1">{users.length}</div>
+                </div>
+
+                <div 
+                  onClick={() => { setUserStatusFilter(userStatusFilter === 'active' ? 'ALL' : 'active'); setUserPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${userStatusFilter === 'active' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${userStatusFilter === 'active' ? 'text-emerald-200' : 'text-emerald-700'}`}>Active Users</div>
+                  <div className="text-2xl font-black mt-1 text-emerald-600 group-hover:text-emerald-700" style={userStatusFilter === 'active' ? { color: 'white' } : {}}>
+                    {users.filter(u => u.isActive).length}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => { setUserKycFilter(userKycFilter === 'APPROVED' ? 'ALL' : 'APPROVED'); setUserPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${userKycFilter === 'APPROVED' ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${userKycFilter === 'APPROVED' ? 'text-teal-200' : 'text-teal-700'}`}>KYC Verified</div>
+                  <div className="text-2xl font-black mt-1 text-teal-600" style={userKycFilter === 'APPROVED' ? { color: 'white' } : {}}>
+                    {users.filter(u => (u.kycStatus || '').toUpperCase() === 'APPROVED').length}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => { setUserStatusFilter(userStatusFilter === 'blocked' ? 'ALL' : 'blocked'); setUserPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${userStatusFilter === 'blocked' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${userStatusFilter === 'blocked' ? 'text-rose-200' : 'text-rose-600'}`}>Restricted / Blocked</div>
+                  <div className="text-2xl font-black mt-1 text-rose-600" style={userStatusFilter === 'blocked' ? { color: 'white' } : {}}>
+                    {users.filter(u => !u.isActive).length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced Enterprise Filter & Search Command Center */}
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                  
+                  {/* High-speed Real-time Search Box */}
+                  <div className="relative flex-1 min-w-[280px]">
+                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search instantly by Name, Email, Phone number, or User ID..."
+                      value={userSearchInput}
+                      onChange={(e) => {
+                        setUserSearchInput(e.target.value);
+                        setUserPage(1);
+                      }}
+                      className="w-full pl-10 pr-9 py-2.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all text-slate-800"
+                    />
+                    {userSearchInput && (
+                      <button 
+                        onClick={() => { setUserSearchInput(''); setUserPage(1); }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                        title="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Dropdowns and Sorters */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    
+                    {/* Role Filter */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Role:</span>
+                      <select
+                        value={userRoleFilter}
+                        onChange={(e: any) => { setUserRoleFilter(e.target.value); setUserPage(1); }}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Roles</option>
+                        <option value="sender">Sender</option>
+                        <option value="traveler">Traveler</option>
+                        <option value="user">General User</option>
+                        <option value="admin">Administrator</option>
+                      </select>
+                    </div>
+
+                    {/* KYC Filter */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">KYC:</span>
+                      <select
+                        value={userKycFilter}
+                        onChange={(e: any) => { setUserKycFilter(e.target.value); setUserPage(1); }}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All KYC</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="PENDING">Pending Review</option>
+                        <option value="REJECTED">Rejected</option>
+                        <option value="NOT_SUBMITTED">Not Submitted</option>
+                      </select>
+                    </div>
+
+                    {/* Status Filter */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Status:</span>
+                      <select
+                        value={userStatusFilter}
+                        onChange={(e: any) => { setUserStatusFilter(e.target.value); setUserPage(1); }}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Status</option>
+                        <option value="active">Active Only</option>
+                        <option value="blocked">Blocked Only</option>
+                      </select>
+                    </div>
+
+                    {/* Sort Order */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Sort:</span>
+                      <select
+                        value={userSortBy}
+                        onChange={(e: any) => setUserSortBy(e.target.value)}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="newest">Newest Joined</option>
+                        <option value="oldest">Oldest Joined</option>
+                        <option value="name">Name (A-Z)</option>
+                        <option value="trust">Highest Trust Score</option>
+                      </select>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Active Filter Tags */}
+                {(userSearchInput || userRoleFilter !== 'ALL' || userKycFilter !== 'ALL' || userStatusFilter !== 'ALL') && (
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100 flex-wrap text-xs">
+                    <span className="text-[11px] font-bold text-slate-400">Active Filters:</span>
+                    {userSearchInput && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 font-bold border border-teal-200/80">
+                        Search: "{userSearchInput}"
+                        <button onClick={() => setUserSearchInput('')} className="hover:text-teal-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    {userRoleFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-200/80">
+                        Role: {userRoleFilter}
+                        <button onClick={() => setUserRoleFilter('ALL')} className="hover:text-blue-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    {userKycFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 font-bold border border-purple-200/80">
+                        KYC: {userKycFilter}
+                        <button onClick={() => setUserKycFilter('ALL')} className="hover:text-purple-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    {userStatusFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200/80">
+                        Status: {userStatusFilter}
+                        <button onClick={() => setUserStatusFilter('ALL')} className="hover:text-amber-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    <button
+                      onClick={() => {
+                        setUserSearchInput('');
+                        setUserRoleFilter('ALL');
+                        setUserKycFilter('ALL');
+                        setUserStatusFilter('ALL');
+                        setUserPage(1);
+                      }}
+                      className="text-xs font-bold text-rose-500 hover:text-rose-700 ml-1 underline"
+                    >
+                      Reset All
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Data Table */}
+              <div className="admin-table-card overflow-x-auto shadow-sm">
+                <table className="w-full text-sm min-w-[900px]">
+                  <thead>
+                    <tr className="admin-table-head">
+                      <th>USER / PROFILE</th>
+                      <th>CONTACT & EMAIL</th>
+                      <th>ROLE</th>
+                      <th>KYC VERIFICATION</th>
+                      <th>JOINED DATE</th>
+                      <th>ACCOUNT STATUS</th>
+                      <th style={{ textAlign: 'center' }}>ACTIONS</th>
+                    </tr>
+                  </thead>
                   {loading ? <Skeleton rows={8} cols={7} /> : (
                     <tbody>
-                      {fUsers.map(u => (
-                        <tr key={u.id} className="admin-table-row">
-                          <td className="max-w-[160px] truncate">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                style={{background:'linear-gradient(135deg,#0D9488,#1B4FD8)',color:'white',boxShadow:'0 2px 8px rgba(13,148,136,0.25)'}}
-                              >{u.fullName[0]?.toUpperCase()}</div>
-                              <span className="font-semibold truncate" style={{color:'#0A1628'}}>{u.fullName}</span>
-                            </div>
-                          </td>
-                          <td className="max-w-[180px] truncate" style={{color:'#64748B'}} title={u.email}>{u.email}</td>
-                          <td className="whitespace-nowrap"><span className="admin-badge-neutral capitalize">{u.role}</span></td>
-                          <td className="whitespace-nowrap"><StatusBadge status={u.kycStatus} /></td>
-                          <td className="whitespace-nowrap" style={{color:'#64748B',fontSize:'12px'}}>{u.dateJoined ? new Date(u.dateJoined).toLocaleDateString() : '-'}</td>
-                          <td className="whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full ${u.isActive ? 'admin-badge-active' : 'admin-badge-error'}`}
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full" style={{background: u.isActive ? '#059669' : '#DC2626', animation: u.isActive ? 'admin-status-dot 2s ease infinite' : 'none'}} />
-                              {u.isActive ? 'Active' : 'Blocked'}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => toggleUserActive(u)}
-                                className={`flex items-center gap-1.5 text-[11px] font-bold transition-all ${u.isActive ? 'admin-btn-danger' : 'admin-btn-ghost'}`}
-                                style={u.isActive ? {} : {color:'#059669',borderColor:'#A7F3D0',background:'#D1FAE5'}}
+                      {fUsers.map(u => {
+                        const trustProf = trustProfiles.find(tp => String(tp.user) === String(u.id) || tp.user_email?.toLowerCase() === u.email?.toLowerCase());
+                        const score = trustProf?.score || 550;
+                        const initial = (u.fullName?.[0] || u.email?.[0] || 'U').toUpperCase();
+
+                        return (
+                          <tr key={u.id} className="admin-table-row hover:bg-slate-50/80 transition-colors">
+                            
+                            {/* User Avatar + Full Name + ID */}
+                            <td className="max-w-[220px]">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black text-white shrink-0 shadow-sm"
+                                  style={{
+                                    background: u.isActive 
+                                      ? 'linear-gradient(135deg, #0D9488 0%, #1E40AF 100%)' 
+                                      : 'linear-gradient(135deg, #EF4444 0%, #991B1B 100%)'
+                                  }}
+                                >
+                                  {initial}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span 
+                                      onClick={() => setViewUserDrawer(u)}
+                                      className="font-extrabold text-slate-900 truncate hover:text-teal-600 cursor-pointer text-sm" 
+                                      title={u.fullName}
+                                    >
+                                      {u.fullName}
+                                    </span>
+                                    {u.isStaff && (
+                                      <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase">
+                                        Staff
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+                                    <span className="font-mono text-[11px]">ID #{u.id}</span>
+                                    <span>•</span>
+                                    <span className="text-emerald-600 font-bold text-[11px]">★ {score} pts</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Email and Phone */}
+                            <td className="max-w-[220px]">
+                              <div className="text-slate-700 font-medium truncate text-xs" title={u.email}>
+                                {u.email}
+                              </div>
+                              <div className="text-slate-400 text-[11px] font-mono mt-0.5">
+                                {u.phone || 'No phone added'}
+                              </div>
+                            </td>
+
+                            {/* Role Badge */}
+                            <td className="whitespace-nowrap">
+                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${
+                                (u.role || '').toLowerCase() === 'traveler' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
+                                (u.role || '').toLowerCase() === 'sender' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
+                                (u.role || '').toLowerCase() === 'admin' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                                'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}>
+                                {u.role || 'User'}
+                              </span>
+                            </td>
+
+                            {/* KYC Verification Status */}
+                            <td className="whitespace-nowrap">
+                              <StatusBadge status={u.kycStatus || 'NOT_SUBMITTED'} />
+                            </td>
+
+                            {/* Joined Date */}
+                            <td className="whitespace-nowrap text-slate-500 text-xs font-medium">
+                              {u.dateJoined ? new Date(u.dateJoined).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                            </td>
+
+                            {/* Status (Active / Blocked) */}
+                            <td className="whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-full ${
+                                  u.isActive ? 'admin-badge-active' : 'admin-badge-error'
+                                }`}
                               >
-                                {u.isActive ? <UserX size={12} /> : <UserCheck size={12} />}
-                                {u.isActive ? 'Block' : 'Unblock'}
-                              </button>
-                              {!u.isStaff && (
-                                <button onClick={() => deleteUser(u)} className="admin-btn-danger p-1.5 border-0" style={{padding:'6px'}}>
-                                  <Trash2 size={12} />
+                                <span 
+                                  className="w-1.5 h-1.5 rounded-full" 
+                                  style={{
+                                    background: u.isActive ? '#059669' : '#DC2626', 
+                                    animation: u.isActive ? 'admin-status-dot 2s ease infinite' : 'none'
+                                  }} 
+                                />
+                                {u.isActive ? 'Active' : 'Blocked'}
+                              </span>
+                            </td>
+
+                            {/* Actions (View Profile, Block/Unblock, Delete) */}
+                            <td className="whitespace-nowrap">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => setViewUserDrawer(u)}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition flex items-center gap-1"
+                                  title="Inspect User Deep Details"
+                                >
+                                  <Eye size={12} /> View
                                 </button>
-                              )}
+
+                                <button
+                                  onClick={() => toggleUserActive(u)}
+                                  className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg transition-all ${
+                                    u.isActive ? 'admin-btn-danger' : 'admin-btn-ghost'
+                                  }`}
+                                  style={u.isActive ? {} : { color: '#059669', borderColor: '#A7F3D0', background: '#D1FAE5' }}
+                                  title={u.isActive ? 'Block Account' : 'Reactivate Account'}
+                                >
+                                  {u.isActive ? <UserX size={12} /> : <UserCheck size={12} />}
+                                  {u.isActive ? 'Block' : 'Unblock'}
+                                </button>
+
+                                {!u.isStaff && (
+                                  <button 
+                                    onClick={() => deleteUser(u)} 
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" 
+                                    title="Delete User Account"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {filteredUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center">
+                            <div className="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                              <Users size={26} />
                             </div>
+                            <h4 className="text-slate-800 font-extrabold text-base">No Matching Users Found</h4>
+                            <p className="text-slate-500 text-xs mt-1 max-w-sm mx-auto">
+                              No accounts match your current search "{userSearchInput}" or selected filters. Try searching by email or resetting filters.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setUserSearchInput('');
+                                setUserRoleFilter('ALL');
+                                setUserKycFilter('ALL');
+                                setUserStatusFilter('ALL');
+                                setUserPage(1);
+                              }}
+                              className="mt-3.5 px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-slate-800 transition"
+                            >
+                              Clear Search & Filters
+                            </button>
                           </td>
                         </tr>
-                      ))}
-                      {fUsers.length === 0 && <Empty icon={<Users size={24} />} msg="No users found" />}
+                      )}
                     </tbody>
                   )}
                 </table>
               </div>
+
+              {/* MNC-Style Pagination Footer */}
+              {filteredUsers.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+                    <span>
+                      Showing <strong>{Math.min((userPage - 1) * userPageSize + 1, filteredUsers.length)}</strong> to <strong>{Math.min(userPage * userPageSize, filteredUsers.length)}</strong> of <strong>{filteredUsers.length}</strong> users
+                    </span>
+                    <span>•</span>
+                    <div className="flex items-center gap-1.5">
+                      <span>Per page:</span>
+                      <select
+                        value={userPageSize}
+                        onChange={(e) => {
+                          setUserPageSize(Number(e.target.value));
+                          setUserPage(1);
+                        }}
+                        className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setUserPage(p => Math.max(1, p - 1))}
+                      disabled={userPage === 1}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: Math.min(5, totalUserPages) }, (_, i) => {
+                        let pageNum = i + 1;
+                        if (totalUserPages > 5 && userPage > 3) {
+                          pageNum = userPage - 2 + i;
+                          if (pageNum > totalUserPages) pageNum = totalUserPages - (4 - i);
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setUserPage(pageNum)}
+                            className={`w-8 h-8 rounded-xl text-xs font-black transition ${
+                              userPage === pageNum 
+                                ? 'bg-slate-900 text-white shadow-xs' 
+                                : 'text-slate-600 hover:bg-slate-100'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setUserPage(p => Math.min(totalUserPages, p + 1))}
+                      disabled={userPage >= totalUserPages}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
-          {/* ─── KYC ──────────────────────────────────────────────────────── */}
+          {/* ─── KYC Identity Verification (Top MNC Google/Stripe Compliance Engine) ──── */}
           {tab === 'kyc' && (
-            <div className="admin-tab-content space-y-5">
+            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              
+              {/* Header with Title and Quick Actions */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="admin-section-title">KYC Identity Verification</h2>
-                  <p className="admin-section-sub">{kycUsers.length} users · {stats?.pendingKyc ?? kycUsers.filter(u => u.status === 'PENDING').length} pending review</p>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/60 flex items-center justify-center text-flyora-teal shadow-2xs">
+                      <ShieldCheck size={22} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        KYC & Identity Verification Command
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-black bg-slate-100 text-slate-600 border border-slate-200">
+                          {filteredKycUsers.length} of {kycUsers.length} Records
+                        </span>
+                      </h2>
+                      <p className="text-xs text-slate-500 font-medium">
+                        Enterprise multi-tier identity review, document verification, and compliance management for high-volume users
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-1.5 flex-wrap">
-                  {(['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'NOT_SUBMITTED'] as const).map(f => (
-                    <button
-                      key={f}
-                      onClick={() => setKycFilter(f)}
-                      className={`admin-chip ${kycFilter === f ? 'active' : ''}`}
-                    >
-                      {f.replace('_', ' ')}
-                    </button>
-                  ))}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      fetchDashboard(false);
+                      toast('info', 'Refreshing KYC queue...');
+                    }}
+                    className="admin-btn-secondary flex items-center gap-1.5 text-xs py-2 px-3 shadow-2xs"
+                    title="Reload latest submissions"
+                  >
+                    <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                    <span>Refresh</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const rows = filteredKycUsers.map(u => [
+                        u.userId,
+                        `"₹${u.fullName}"`,
+                        u.email,
+                        u.phone || '',
+                        u.documentType || '',
+                        u.status,
+                        u.rejectionReason ? `"₹${u.rejectionReason}"` : '',
+                        u.submittedAt ? new Date(u.submittedAt).toLocaleDateString() : ''
+                      ]);
+                      const csvContent = "data:text/csv;charset=utf-8," + ["User ID,Full Name,Email,Phone,Document Type,KYC Status,Rejection Reason,Submitted Date", ...rows.map(e => e.join(","))].join("\n");
+                      const encodedUri = encodeURI(csvContent);
+                      const link = document.createElement("a");
+                      link.setAttribute("href", encodedUri);
+                      link.setAttribute("download", `flyorago_kyc_export_${new Date().toISOString().slice(0,10)}.csv`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      toast('success', `Exported ${filteredKycUsers.length} KYC records to CSV!`);
+                    }}
+                    className="admin-btn-primary flex items-center gap-1.5 text-xs py-2 px-3.5 shadow-sm"
+                  >
+                    <Download size={13} />
+                    <span>Export CSV</span>
+                  </button>
                 </div>
               </div>
-              <div className="admin-table-card overflow-x-auto">
-                <table className="w-full text-sm min-w-[800px]">
-                  <thead><tr className="admin-table-head">
-                    <th>User</th><th>Email</th><th>Phone</th><th>Document</th><th>Status</th><th>Submitted</th><th style={{textAlign:'center'}}>Actions</th>
-                  </tr></thead>
+
+              {/* Quick Clickable Metric KPI Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div 
+                  onClick={() => { setKycFilter('ALL'); setKycDocTypeFilter('ALL'); setKycPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'ALL' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${kycFilter === 'ALL' ? 'text-slate-400' : 'text-slate-500'}`}>All Submissions</div>
+                  <div className="text-2xl font-black mt-1">{kycUsers.length}</div>
+                </div>
+
+                <div 
+                  onClick={() => { setKycFilter(kycFilter === 'PENDING' ? 'ALL' : 'PENDING'); setKycPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'PENDING' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white border-amber-200/80 hover:border-amber-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${kycFilter === 'PENDING' ? 'text-amber-100' : 'text-amber-600'}`}>Pending Review</div>
+                  <div className="text-2xl font-black mt-1 text-amber-600" style={kycFilter === 'PENDING' ? { color: 'white' } : {}}>
+                    {kycUsers.filter(u => u.status === 'PENDING').length}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => { setKycFilter(kycFilter === 'APPROVED' ? 'ALL' : 'APPROVED'); setKycPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'APPROVED' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${kycFilter === 'APPROVED' ? 'text-emerald-200' : 'text-emerald-700'}`}>Approved & Verified</div>
+                  <div className="text-2xl font-black mt-1 text-emerald-600" style={kycFilter === 'APPROVED' ? { color: 'white' } : {}}>
+                    {kycUsers.filter(u => u.status === 'APPROVED').length}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => { setKycFilter(kycFilter === 'REJECTED' ? 'ALL' : 'REJECTED'); setKycPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'REJECTED' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${kycFilter === 'REJECTED' ? 'text-rose-200' : 'text-rose-700'}`}>Declined / Fix Needed</div>
+                  <div className="text-2xl font-black mt-1 text-rose-600" style={kycFilter === 'REJECTED' ? { color: 'white' } : {}}>
+                    {kycUsers.filter(u => u.status === 'REJECTED').length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Omni Search & Multi-Faceted Filters Bar */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                  
+                  {/* Real-time Omni-Search */}
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                    <input
+                      type="text"
+                      value={kycSearchInput}
+                      onChange={(e) => {
+                        setKycSearchInput(e.target.value);
+                        setKycPage(1);
+                      }}
+                      placeholder="Search instantly by User Name, Email, Phone, User ID (#14) or Document Type..."
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-flyora-teal focus:bg-white rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 placeholder:text-slate-400 outline-none transition"
+                    />
+                    {kycSearchInput && (
+                      <button 
+                        onClick={() => { setKycSearchInput(''); setKycPage(1); }} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown Filters and Sort */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Status Filter */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Status:</span>
+                      <select
+                        value={kycFilter}
+                        onChange={(e: any) => { setKycFilter(e.target.value); setKycPage(1); }}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All KYC</option>
+                        <option value="PENDING">Pending Review</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                        <option value="NOT_SUBMITTED">Not Submitted</option>
+                      </select>
+                    </div>
+
+                    {/* Document Type Filter */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Document:</span>
+                      <select
+                        value={kycDocTypeFilter}
+                        onChange={(e) => { setKycDocTypeFilter(e.target.value); setKycPage(1); }}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Documents</option>
+                        <option value="national_id_and_passport">National ID / Passport</option>
+                        <option value="passport">Passport</option>
+                        <option value="national_id">National ID Card</option>
+                        <option value="driving_license">Driving License</option>
+                        <option value="Gov ID">Gov ID</option>
+                      </select>
+                    </div>
+
+                    {/* Sort Order */}
+                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Sort:</span>
+                      <select
+                        value={kycSortBy}
+                        onChange={(e: any) => setKycSortBy(e.target.value)}
+                        className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value="newest">Newest Submissions</option>
+                        <option value="oldest">Oldest Submissions</option>
+                        <option value="name">Name (A-Z)</option>
+                      </select>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Active Filter Tags */}
+                {(kycSearchInput || kycFilter !== 'ALL' || kycDocTypeFilter !== 'ALL') && (
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100 flex-wrap text-xs">
+                    <span className="text-[11px] font-bold text-slate-400">Active Filters:</span>
+                    {kycSearchInput && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 font-bold border border-teal-200/80">
+                        Search: "{kycSearchInput}"
+                        <button onClick={() => setKycSearchInput('')} className="hover:text-teal-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    {kycFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200/80">
+                        Status: {kycFilter.replace('_', ' ')}
+                        <button onClick={() => setKycFilter('ALL')} className="hover:text-amber-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    {kycDocTypeFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-200/80">
+                        Doc: {kycDocTypeFilter.replace(/_/g, ' ')}
+                        <button onClick={() => setKycDocTypeFilter('ALL')} className="hover:text-blue-900"><X size={12} /></button>
+                      </span>
+                    )}
+                    <button
+                      onClick={() => {
+                        setKycSearchInput('');
+                        setKycFilter('ALL');
+                        setKycDocTypeFilter('ALL');
+                        setKycPage(1);
+                      }}
+                      className="text-xs font-bold text-rose-500 hover:text-rose-700 ml-1 underline"
+                    >
+                      Reset All
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Enterprise KYC Data Table */}
+              <div className="admin-table-card overflow-x-auto shadow-sm">
+                <table className="w-full text-sm min-w-[950px]">
+                  <thead>
+                    <tr className="admin-table-head">
+                      <th>USER / APPLICANT</th>
+                      <th>CONTACT & EMAIL</th>
+                      <th>DOCUMENT TYPE</th>
+                      <th>DOCUMENTS UPLOADED</th>
+                      <th>COMPLIANCE STATUS</th>
+                      <th>SUBMITTED DATE</th>
+                      <th style={{ textAlign: 'center' }}>ACTIONS</th>
+                    </tr>
+                  </thead>
                   {loading ? <Skeleton rows={8} cols={7} /> : (
                     <tbody>
-                      {fKyc.map(u => (
-                        <tr key={u.userId} className="admin-table-row">
-                          <td className="max-w-[150px] truncate">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                style={{background:'linear-gradient(135deg,#0D9488,#1B4FD8)',color:'white',boxShadow:'0 2px 8px rgba(13,148,136,0.25)'}}
-                              >{u.fullName[0]?.toUpperCase()}</div>
-                              <span className="font-semibold truncate" style={{color:'#0A1628'}}>{u.fullName}</span>
-                            </div>
-                          </td>
-                          <td className="max-w-[180px] truncate" style={{color:'#64748B'}} title={u.email}>{u.email}</td>
-                          <td className="whitespace-nowrap" style={{color:'#475569'}}>{u.phone || '—'}</td>
-                          <td className="capitalize whitespace-nowrap" style={{color:'#64748B'}}>{u.documentType?.replace(/_/g, ' ') || '—'}</td>
-                          <td className="whitespace-nowrap"><StatusBadge status={u.status} /></td>
-                          <td className="whitespace-nowrap" style={{color:'#64748B',fontSize:'12px'}}>{u.submittedAt ? new Date(u.submittedAt).toLocaleDateString() : '-'}</td>
-                          <td className="whitespace-nowrap">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button onClick={() => setSelectedKyc(u)} className="admin-btn-ghost flex items-center gap-1">
-                                <Eye size={11} /> Review
-                              </button>
-                              {u.status !== 'APPROVED' && (
-                                <button onClick={() => confirm_({
-                                  title: 'Approve KYC?',
-                                  description: `Approve ${u.fullName}'s identity verification?`,
-                                  confirmLabel: 'Approve', variant: 'info', icon: <ShieldCheck size={26} />,
-                                  onConfirm: () => handleKyc(u.userId, 'APPROVE')
-                                })} className="admin-btn-ghost flex items-center gap-1" style={{color:'#059669',borderColor:'#A7F3D0',background:'#D1FAE5'}}>
-                                  <Check size={11} /> Approve
+                      {fKyc.map(u => {
+                        const initial = (u.fullName?.[0] || u.email?.[0] || 'U').toUpperCase();
+                        const docCount = [u.frontImage, u.backImage, u.passportImage, u.selfieImage].filter(Boolean).length;
+                        const matchingAppUser = users.find(x => String(x.id) === String(u.userId) || x.email?.toLowerCase() === u.email?.toLowerCase());
+
+                        return (
+                          <tr key={u.userId} className="admin-table-row hover:bg-slate-50/80 transition-colors">
+                            
+                            {/* User Avatar & Name */}
+                            <td className="whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-xs"
+                                  style={{
+                                    background: u.status === 'APPROVED' ? 'linear-gradient(135deg, #059669, #0D9488)' :
+                                                u.status === 'PENDING' ? 'linear-gradient(135deg, #D97706, #F59E0B)' :
+                                                u.status === 'REJECTED' ? 'linear-gradient(135deg, #DC2626, #E11D48)' :
+                                                'linear-gradient(135deg, #475569, #64748B)'
+                                  }}
+                                >
+                                  {initial}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span 
+                                      onClick={() => setSelectedKyc(u)}
+                                      className="font-extrabold text-slate-900 truncate hover:text-teal-600 cursor-pointer text-sm" 
+                                      title={u.fullName}
+                                    >
+                                      {u.fullName}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1">
+                                    <span>ID #{u.userId}</span>
+                                    {matchingAppUser?.role && (
+                                      <span className="capitalize text-slate-500 font-semibold">• {matchingAppUser.role}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Contact & Email */}
+                            <td className="whitespace-nowrap">
+                              <div className="font-semibold text-slate-700 text-xs truncate max-w-[200px]" title={u.email}>
+                                {u.email}
+                              </div>
+                              <div className="text-slate-400 text-[11px] font-mono mt-0.5">
+                                {u.phone || 'No phone added'}
+                              </div>
+                            </td>
+
+                            {/* Document Type */}
+                            <td className="whitespace-nowrap">
+                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                                {u.documentType?.replace(/_/g, ' ') || 'Gov ID'}
+                              </span>
+                            </td>
+
+                            {/* Document Uploads Preview Pill */}
+                            <td className="whitespace-nowrap">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${docCount > 0 ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-slate-100 text-slate-400'}`}>
+                                  {docCount} File{docCount !== 1 ? 's' : ''}
+                                </span>
+                                {u.frontImage && <span className="w-1.5 h-1.5 rounded-full bg-teal-500" title="Front ID attached" />}
+                                {u.passportImage && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" title="Passport attached" />}
+                                {u.selfieImage && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Selfie attached" />}
+                              </div>
+                            </td>
+
+                            {/* Compliance Status */}
+                            <td className="whitespace-nowrap">
+                              <StatusBadge status={u.status || 'NOT_SUBMITTED'} />
+                            </td>
+
+                            {/* Submitted Date */}
+                            <td className="whitespace-nowrap text-slate-500 text-xs font-medium">
+                              {u.submittedAt ? new Date(u.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                            </td>
+
+                            {/* Action Buttons */}
+                            <td className="whitespace-nowrap">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => setSelectedKyc(u)}
+                                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition flex items-center gap-1 shadow-2xs"
+                                  title="Inspect KYC Photos & Bio Details"
+                                >
+                                  <Eye size={12} /> Inspect
                                 </button>
-                              )}
+
+                                {u.status !== 'APPROVED' ? (
+                                  <button
+                                    onClick={() => confirm_({
+                                      title: 'Approve KYC Verification?',
+                                      description: `Are you sure you want to approve identity documents for ${u.fullName}?`,
+                                      confirmLabel: 'Yes, Approve',
+                                      variant: 'info',
+                                      icon: <ShieldCheck size={26} />,
+                                      onConfirm: () => handleKyc(u.userId, 'APPROVE')
+                                    })}
+                                    className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs transition flex items-center gap-1 border border-emerald-200"
+                                    title="One-click Approve"
+                                  >
+                                    <Check size={12} /> Approve
+                                  </button>
+                                ) : (
+                                  <span className="text-[11px] font-bold text-emerald-600 px-2 py-1 flex items-center gap-1">
+                                    <CheckCircle2 size={13} /> Verified
+                                  </span>
+                                )}
+
+                                {u.status === 'PENDING' && (
+                                  <button
+                                    onClick={() => setSelectedKyc(u)}
+                                    className="p-1.5 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition border border-rose-200"
+                                    title="Reject with Reason"
+                                  >
+                                    <XCircle size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {filteredKycUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center">
+                            <div className="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                              <ShieldCheck size={26} />
                             </div>
+                            <h4 className="text-slate-800 font-extrabold text-base">No Matching KYC Records</h4>
+                            <p className="text-slate-500 text-xs mt-1 max-w-sm mx-auto">
+                              No verification files match your search "{kycSearchInput}" or current filter. Try resetting search parameters.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setKycSearchInput('');
+                                setKycFilter('ALL');
+                                setKycDocTypeFilter('ALL');
+                                setKycPage(1);
+                              }}
+                              className="mt-3.5 px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-slate-800 transition"
+                            >
+                              Clear Search & Filters
+                            </button>
                           </td>
                         </tr>
-                      ))}
-                      {fKyc.length === 0 && <Empty icon={<ShieldCheck size={24} />} msg="No KYC records" sub="Try changing the filter" />}
+                      )}
                     </tbody>
                   )}
                 </table>
               </div>
+
+              {/* MNC-Style Pagination Footer */}
+              {filteredKycUsers.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+                    <span>
+                      Showing <strong>{Math.min((kycPage - 1) * kycPageSize + 1, filteredKycUsers.length)}</strong> to <strong>{Math.min(kycPage * kycPageSize, filteredKycUsers.length)}</strong> of <strong>{filteredKycUsers.length}</strong> records
+                    </span>
+                    <span>•</span>
+                    <div className="flex items-center gap-1.5">
+                      <span>Per page:</span>
+                      <select
+                        value={kycPageSize}
+                        onChange={(e) => {
+                          setKycPageSize(Number(e.target.value));
+                          setKycPage(1);
+                        }}
+                        className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none cursor-pointer"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setKycPage(p => Math.max(1, p - 1))}
+                      disabled={kycPage === 1}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: Math.min(5, totalKycPages) }, (_, i) => {
+                        let pageNum = i + 1;
+                        if (totalKycPages > 5 && kycPage > 3) {
+                          pageNum = kycPage - 2 + i;
+                          if (pageNum > totalKycPages) pageNum = totalKycPages - (4 - i);
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setKycPage(pageNum)}
+                            className={`w-8 h-8 rounded-xl text-xs font-black transition ${
+                              kycPage === pageNum 
+                                ? 'bg-slate-900 text-white shadow-xs' 
+                                : 'text-slate-600 hover:bg-slate-100'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setKycPage(p => Math.min(totalKycPages, p + 1))}
+                      disabled={kycPage >= totalKycPages}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
@@ -4466,12 +5635,174 @@ const AdminDashboardPage: React.FC = () => {
           {/* ── Settings / Admin Credentials Tab ── */}
           {tab === 'settings' && <SettingsTab toast={toast} />}
 
+          {/* ── Transactions & Platform Fee Revenue Ledger Tab (Top-MNC Grade) ── */}
+          {tab === 'transactions' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Header & KPI Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between bg-gradient-to-br from-white to-emerald-50/50">
+                  <div>
+                    <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Total Platform Revenue</div>
+                    <div className="text-3xl font-black text-emerald-700 mt-1">
+                      ₹{(stats?.totalPlatformEarnings || 0).toFixed(2)}
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Accrued platform fees across all users</p>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black">
+                    <DollarSign size={28} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-sky-600 uppercase tracking-wider">Fee Deductions Count</div>
+                    <div className="text-3xl font-black text-slate-900 mt-1">
+                      {platformRevenues.length}
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Sender checkout & Traveler payout events</p>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center">
+                    <Package size={26} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Current Fee Rule</div>
+                    <div className="text-3xl font-black text-slate-900 mt-1">
+                      ₹50.00
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Flat charge per parcel transaction</p>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                    <ShieldCheck size={26} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Ledger Table */}
+              <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <DollarSign className="text-emerald-500" size={20} /> Platform Fee Transactions & Audit Ledger
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      Live financial trace of platform fee collected from each user (Sender & Traveler) with booking references
+                    </p>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                    {platformRevenues.length} Transactions
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="bg-slate-50/80 text-[10px] font-black text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                        <th className="px-6 py-4">Transaction ID</th>
+                        <th className="px-6 py-4">User Name & Email</th>
+                        <th className="px-6 py-4">User Role</th>
+                        <th className="px-6 py-4">Linked Booking</th>
+                        <th className="px-6 py-4">Platform Fee Cut</th>
+                        <th className="px-6 py-4">Date & Time</th>
+                        <th className="px-6 py-4 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {platformRevenues.map((rec) => (
+                        <tr key={rec.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-6 py-4 font-mono font-bold text-slate-700 text-xs">
+                            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                              {rec.transaction_id || `TXN-PR-${rec.id}`}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-extrabold text-slate-900 text-xs">{rec.userName}</div>
+                            <div className="text-[11px] text-slate-400 font-medium">{rec.userEmail}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                              rec.userRole === 'Sender' 
+                                ? 'bg-sky-50 text-sky-700 border-sky-200' 
+                                : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            }`}>
+                              {rec.userRole}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {rec.bookingId ? (
+                              <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                                Booking #{rec.bookingId}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-400 font-medium">Direct / Wallet</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 font-black text-emerald-600 text-sm">
+                            +₹{rec.platformFee.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-slate-500 font-medium">
+                            {rec.createdAt}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                              {rec.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {platformRevenues.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                            No platform fee transactions recorded yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
 
       {/* ── Modals & Overlays ── */}
       {confirm && <ConfirmModal {...confirm} />}
       {statusModal && <StatusModal {...statusModal} onClose={() => setStatusModal(null)} />}
+      {viewUserDrawer && (() => {
+        const trustProf = trustProfiles.find(tp => String(tp.user) === String(viewUserDrawer.id) || tp.user_email?.toLowerCase() === viewUserDrawer.email?.toLowerCase());
+        const userTrustScore = trustProf?.score || 550;
+        const kycRecord = kycUsers.find(k => String(k.userId) === String(viewUserDrawer.id) || k.email?.toLowerCase() === viewUserDrawer.email?.toLowerCase());
+        const userTrips = trips.filter(t => t.traveler_email?.toLowerCase() === viewUserDrawer.email?.toLowerCase());
+        const userBookings = bookings.filter(b => b.sender?.email?.toLowerCase() === viewUserDrawer.email?.toLowerCase() || b.traveler?.email?.toLowerCase() === viewUserDrawer.email?.toLowerCase());
+
+        return (
+          <UserDetailsModal
+            user={viewUserDrawer}
+            kycRecord={kycRecord}
+            trustScore={userTrustScore}
+            tripsCount={userTrips.length}
+            bookingsCount={userBookings.length}
+            onClose={() => setViewUserDrawer(null)}
+            onToggleActive={(u) => {
+              toggleUserActive(u);
+              setViewUserDrawer(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
+            }}
+            onDelete={(u) => {
+              setViewUserDrawer(null);
+              deleteUser(u);
+            }}
+            onViewKyc={(k) => {
+              setViewUserDrawer(null);
+              setSelectedKyc(k);
+            }}
+          />
+        );
+      })()}
       {selectedKyc && <KycModal user={selectedKyc} onClose={() => setSelectedKyc(null)} onAction={(id, action, reason) => handleKyc(id, action, reason)} />}
       {selectedBooking && <BookingModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} onStatusChange={updateBookingStatus} />}
       {selectedTrip && <TripModal trip={selectedTrip} onClose={() => setSelectedTrip(null)} onStatusChange={updateTripStatus} />}

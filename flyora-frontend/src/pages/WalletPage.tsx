@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Plane, Package, CalendarDays, Wallet, CreditCard,
   Headphones, Gift, UserRound, Settings, Search, Bell, ChevronDown,
-  ArrowRight, ShieldCheck, Plus, ArrowUpRight, Lock, RefreshCcw, Landmark, X, Filter
+  ArrowRight, ShieldCheck, Plus, ArrowUpRight, ArrowDownLeft, Lock, RefreshCcw, Landmark, X, Filter,
+  Eye, CheckCircle2, MapPin, User, FileText, ArrowDownRight, ExternalLink
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { useKycValidation } from '../hooks/useKycValidation';
@@ -28,7 +29,7 @@ const sidebarItems = [
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { validateAction, isModalOpen: isKycModalOpen, closeModal: closeKycModal, kycStatus } = useKycValidation();
-  const userName = localStorage.getItem('flyora_user_name') || 'Vedant Sharma';
+  const userName = localStorage.getItem('flyora_user_name') || 'User';
   const initials = userName.split(' ').map(n => n[0]).join('');
 
   // Balance and data states
@@ -36,6 +37,7 @@ const WalletPage: React.FC = () => {
     walletBalance: 0,
     escrowBalance: 0,
     pendingBalance: 0,
+    totalEarnings: 0,
   });
   const [transactionsList, setTransactionsList] = useState<any[]>([]);
   const [payoutMethods, setPayoutMethods] = useState<any[]>([]);
@@ -46,6 +48,7 @@ const WalletPage: React.FC = () => {
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [selectedTxForDetail, setSelectedTxForDetail] = useState<any | null>(null);
 
   // Search and Filters state
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,6 +72,9 @@ const WalletPage: React.FC = () => {
           walletBalance: parseFloat(summaryRes.data.balance_available) || 0,
           pendingBalance: parseFloat(summaryRes.data.balance_pending) || 0,
           escrowBalance: parseFloat(summaryRes.data.balance_escrow) || 0,
+          totalEarnings: typeof summaryRes.data.total_earnings === 'number' 
+            ? summaryRes.data.total_earnings 
+            : (parseFloat(summaryRes.data.total_earnings) || 0),
         });
       }
 
@@ -91,22 +97,36 @@ const WalletPage: React.FC = () => {
 
       // 3. Fetch Transactions
       const txsRes = await apiFetch('/api/wallet/transactions');
-      if (txsRes.status === 'success' && Array.isArray(txsRes.data)) {
-        const mappedTxs = txsRes.data.map((t: any) => {
-          const isCredit = ['Deposit', 'Payment Received', 'Refund'].includes(t.type);
+      const rawTxs = Array.isArray(txsRes?.results) 
+        ? txsRes.results 
+        : (Array.isArray(txsRes?.data?.results) 
+            ? txsRes.data.results 
+            : (Array.isArray(txsRes?.data) 
+                ? txsRes.data 
+                : (Array.isArray(txsRes) ? txsRes : [])));
+
+      if (rawTxs.length > 0) {
+        const mappedTxs = rawTxs.map((t: any) => {
+          const typeStr = (t.type || '').trim();
+          // Escrow Release, Deposit, Payment Received, Refund are incoming credits (+)
+          const isCredit = ['Deposit', 'Payment Received', 'Refund', 'Escrow Release'].includes(typeStr);
           return {
             id: `#TXN${t.id}`,
             rawId: t.id,
             description: t.description || 'Wallet transaction',
             date: t.createdAt || 'Just now',
-            category: t.type || 'Transfer',
+            category: typeStr || 'Transaction',
             type: isCredit ? 'credit' : 'debit',
             amount: parseFloat(t.amount) || 0.00,
-            status: t.status || 'PAYMENT_RELEASED',
-            reference: t.refId || `REF-${t.id}`
+            status: t.status || 'Completed',
+            reference: t.refId || t.reference_id || `REF-${t.id}`,
+            counterparty: t.counterparty || null,
+            booking_details: t.booking_details || null
           };
         });
         setTransactionsList(mappedTxs);
+      } else {
+        setTransactionsList([]);
       }
 
       // 4. Fetch Bookings to map escrow payments
@@ -181,7 +201,7 @@ const WalletPage: React.FC = () => {
       });
 
       if (res.status === 'success') {
-        alert(`Successfully deposited $${amount} to your available balance.`);
+        alert(`Successfully deposited ₹${amount} to your available balance.`);
         setIsAddFundsOpen(false);
         setAmount('');
         fetchWalletData();
@@ -209,7 +229,7 @@ const WalletPage: React.FC = () => {
       });
 
       if (res.status === 'success') {
-        alert(`Withdrawal request of $${amount} processed successfully.`);
+        alert(`Withdrawal request of ₹${amount} processed successfully.`);
         setIsWithdrawOpen(false);
         setAmount('');
         fetchWalletData();
@@ -223,7 +243,7 @@ const WalletPage: React.FC = () => {
     e.preventDefault();
     // Simulate transfer locally by requesting mock withdrawal
     try {
-      alert(`Transfer of $${amount} to recipient ${transferRecipient} requested successfully.`);
+      alert(`Transfer of ₹${amount} to recipient ${transferRecipient} requested successfully.`);
       setIsTransferOpen(false);
       setAmount('');
     } catch (err: any) {
@@ -249,7 +269,7 @@ const WalletPage: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-extrabold text-flyora-teal tracking-tight mb-1">Wallet <span className="text-slate-800">& Payouts</span></h1>
@@ -279,21 +299,21 @@ const WalletPage: React.FC = () => {
                 <CreditCard size={24} />
               </div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Total Earnings</div>
-              <div className="text-3xl font-black text-slate-800">${(walletStats.walletBalance + walletStats.escrowBalance + walletStats.pendingBalance).toFixed(2)}</div>
+              <div className="text-3xl font-black text-slate-800">₹{walletStats.totalEarnings.toFixed(2)}</div>
             </div>
             <div className="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm relative overflow-hidden group">
               <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mb-4 group-hover:scale-110 transition-transform">
                 <Wallet size={24} />
               </div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Current Balance</div>
-              <div className="text-3xl font-black text-slate-800">${walletStats.walletBalance.toFixed(2)}</div>
+              <div className="text-3xl font-black text-slate-800">₹{walletStats.walletBalance.toFixed(2)}</div>
             </div>
             <div className="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm relative overflow-hidden group">
               <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mb-4 group-hover:scale-110 transition-transform">
                 <Lock size={24} />
               </div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">In Escrow</div>
-              <div className="text-3xl font-black text-slate-800">${walletStats.escrowBalance.toFixed(2)}</div>
+              <div className="text-3xl font-black text-slate-800">₹{walletStats.escrowBalance.toFixed(2)}</div>
             </div>
           </div>
 
@@ -332,41 +352,101 @@ const WalletPage: React.FC = () => {
                   <tr className="bg-slate-50/50">
                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 whitespace-nowrap">Transaction ID</th>
                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 whitespace-nowrap">Date</th>
-                    <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 whitespace-nowrap">Description</th>
+                    <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 whitespace-nowrap">Description & Party</th>
                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 whitespace-nowrap">Amount</th>
                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 whitespace-nowrap">Status</th>
+                    <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTransactions.map((tx) => (
-                    <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
-                      <td className="py-4 px-6">
-                        <span className="text-sm font-bold text-slate-700">{tx.id}</span>
+                  {filteredTransactions.map((tx) => {
+                    const isEscrow = tx.category.toLowerCase().includes('escrow');
+                    const isHold = tx.category.toLowerCase().includes('hold');
+                    const isRelease = tx.category.toLowerCase().includes('release');
+                    
+                    return (
+                    <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition group">
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                            {tx.id}
+                          </span>
+                        </div>
                       </td>
-                      <td className="py-4 px-6 text-sm text-slate-500 font-medium">
+                      <td className="py-4 px-6 text-xs text-slate-500 font-medium whitespace-nowrap">
                         {tx.date}
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-sm text-slate-800">{tx.description}</span>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{tx.category}</div>
+                        <div className="flex items-start gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                            isHold ? 'bg-amber-50 text-amber-600 border border-amber-200' :
+                            isRelease ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                            tx.type === 'credit' ? 'bg-teal-50 text-teal-600 border border-teal-200' :
+                            'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}>
+                            {isHold ? <Lock size={15} /> :
+                             isRelease ? <ShieldCheck size={15} /> :
+                             tx.type === 'credit' ? <ArrowDownLeft size={15} /> :
+                             <ArrowUpRight size={15} />}
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-slate-800 block">{tx.description}</span>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                                isHold ? 'bg-amber-100/60 text-amber-700' :
+                                isRelease ? 'bg-emerald-100/60 text-emerald-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>
+                                {tx.category}
+                              </span>
+                              {tx.counterparty && (
+                                <span className="text-[11px] font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <User size={11} className="text-slate-400" />
+                                  <span>{tx.counterparty.role}: <strong className="text-slate-800">{tx.counterparty.name}</strong></span>
+                                </span>
+                              )}
+                              {tx.reference && tx.reference !== `REF-${tx.rawId}` && (
+                                <span className="text-[11px] text-slate-400 font-mono">
+                                  Ref: #{tx.reference}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className={`text-sm font-bold ${tx.type === 'credit' ? 'text-emerald-500' : 'text-slate-800'}`}>
-                          {tx.type === 'credit' ? '+' : '-'}${tx.amount.toFixed(2)}
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <span className={`text-sm font-extrabold ${tx.type === 'credit' ? 'text-emerald-600' : 'text-slate-800'}`}>
+                          {tx.type === 'credit' ? '+' : '-'}₹{tx.amount.toFixed(2)}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${tx.status === 'PAYMENT_RELEASED' ? 'bg-emerald-50 text-emerald-600' :
-                            tx.status === 'REQUEST_SENT' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                          }`}>
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 ${
+                          tx.status === 'Completed' || tx.status === 'PAYMENT_RELEASED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                          tx.status === 'Pending' || tx.status === 'REQUEST_SENT' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 
+                          'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            tx.status === 'Completed' || tx.status === 'PAYMENT_RELEASED' ? 'bg-emerald-500' :
+                            tx.status === 'Pending' || tx.status === 'REQUEST_SENT' ? 'bg-amber-500' : 'bg-rose-500'
+                          }`}></span>
                           {tx.status}
                         </span>
                       </td>
+                      <td className="py-4 px-6 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => setSelectedTxForDetail(tx)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ml-auto border border-slate-200/80 hover:border-emerald-200 shadow-sm"
+                        >
+                          <Eye size={13} />
+                          <span>View Details</span>
+                        </button>
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {filteredTransactions.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-500 text-sm font-medium">
+                      <td colSpan={6} className="py-12 text-center text-slate-500 text-sm font-medium">
                         No transactions found matching your criteria.
                       </td>
                     </tr>
@@ -407,7 +487,7 @@ const WalletPage: React.FC = () => {
                 </select>
               </label>
               <label className="block">
-                <span className="dash-input-label">Amount (USD)</span>
+                <span className="dash-input-label">Amount (INR)</span>
                 <input type="number" required placeholder="50.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="dash-input mt-1 w-full" />
               </label>
               <div className="trip-modal__actions pt-2">
@@ -435,7 +515,7 @@ const WalletPage: React.FC = () => {
             <form className="trip-modal__form mt-4 space-y-4" onSubmit={handleWithdraw}>
               <div className="p-3 bg-teal-50 border border-teal-100 rounded-xl flex justify-between text-xs font-bold text-flyora-teal">
                 <span>Withdrawable Balance:</span>
-                <span>${walletStats.walletBalance.toFixed(2)}</span>
+                <span>₹{walletStats.walletBalance.toFixed(2)}</span>
               </div>
               <label className="block">
                 <span className="dash-input-label">Payout Destination</span>
@@ -452,7 +532,7 @@ const WalletPage: React.FC = () => {
                 </select>
               </label>
               <label className="block">
-                <span className="dash-input-label">Withdraw Amount (USD)</span>
+                <span className="dash-input-label">Withdraw Amount (INR)</span>
                 <input type="number" max={walletStats.walletBalance} required placeholder="100.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="dash-input mt-1 w-full" />
               </label>
               <div className="trip-modal__actions pt-2">
@@ -483,7 +563,7 @@ const WalletPage: React.FC = () => {
                 <input type="text" required placeholder="priya.mehta@example.com" value={transferRecipient} onChange={(e) => setTransferRecipient(e.target.value)} className="dash-input mt-1 w-full" />
               </label>
               <label className="block">
-                <span className="dash-input-label">Amount (USD)</span>
+                <span className="dash-input-label">Amount (INR)</span>
                 <input type="number" max={walletStats.walletBalance} required placeholder="50.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="dash-input mt-1 w-full" />
               </label>
               <div className="trip-modal__actions pt-2">
@@ -491,6 +571,183 @@ const WalletPage: React.FC = () => {
                 <button type="submit" className="fly-btn fly-btn-primary">Transfer Now</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Details Modal */}
+      {selectedTxForDetail && (
+        <div className="trip-modal-overlay" onClick={(e) => e.target === e.currentTarget && setSelectedTxForDetail(null)}>
+          <div className="trip-modal fly-card max-w-lg bg-white rounded-2xl shadow-2xl p-0 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-6 bg-slate-900 text-white flex items-start justify-between relative overflow-hidden">
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[11px] font-mono tracking-wider font-bold bg-white/20 text-emerald-300 px-2.5 py-0.5 rounded">
+                    {selectedTxForDetail.id}
+                  </span>
+                  <span className="text-xs text-slate-300">
+                    • {selectedTxForDetail.date}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Transaction Dossier</h3>
+                <p className="text-xs text-slate-300 mt-0.5">Top-MNC Grade Financial Trace & Audit Record</p>
+              </div>
+              <button 
+                type="button" 
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition relative z-10" 
+                onClick={() => setSelectedTxForDetail(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              {/* Amount Highlight Card */}
+              <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Transaction Value
+                  </span>
+                  <div className="text-3xl font-black text-slate-900 flex items-baseline gap-1">
+                    <span className={selectedTxForDetail.type === 'credit' ? 'text-emerald-600' : 'text-slate-900'}>
+                      {selectedTxForDetail.type === 'credit' ? '+' : '-'}₹{selectedTxForDetail.amount.toFixed(2)}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest ml-1">INR</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Settlement Status
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 ${
+                    selectedTxForDetail.status === 'Completed' || selectedTxForDetail.status === 'PAYMENT_RELEASED' ? 'bg-emerald-100 text-emerald-800' :
+                    selectedTxForDetail.status === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    <CheckCircle2 size={13} />
+                    {selectedTxForDetail.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Counterparty / Transfer Flow Card */}
+              {selectedTxForDetail.counterparty ? (
+                <div className="p-5 rounded-xl bg-gradient-to-br from-teal-50/60 to-emerald-50/40 border border-teal-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-800">
+                      <User size={14} className="text-teal-600" />
+                      <span>
+                        {selectedTxForDetail.type === 'credit' ? 'Payment Source (From Whom)' : 'Transfer Destination (Paid To)'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-800 uppercase tracking-wider">
+                      {selectedTxForDetail.counterparty.role}
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg border border-teal-100/80 shadow-sm flex items-center justify-between">
+                    <div>
+                      <div className="text-base font-bold text-slate-800">
+                        {selectedTxForDetail.counterparty.name}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium mt-0.5">
+                        {selectedTxForDetail.counterparty.email}
+                      </div>
+                      {selectedTxForDetail.counterparty.phone && (
+                        <div className="text-xs text-slate-400 font-mono mt-0.5">
+                          Phone: {selectedTxForDetail.counterparty.phone}
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-teal-100/80 text-teal-700 font-black text-sm flex items-center justify-center shrink-0">
+                      {selectedTxForDetail.counterparty.name.charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-500 flex items-center gap-2">
+                  <FileText size={16} className="text-slate-400 shrink-0" />
+                  <span>Direct System Transaction / Wallet Payout / Balance Adjustment</span>
+                </div>
+              )}
+
+              {/* Associated Booking & Logistics Details */}
+              {selectedTxForDetail.booking_details && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <Package size={14} className="text-slate-400" />
+                      Linked Booking / Logistics Order
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                      Order #{selectedTxForDetail.booking_details.id}
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-sm">
+                    {selectedTxForDetail.booking_details.route && (
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-800 pb-2 border-b border-slate-100">
+                        <MapPin size={16} className="text-emerald-600 shrink-0" />
+                        <span>{selectedTxForDetail.booking_details.route}</span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="text-slate-400 font-medium block">Package / Cargo</span>
+                        <span className="text-slate-800 font-bold mt-0.5 block">
+                          {selectedTxForDetail.booking_details.package_name || selectedTxForDetail.booking_details.type}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-medium block">Weight Space</span>
+                        <span className="text-slate-800 font-bold mt-0.5 block">
+                          {selectedTxForDetail.booking_details.weight || selectedTxForDetail.booking_details.booked_weight || 'N/A'}
+                        </span>
+                      </div>
+                      {selectedTxForDetail.booking_details.receiver_name && (
+                        <div className="col-span-2 pt-2 border-t border-slate-100">
+                          <span className="text-slate-400 font-medium block">Intended Receiver</span>
+                          <span className="text-slate-800 font-semibold mt-0.5 block">
+                            {selectedTxForDetail.booking_details.receiver_name}
+                            {selectedTxForDetail.booking_details.receiver_address && ` • ${selectedTxForDetail.booking_details.receiver_address}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Transaction Meta Details */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 text-xs space-y-2">
+                <div className="flex justify-between items-center text-slate-600">
+                  <span className="text-slate-400">Nature / Category:</span>
+                  <span className="font-bold text-slate-700">{selectedTxForDetail.category}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-600">
+                  <span className="text-slate-400">Reference Token:</span>
+                  <span className="font-mono font-bold text-slate-700">#{selectedTxForDetail.reference}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-600">
+                  <span className="text-slate-400">Description:</span>
+                  <span className="font-medium text-slate-700 text-right max-w-[260px] truncate">{selectedTxForDetail.description}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition"
+                onClick={() => setSelectedTxForDetail(null)}
+              >
+                Close Dossier
+              </button>
+            </div>
           </div>
         </div>
       )}
