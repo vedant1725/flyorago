@@ -72,61 +72,91 @@ const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center font-sans select-none overflow-x-hidden bg-[#C9E8FD]">
+    <div className="relative min-h-screen w-full flex flex-col lg:flex-row items-center justify-between font-sans select-none overflow-x-hidden bg-[#D4EDFC]">
 
-      {/* ─── 1. Exact 100% Matching High-Resolution Artwork Canvas ─── */}
+      {/* ─── 1. 100% Clean Background (NO text, NO mock forms behind) ─── */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img
-          src="/images/admin_portal_canvas.png"
-          alt="Flyorago Global Travel & Freight"
+          src="/images/admin_clean_bg.png"
+          alt="Flight Network & 3D Globe"
           className="w-full h-full object-cover object-center"
         />
+        {/* Soft daylight ambient wash */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-white/30" />
       </div>
 
-      {/* ─── 2. Interactive Navigation Link on Logo (Top-Left) ─── */}
-      <Link 
-        to="/" 
-        className="absolute top-5 sm:top-8 md:top-10 left-5 sm:left-10 md:left-14 z-20 w-36 sm:w-48 h-12 sm:h-14 rounded-2xl cursor-pointer hover:opacity-80 transition-opacity" 
-        title="Go to Flyorago Home"
-      />
+      {/* ─── 2. Top-Left Logo ─── */}
+      <div className="absolute top-6 sm:top-8 lg:top-10 left-6 sm:left-10 lg:left-14 z-20">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#00D2B4] via-[#0D9488] to-[#0284C7] flex items-center justify-center shadow-lg shadow-teal-500/25 border border-white/60 group-hover:scale-105 transition-transform duration-300">
+            <Plane size={24} className="text-white transform -rotate-45" />
+          </div>
+          <span className="text-2xl sm:text-3xl font-black text-[#0A2540] tracking-tight">
+            fly<span className="text-[#0D9488]">orago</span>
+          </span>
+        </Link>
+      </div>
 
-      {/* ─── 3. Floating Interactive Glassmorphism Form Overlay ─── */}
-      {/* Positioned seamlessly directly over the right form zone of the canvas */}
-      <div className="relative z-10 w-full min-h-screen flex items-center justify-end px-4 sm:px-8 md:px-14 lg:px-20 xl:px-28 py-10">
-        <div className="w-full max-w-[360px] sm:max-w-[380px] lg:max-w-[400px] flex flex-col items-center mt-28 sm:mt-24 md:mt-16 lg:mt-24">
+      {/* ─── 3. Left Hero Text ─── */}
+      <div className="relative z-10 w-full lg:w-[50%] p-6 sm:p-10 lg:p-16 flex flex-col justify-end mt-28 lg:mt-auto mb-6 lg:mb-16">
+        <div className="max-w-xl">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-[#0A2240] tracking-tight leading-[1.12]">
+            Smart Global <br />
+            <span className="text-[#0D9488]">Luggage & Travel</span> <br />
+            Platform
+          </h1>
+          {/* Decorative Pill Line */}
+          <div className="flex items-center gap-2 mt-5">
+            <div className="w-14 sm:w-16 h-1.5 rounded-full bg-[#00D2B4]" />
+            <div className="w-2.5 h-1.5 rounded-full bg-[#00D2B4]" />
+          </div>
+        </div>
+      </div>
 
-          {/* Form Title & Subtitle Matching Exact Visual Geometry */}
-          <div className="text-center mb-5 sm:mb-6">
-            <h1 className="text-2xl sm:text-[27px] font-black text-[#0A2240] tracking-tight leading-none">
+      {/* ─── 4. Right Glassmorphism Admin Login Card (Crystal Clear — Zero Overlap) ─── */}
+      <div className="relative z-20 w-full lg:w-[50%] flex items-center justify-center lg:justify-end p-4 sm:p-8 lg:pr-16 xl:pr-24 my-auto">
+        <div 
+          className="relative w-full max-w-[420px] rounded-[36px] p-7 sm:p-9 border border-white/80 shadow-[0_25px_60px_rgba(10,37,64,0.16)] transition-all"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 255, 0.65) 100%)',
+            backdropFilter: 'blur(28px)',
+            WebkitBackdropFilter: 'blur(28px)',
+          }}
+        >
+          {/* Top Plane Floating Badge */}
+          <div className="flex justify-center mb-5">
+            <div className="w-16 h-16 rounded-[22px] bg-gradient-to-tr from-[#00D2B4] via-[#0D9488] to-[#0284C7] flex items-center justify-center text-white shadow-lg shadow-teal-500/35 border-2 border-white">
+              <Plane size={28} className="transform -rotate-45" />
+            </div>
+          </div>
+
+          {/* Title Header */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-[27px] font-black text-[#0A2240] tracking-tight">
               Sign In to <span className="text-[#0D9488]">Admin Portal</span>
-            </h1>
-            <p className="text-[12px] sm:text-[13px] font-semibold text-slate-500 mt-2">
+            </h2>
+            <p className="text-xs sm:text-[13px] font-medium text-slate-500 mt-2">
               Enter your credentials below to access the control center.
             </p>
           </div>
 
-          {/* Error Message Pill Alert (if any) */}
+          {/* Error Alert Box */}
           {error && (
-            <div className="w-full mb-4 px-4 py-2.5 bg-[#FEE2E2]/90 border border-rose-300 rounded-full text-[#DC2626] text-xs font-bold flex items-center justify-center gap-2 shadow-xs animate-shake">
-              <AlertCircle size={15} className="shrink-0 text-rose-600" />
+            <div className="mb-5 px-4 py-2.5 bg-[#FEE2E2]/95 border border-rose-300 rounded-2xl text-[#DC2626] text-xs font-bold flex items-center gap-2.5 shadow-xs animate-shake">
+              <AlertCircle size={16} className="shrink-0 text-rose-600" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Login Form Fields */}
-          <form onSubmit={handleAdminLogin} className="w-full space-y-4">
-
-            {/* Email Field with Floating Modern Pill Container */}
+          {/* Form */}
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            {/* Username / Email Field */}
             <div className="w-full">
-              <div 
-                className="w-full h-[48px] sm:h-[50px] px-4 rounded-full flex items-center gap-3 transition-all duration-200 border border-white/80 focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-teal-500/20 shadow-xs"
-                style={{
-                  background: 'rgba(235, 244, 255, 0.75)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                }}
-              >
-                <Mail size={18} className="text-slate-500 shrink-0" />
+              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5 ml-1">
+                ADMIN USERNAME / EMAIL
+              </label>
+              <div className="w-full h-12 px-4 rounded-full bg-white/70 border border-[#BAE6FD] flex items-center gap-3 focus-within:bg-white focus-within:border-[#0D9488] focus-within:ring-4 focus-within:ring-teal-500/15 transition-all shadow-xs">
+                <Mail size={17} className="text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={email}
@@ -134,29 +164,25 @@ const AdminLoginPage: React.FC = () => {
                   placeholder="admin@flyorago.com"
                   required
                   autoFocus
-                  className="w-full h-full bg-transparent border-0 outline-none ring-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-500 placeholder:font-normal p-0 focus:ring-0 focus:outline-none"
+                  className="w-full h-full bg-transparent border-0 outline-none ring-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal p-0 focus:ring-0 focus:outline-none"
                 />
               </div>
             </div>
 
-            {/* Password Field with Floating Modern Pill Container */}
+            {/* Password Field */}
             <div className="w-full">
-              <div 
-                className="w-full h-[48px] sm:h-[50px] px-4 rounded-full flex items-center gap-3 transition-all duration-200 border border-white/80 focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-teal-500/20 shadow-xs"
-                style={{
-                  background: 'rgba(235, 244, 255, 0.75)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                }}
-              >
-                <Lock size={18} className="text-slate-500 shrink-0" />
+              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5 ml-1">
+                PASSWORD
+              </label>
+              <div className="w-full h-12 px-4 rounded-full bg-white/70 border border-[#BAE6FD] flex items-center gap-3 focus-within:bg-white focus-within:border-[#0D9488] focus-within:ring-4 focus-within:ring-teal-500/15 transition-all shadow-xs">
+                <Lock size={17} className="text-slate-400 shrink-0" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full h-full bg-transparent border-0 outline-none ring-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-500 placeholder:font-normal p-0 focus:ring-0 focus:outline-none"
+                  className="w-full h-full bg-transparent border-0 outline-none ring-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal p-0 focus:ring-0 focus:outline-none"
                 />
                 <button
                   type="button"
@@ -169,12 +195,12 @@ const AdminLoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Glowing Gradient Action Button (Exact 100% Color Match) */}
-            <div className="pt-1.5 w-full">
+            {/* Glowing Gradient Submit Button */}
+            <div className="pt-2 w-full">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-[48px] sm:h-[52px] rounded-full bg-gradient-to-r from-[#00D2B4] via-[#0D9488] to-[#0284C7] hover:brightness-105 active:scale-[0.99] text-white font-extrabold text-xs sm:text-sm tracking-wide shadow-lg shadow-teal-500/35 hover:shadow-xl hover:shadow-teal-500/50 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group border border-white/30"
+                className="w-full h-12 rounded-full bg-gradient-to-r from-[#00D2B4] via-[#0D9488] to-[#0284C7] hover:brightness-105 active:scale-[0.99] text-white font-extrabold text-xs sm:text-sm tracking-wide shadow-lg shadow-teal-500/35 hover:shadow-xl hover:shadow-teal-500/50 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group border border-white/30"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -191,6 +217,19 @@ const AdminLoginPage: React.FC = () => {
             </div>
           </form>
 
+          {/* Decorative Indicator Dots */}
+          <div className="flex items-center justify-center gap-1.5 mt-5">
+            <div className="w-5 h-1.5 rounded-full bg-[#00D2B4]" />
+            <div className="w-5 h-1.5 rounded-full bg-slate-300/80" />
+          </div>
+
+          {/* Airplane Line Divider & Copyright */}
+          <div className="mt-5 pt-4 border-t border-slate-200/60 text-center flex flex-col items-center">
+            <Plane size={14} className="text-slate-400 transform -rotate-45 mb-1" />
+            <span className="text-[11px] font-semibold text-slate-500">
+              © 2026 Flyorago. All rights reserved.
+            </span>
+          </div>
         </div>
       </div>
 
