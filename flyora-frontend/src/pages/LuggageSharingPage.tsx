@@ -390,7 +390,7 @@ const LuggageSharingPage: React.FC = () => {
     <div className="flex flex-col lg:flex-row min-h-screen w-full max-w-full overflow-x-hidden bg-[#F8FAFC] text-slate-800 font-sans">
       <Sidebar activeItem="Luggage Sharing" />
 
-      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] pb-24 lg:pb-12 px-3 sm:px-8 pt-6 max-w-7xl mx-auto space-y-8 overflow-x-hidden">
+      <main className="flex-1 min-w-0 w-full lg:ml-[240px] pb-24 lg:pb-12 px-4 sm:px-8 xl:px-10 pt-6 space-y-8 overflow-x-hidden">
         
         {/* ─── GOOGLE-GRADE HERO HEADER ─── */}
         <div className="relative rounded-3xl bg-white p-4 sm:p-8 border border-slate-200 shadow-sm overflow-hidden">

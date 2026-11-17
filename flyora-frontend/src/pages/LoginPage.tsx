@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import {
   Plane, Mail, Lock, Eye, EyeOff, ArrowRight, Fingerprint,
   ArrowLeft, AlertCircle, ShieldX, KeyRound, UserX, X, Shield,
@@ -279,6 +280,60 @@ const LoginPage: React.FC = () => {
   const [showBlockedModal, setShowBlockedModal] = useState(false);
   const [emailFieldError, setEmailFieldError] = useState(false);
   const [passwordFieldError, setPasswordFieldError] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse?.credential) {
+      setErrorType('SERVER_ERROR');
+      setErrorMsg('Google login failed: No credential received.');
+      return;
+    }
+    setGoogleLoading(true);
+    clearError();
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/google/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok || !resData.success) {
+        setErrorType('SERVER_ERROR');
+        setErrorMsg(resData.message || 'Google authentication failed.');
+        return;
+      }
+
+      const data = resData.data;
+      localStorage.setItem('flyora_user_id', data.userId);
+      localStorage.setItem('flyora_user_name', data.fullName);
+      localStorage.setItem('flyora_user_email', data.email);
+      localStorage.setItem('flyora_login_time', Date.now().toString());
+
+      const userRole = data.user?.role || data.role || 'user';
+      localStorage.setItem('flyora_user_role', userRole);
+
+      if (data.tokens) {
+        localStorage.setItem('flyora_access_token', data.tokens.access);
+        localStorage.setItem('flyora_refresh_token', data.tokens.refresh);
+        localStorage.setItem('access_token', data.tokens.access);
+        localStorage.setItem('refresh_token', data.tokens.refresh);
+      }
+
+      const kycStatus = (data.kycStatus || 'APPROVED').toUpperCase();
+      localStorage.setItem('flyora_kyc_status', kycStatus);
+
+      sessionStorage.setItem('flyora_show_welcome', 'true');
+      navigate('/dashboard');
+    } catch (err: any) {
+      setErrorType('SERVER_ERROR');
+      setErrorMsg(err.message || 'Could not connect to server during Google login.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   // Inject shake keyframe CSS once
   useEffect(() => {
@@ -382,6 +437,7 @@ const LoginPage: React.FC = () => {
       } else if (kycStatus === 'NOT_SUBMITTED') {
         navigate('/kyc');
       } else {
+        sessionStorage.setItem('flyora_show_welcome', 'true');
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -592,6 +648,41 @@ const LoginPage: React.FC = () => {
                 </Button>
               </div>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-3 font-bold text-slate-400 tracking-wider">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* Google Sign-In Button */}
+            <div className="flex flex-col items-center justify-center w-full">
+              <div className="w-full flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    setErrorType('SERVER_ERROR');
+                    setErrorMsg('Google login was cancelled or failed.');
+                  }}
+                  shape="pill"
+                  theme="outline"
+                  size="large"
+                  text="continue_with"
+                  width="300"
+                />
+              </div>
+              {googleLoading && (
+                <p className="text-xs text-flyora-teal font-bold mt-2 animate-pulse">
+                  Connecting your Google Account...
+                </p>
+              )}
+            </div>
 
             {/* Footer */}
             <p className="text-center mt-10 text-[13px] font-semibold text-gray-500">

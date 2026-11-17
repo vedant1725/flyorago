@@ -9,13 +9,16 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { useSocket } from '../context/SocketContext';
+import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
+import { useToast } from '../context/ToastContext';
 import { API_BASE_URL } from '../config';
 import './dashboard.css';
 
 const BookingDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -154,6 +157,7 @@ const BookingDetailsPage: React.FC = () => {
           packageName: b.package_name || b.package?.name || 'Parcel Request',
           packageCategory: b.package_category || b.package?.category || 'General',
           packageImage: b.package_image || b.package?.image,
+          verificationImages: b.verification_images || [],
           acceptedParcelTypes: b.accepted_parcel_types || [],
           weight: b.weight || 1,
           reward: parseFloat(b.reward || b.agreed_price || 0),
@@ -271,7 +275,7 @@ const BookingDetailsPage: React.FC = () => {
   const handleSubmitParcelVerification = async () => {
     if (!booking) return;
     if (verificationPreviews.length === 0) {
-      alert("Please upload at least 1 photo of the physical parcel at pickup handover.");
+      addToast('Photos Required', 'Please upload at least 1 photo of the physical parcel at pickup handover.', 'warning');
       return;
     }
     setIsSubmittingVerification(true);
@@ -284,11 +288,11 @@ const BookingDetailsPage: React.FC = () => {
           payload: { images: verificationPreviews }
         })
       });
-      alert("✅ Parcel Pickup Verification Completed! Status updated to Ready for Transit.");
+      addToast('Pickup Verified', 'Parcel pickup verification completed! Status updated to Ready for Transit.', 'success');
       setShowVerifyParcelModal(false);
       loadBookingData();
     } catch (err: any) {
-      alert("Verification failed: " + err.message);
+      addToast('Verification Failed', err.message || 'Verification failed. Please try again.', 'error');
     } finally {
       setIsSubmittingVerification(false);
     }
@@ -303,10 +307,10 @@ const BookingDetailsPage: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({ action: actionName })
       });
-      alert(`Transit status updated: ${newStatusName}`);
+      addToast('Status Updated', `Transit status updated: ${newStatusName}`, 'info');
       loadBookingData();
     } catch (err: any) {
-      alert("Failed to update status: " + err.message);
+      addToast('Update Failed', err.message || 'Failed to update status.', 'error');
     }
   };
 
@@ -314,7 +318,7 @@ const BookingDetailsPage: React.FC = () => {
   const handleVerifyOtpHandover = async () => {
     if (!booking) return;
     if (!inputOtp.trim()) {
-      setOtpError('Please enter the 4-digit handover OTP code');
+      setOtpError('Please enter the 6-digit handover OTP code');
       return;
     }
     setVerifyingOtp(true);
@@ -323,7 +327,7 @@ const BookingDetailsPage: React.FC = () => {
     const bookingId = booking.linkedBookingId || booking.rawId;
     const expectedOtp = booking.deliveryOtp;
 
-    if (inputOtp.trim() !== expectedOtp) {
+    if (expectedOtp && inputOtp.trim() !== expectedOtp.trim()) {
       setOtpError('Incorrect OTP code! Please check the code provided by the Sender.');
       setVerifyingOtp(false);
       return;
@@ -332,14 +336,14 @@ const BookingDetailsPage: React.FC = () => {
     try {
       await apiFetch(`/api/bookings/${bookingId}/action`, {
         method: 'POST',
-        body: JSON.stringify({ action: 'CONFIRM_DELIVERY' })
+        body: JSON.stringify({ action: 'CONFIRM_DELIVERY', otp: inputOtp.trim() })
       });
-      alert("🎉 Handover OTP Verified! Parcel status marked as Completed & ₹" + booking.reward + " Escrow released to Traveler Wallet!");
+      addToast('Handover Completed', `🎉 Handover OTP Verified! Parcel marked as Completed & ₹${booking.reward} Escrow released to Wallet!`, 'success');
       setShowOtpModal(false);
       setInputOtp('');
       loadBookingData();
     } catch (err: any) {
-      setOtpError("Verification error: " + err.message);
+      setOtpError("Verification error: " + (err.message || 'Verification failed'));
     } finally {
       setVerifyingOtp(false);
     }
@@ -347,8 +351,16 @@ const BookingDetailsPage: React.FC = () => {
 
   // Extract photos
   const rawImgs = booking?.acceptedParcelTypes || [];
+  const vImgs = booking?.verificationImages || [];
   const pImg = booking?.packageImage;
   let allImgs: string[] = [];
+
+  if (Array.isArray(vImgs)) {
+    vImgs.forEach((img: string) => {
+      if (img && typeof img === 'string' && !allImgs.includes(img)) allImgs.push(img);
+    });
+  }
+
   if (pImg && typeof pImg === 'string' && pImg.startsWith('[')) {
     try {
       const parsed = JSON.parse(pImg);
@@ -393,54 +405,54 @@ const BookingDetailsPage: React.FC = () => {
   const daysSinceDelivery = getDaysSinceDelivery();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans selection:bg-teal-500/30">
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
       <Sidebar activeItem="Sender" />
 
-      {/* Main Panel with responsive left margin */}
-      <main className="flex-1 lg:ml-[240px] flex flex-col min-h-screen overflow-y-auto pb-24 lg:pb-10">
+      {/* Main Panel */}
+      <main className="flex-1 min-w-0 w-full lg:ml-[240px] flex flex-col min-h-screen relative pb-20 lg:pb-12">
+        {/* Subtle Ambient Flyora Teal Wave Gradient in Background */}
+        <div className="absolute top-0 right-0 w-full h-[460px] overflow-hidden pointer-events-none -z-0">
+          <svg className="w-full h-full" viewBox="0 0 1440 460" fill="none" preserveAspectRatio="none">
+            <path
+              d="M620 0 C860 130, 1120 40, 1440 140 L1440 0 Z"
+              fill="#F0FDFA"
+              fillOpacity="0.75"
+            />
+            <path
+              d="M450 0 C680 180, 1020 200, 1440 70 L1440 0 Z"
+              fill="#CCFBF1"
+              fillOpacity="0.4"
+            />
+          </svg>
+        </div>
 
         {/* Top Header */}
-        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0 sticky top-0 z-30 shadow-xs">
+        <header className="flex h-20 items-center justify-between px-4 sm:px-8 xl:px-10 shrink-0 gap-3 sm:gap-6 relative z-30">
           <button
             type="button"
             onClick={() => navigate('/sender')}
-            className="flex items-center gap-2 text-xs font-black text-slate-700 hover:text-flyora-teal transition bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-xl border border-slate-200"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-700 hover:text-flyora-teal transition bg-white hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-full border border-slate-200/90 shadow-[0_2px_8px_rgba(10,22,40,0.02)]"
           >
-            <ArrowLeft size={16} /> Back to Sender Dashboard
+            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Sender Dashboard</span><span className="sm:hidden">Back</span>
           </button>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/notifications')}
-              className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <NotificationDropdown />
             <HeaderProfileDropdown />
           </div>
         </header>
 
-        {/* Content Container */}
-        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
-          <div className="lg:hidden flex items-center justify-between pb-2">
-            <button
-              type="button"
-              onClick={() => navigate('/sender')}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-flyora-teal bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
-            >
-              <ArrowLeft size={14} /> Back to Sender
-            </button>
-          </div>
+        {/* Content Container - Exact same padding as Dashboard (px-4 sm:px-8 xl:px-10) */}
+        <div className="px-4 sm:px-8 xl:px-10 space-y-6 sm:space-y-8 relative z-20">
 
           {loading ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-12 text-center border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)]">
               <div className="w-12 h-12 rounded-full border-4 border-teal-500 border-t-transparent animate-spin mx-auto mb-4"></div>
               <h3 className="text-slate-800 font-extrabold text-base">Loading Parcel Request Details...</h3>
               <p className="text-slate-400 text-xs mt-1">Fetching package specifications and traveler status</p>
             </div>
           ) : !booking ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs max-w-lg mx-auto mt-8">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-12 text-center border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)] max-w-lg mx-auto mt-8">
               <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-200">
                 <Package size={32} />
               </div>
@@ -457,7 +469,7 @@ const BookingDetailsPage: React.FC = () => {
           ) : (
             <>
               {/* Header Card */}
-              <section className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <section className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-7 border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)] flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h1 className="text-2xl font-black text-slate-800 tracking-tight">Parcel Request {booking.id}</h1>
@@ -874,27 +886,27 @@ const BookingDetailsPage: React.FC = () => {
 
       {/* 1. INTERACTIVE PAYMENT GATEWAY MODAL */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-4" onClick={() => setShowPaymentModal(false)}>
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowPaymentModal(false)}>
+          <div className="bg-white w-full max-w-lg max-h-[92vh] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
 
             {/* Modal Header */}
-            <div className="px-6 py-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white flex items-center justify-between relative overflow-hidden">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white flex items-center justify-between relative overflow-hidden shrink-0">
               <div className="relative z-10 flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-white shadow-inner">
-                  <Wallet size={22} />
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-white shadow-inner shrink-0">
+                  <Wallet size={20} />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-white text-lg tracking-tight">Pay Now</h3>
+                  <h3 className="font-extrabold text-white text-base sm:text-lg tracking-tight">Pay Now</h3>
                   <p className="text-xs text-emerald-100 font-medium">Payment for Parcel Request #{booking?.id}</p>
                 </div>
               </div>
-              <button onClick={() => setShowPaymentModal(false)} className="relative z-10 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition">
+              <button onClick={() => setShowPaymentModal(false)} className="relative z-10 text-white/80 hover:text-white p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition">
                 <X size={20} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
               {(() => {
                 const travelerReward = Number(booking?.reward) || (Number(booking?.weight) * (Number(booking?.trip_price_per_kg) || 10.0)) || 0;
                 return (
@@ -1003,11 +1015,11 @@ const BookingDetailsPage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex gap-2.5 sm:gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setShowPaymentModal(false)}
-                className="py-3 px-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition"
+                className="py-2.5 sm:py-3 px-4 sm:px-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition"
               >
                 Cancel
               </button>
@@ -1015,7 +1027,7 @@ const BookingDetailsPage: React.FC = () => {
                 type="button"
                 disabled={isProcessingPayment}
                 onClick={handleConfirmPayment}
-                className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 sm:py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2"
               >
                 {isProcessingPayment ? (
                   <>
@@ -1033,8 +1045,8 @@ const BookingDetailsPage: React.FC = () => {
 
       {/* 2. PAYMENT SUCCESS CONFIRMATION MODAL */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-md z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 sm:p-8 text-center space-y-6 animate-in zoom-in-95 duration-200 relative overflow-hidden border border-slate-100">
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-md z-[110] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 text-center space-y-5 sm:space-y-6 animate-in zoom-in-95 duration-200 relative overflow-hidden border border-slate-100">
 
             {/* Top Confetti Decor */}
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -1094,30 +1106,30 @@ const BookingDetailsPage: React.FC = () => {
 
       {/* TRAVELER PARCEL HANDOVER VERIFICATION & IMAGE UPLOAD MODAL */}
       {showVerifyParcelModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowVerifyParcelModal(false)}>
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowVerifyParcelModal(false)}>
+          <div className="bg-white w-full max-w-lg max-h-[92vh] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
-                  <Camera size={20} />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">
+                  <Camera size={18} />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-800 text-base">Parcel Pickup Verification</h3>
-                  <p className="text-xs text-slate-500">Upload photos of the physical parcel received from sender</p>
+                  <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">Parcel Pickup Verification</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500">Upload photos of the physical parcel received from sender</p>
                 </div>
               </div>
-              <button onClick={() => setShowVerifyParcelModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowVerifyParcelModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
                 Before starting flight transit, inspect the physical parcel carefully and upload at least 1 verification photo of the package at handover.
               </p>
 
               {/* Upload Dropzone */}
-              <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-teal-500 transition cursor-pointer bg-slate-50 relative">
+              <div className="border-2 border-dashed border-slate-300 rounded-2xl p-5 sm:p-6 text-center hover:border-teal-500 transition cursor-pointer bg-slate-50 relative">
                 <input
                   type="file"
                   multiple
@@ -1125,7 +1137,7 @@ const BookingDetailsPage: React.FC = () => {
                   onChange={handleVerificationFileSelect}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
-                <Upload size={28} className="text-slate-400 mx-auto mb-2" />
+                <Upload size={24} className="text-slate-400 mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-700">Click or drag photos to upload</p>
                 <p className="text-[10px] text-slate-400 mt-1">Upload up to 5 parcel verification images</p>
               </div>
@@ -1134,7 +1146,7 @@ const BookingDetailsPage: React.FC = () => {
               {verificationPreviews.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto p-2 bg-slate-50 rounded-2xl border border-slate-200">
                   {verificationPreviews.map((img, idx) => (
-                    <div key={idx} className="w-16 h-16 rounded-xl border-2 border-teal-500 overflow-hidden relative group shrink-0">
+                    <div key={idx} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-teal-500 overflow-hidden relative group shrink-0">
                       <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
                     </div>
                   ))}
@@ -1142,11 +1154,11 @@ const BookingDetailsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex gap-2.5 sm:gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setShowVerifyParcelModal(false)}
-                className="py-3 px-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition"
+                className="py-2.5 sm:py-3 px-4 sm:px-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition"
               >
                 Cancel
               </button>
@@ -1154,7 +1166,7 @@ const BookingDetailsPage: React.FC = () => {
                 type="button"
                 disabled={isSubmittingVerification || verificationPreviews.length === 0}
                 onClick={handleSubmitParcelVerification}
-                className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 sm:py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 sm:gap-2"
               >
                 {isSubmittingVerification ? 'Submitting Verification...' : 'Submit Photos & Verify Pickup 📷'}
               </button>
@@ -1165,16 +1177,16 @@ const BookingDetailsPage: React.FC = () => {
 
       {/* TRAVELER OTP HANDOVER VERIFICATION MODAL */}
       {showOtpModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowOtpModal(false)}>
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowOtpModal(false)}>
+          <div className="bg-white w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-teal-500 text-white flex items-center justify-center font-bold">
-                  <KeyRound size={20} />
+                <div className="w-9 h-9 rounded-xl bg-teal-500 text-white flex items-center justify-center font-bold shrink-0">
+                  <KeyRound size={18} />
                 </div>
-                <h3 className="font-extrabold text-slate-800 text-base">Verify Handover OTP</h3>
+                <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">Verify Handover OTP</h3>
               </div>
-              <button onClick={() => setShowOtpModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowOtpModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X size={18} />
               </button>
             </div>
@@ -1191,7 +1203,7 @@ const BookingDetailsPage: React.FC = () => {
                 placeholder="e.g. 2665"
                 value={inputOtp}
                 onChange={e => setInputOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full text-center text-3xl font-mono tracking-widest py-3 px-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-teal-500 font-black text-slate-800"
+                className="w-full text-center text-2xl sm:text-3xl font-mono tracking-widest py-2.5 sm:py-3 px-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-teal-500 font-black text-slate-800"
               />
               {otpError && (
                 <div className="text-xs text-rose-600 font-bold bg-rose-50 p-2.5 rounded-xl border border-rose-200 flex items-center gap-1.5">
@@ -1200,11 +1212,11 @@ const BookingDetailsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowOtpModal(false)}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                className="flex-1 py-2.5 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
               >
                 Cancel
               </button>
@@ -1212,7 +1224,7 @@ const BookingDetailsPage: React.FC = () => {
                 type="button"
                 disabled={verifyingOtp || inputOtp.length !== 4}
                 onClick={handleVerifyOtpHandover}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 sm:py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5"
               >
                 {verifyingOtp ? 'Verifying...' : 'Confirm Handover & Release Funds'}
               </button>
@@ -1223,28 +1235,28 @@ const BookingDetailsPage: React.FC = () => {
 
       {/* Lightbox Zoom */}
       {zoomImg && (
-        <div className="fixed inset-0 bg-black/95 z-[500] flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setZoomImg(null)}>
-          <img src={zoomImg} alt="Zoom" className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl" />
-          <button className="absolute top-4 right-4 bg-white/20 text-white p-3 rounded-full hover:bg-white/30"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/95 z-[500] flex items-center justify-center p-3 sm:p-4 cursor-zoom-out" onClick={() => setZoomImg(null)}>
+          <img src={zoomImg} alt="Zoom" className="max-w-[92vw] max-h-[92vh] object-contain rounded-xl shadow-2xl" />
+          <button className="absolute top-4 right-4 bg-white/20 text-white p-2.5 sm:p-3 rounded-full hover:bg-white/30"><X size={20} /></button>
         </div>
       )}
 
       {/* DISPUTE MODAL */}
       {showDisputeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200/50 flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-red-50/50">
-              <h2 className="text-xl font-black text-red-700">Raise a Dispute</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowDisputeModal(false)}>
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200/50 flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-red-50/50 shrink-0">
+              <h2 className="text-lg sm:text-xl font-black text-red-700">Raise a Dispute</h2>
               <button
                 onClick={() => setShowDisputeModal(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 p-1"
               >
                 <X size={16} strokeWidth={3} />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4">
-              <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-xs font-semibold text-red-800 leading-relaxed">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 sm:p-4 text-xs font-semibold text-red-800 leading-relaxed">
                 Raising a dispute will notify our admin team. Please provide as much detail as possible. False disputes may result in account penalty.
               </div>
 
@@ -1253,7 +1265,7 @@ const BookingDetailsPage: React.FC = () => {
                 <select
                   value={disputeReason}
                   onChange={(e) => setDisputeReason(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 focus:border-red-400 focus:ring-4 focus:ring-red-400/20 outline-none transition"
+                  className="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 text-xs sm:text-sm font-semibold rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 focus:border-red-400 focus:ring-4 focus:ring-red-400/20 outline-none transition"
                 >
                   <option value="Damaged Parcel">Damaged Parcel</option>
                   <option value="Missing Items">Missing Items</option>
@@ -1268,15 +1280,15 @@ const BookingDetailsPage: React.FC = () => {
                   value={disputeDescription}
                   onChange={(e) => setDisputeDescription(e.target.value)}
                   placeholder="Describe exactly what happened..."
-                  className="w-full h-28 bg-slate-50 border-2 border-slate-200 text-slate-800 text-sm font-medium rounded-xl px-4 py-3 focus:border-red-400 focus:ring-4 focus:ring-red-400/20 outline-none transition resize-none placeholder:text-slate-400"
+                  className="w-full h-24 sm:h-28 bg-slate-50 border-2 border-slate-200 text-slate-800 text-xs sm:text-sm font-medium rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 focus:border-red-400 focus:ring-4 focus:ring-red-400/20 outline-none transition resize-none placeholder:text-slate-400"
                 ></textarea>
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+            <div className="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-2.5 sm:gap-3 shrink-0">
               <button
                 onClick={() => setShowDisputeModal(false)}
-                className="px-5 py-2.5 bg-white border-2 border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white border-2 border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition"
               >
                 Cancel
               </button>
@@ -1311,7 +1323,7 @@ const BookingDetailsPage: React.FC = () => {
                   }
                 }}
                 disabled={isSubmittingDispute}
-                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md shadow-red-600/20 transition disabled:opacity-50"
+                className="px-5 sm:px-6 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md shadow-red-600/20 transition disabled:opacity-50"
               >
                 {isSubmittingDispute ? 'Submitting...' : 'Submit Dispute'}
               </button>

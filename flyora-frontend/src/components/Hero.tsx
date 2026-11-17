@@ -203,7 +203,7 @@ const Hero: React.FC = () => {
 
           {/* H1 */}
           <h1
-            className="font-black text-flyora-navy leading-[1.1] tracking-tight mb-4 text-[2.75rem] w-full"
+            className="font-black text-flyora-navy leading-[1.1] tracking-tight mb-4 text-[2.25rem] sm:text-[2.75rem] w-full"
             id="hero-headline-mobile"
           >
             Your Journey
@@ -216,12 +216,12 @@ const Hero: React.FC = () => {
           </h1>
 
           {/* Description */}
-          <p className="text-[15px] text-flyora-gray-600 leading-relaxed mb-8 max-w-[300px] font-medium">
+          <p className="text-[14px] sm:text-[15px] text-flyora-gray-600 leading-relaxed mb-8 max-w-[300px] font-medium">
             Share luggage space with verified travelers. Ship packages safely, affordably, and seamlessly.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col gap-3.5 mb-8 w-full max-w-[340px] relative z-30">
+          <div className="flex flex-col gap-3.5 mb-8 w-full max-w-[320px] sm:max-w-[340px] relative z-30">
             <button
               onClick={() => navigate('/trips')}
               className="flex items-center justify-center gap-3 w-full py-4 bg-flyora-navy text-white font-black text-[15px] rounded-2xl shadow-[0_8px_25px_rgba(10,22,40,0.25)] hover:bg-flyora-navy-light transition-all active:scale-95"

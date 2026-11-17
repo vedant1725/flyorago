@@ -10,6 +10,7 @@ import {
 import { apiFetch } from '../utils/api';
 import { useKycValidation } from '../hooks/useKycValidation';
 import { KycValidationModal } from '../components/ui/KycValidationModal';
+import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
 import './dashboard.css';
 
@@ -252,40 +253,55 @@ const WalletPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
       <Sidebar activeItem="Wallet" />
 
-      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
+      <main className="flex-1 min-w-0 w-full lg:ml-[240px] flex flex-col min-h-screen relative pb-20 lg:pb-12">
+        {/* Subtle Ambient Flyora Teal Wave Gradient in Background */}
+        <div className="absolute top-0 right-0 w-full h-[460px] overflow-hidden pointer-events-none -z-0">
+          <svg className="w-full h-full" viewBox="0 0 1440 460" fill="none" preserveAspectRatio="none">
+            <path
+              d="M620 0 C860 130, 1120 40, 1440 140 L1440 0 Z"
+              fill="#F0FDFA"
+              fillOpacity="0.75"
+            />
+            <path
+              d="M450 0 C680 180, 1020 200, 1440 70 L1440 0 Z"
+              fill="#CCFBF1"
+              fillOpacity="0.4"
+            />
+          </svg>
+        </div>
+
         {/* Top Header */}
-        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-end px-8 shrink-0">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/notifications')}
-              className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
-            >
-              <Bell size={18} />
-            </button>
+        <header className="flex h-20 items-center justify-between px-4 sm:px-8 xl:px-10 shrink-0 gap-4 sm:gap-6 relative z-30">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">My Wallet</h2>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <NotificationDropdown />
             <HeaderProfileDropdown />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
+        <div className="px-4 sm:px-8 xl:px-10 space-y-6 sm:space-y-8 relative z-20">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-extrabold text-flyora-teal tracking-tight mb-1">Wallet <span className="text-slate-800">& Payouts</span></h1>
               <p className="text-sm text-slate-500 font-medium">Manage your logistics, track active routes, and review your earnings profile.</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <button
                 onClick={() => validateAction(() => setIsAddFundsOpen(true))}
-                className="bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-full text-sm font-bold hover:bg-slate-50 transition flex items-center gap-2 shrink-0"
+                className="bg-white border border-slate-200 text-slate-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold hover:bg-slate-50 transition flex items-center gap-2 shrink-0"
               >
                 <Plus size={16} />
                 Add Funds
               </button>
               <button
                 onClick={() => validateAction(() => setIsWithdrawOpen(true))}
-                className="bg-flyora-teal text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg shadow-teal-500/20 hover:bg-teal-600 transition flex items-center gap-2 shrink-0"
+                className="bg-flyora-teal text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold shadow-lg shadow-teal-500/20 hover:bg-teal-600 transition flex items-center gap-2 shrink-0"
               >
                 <ArrowUpRight size={16} />
                 Withdraw Funds
@@ -460,8 +476,8 @@ const WalletPage: React.FC = () => {
 
       {/* Add Funds Modal */}
       {isAddFundsOpen && (
-        <div className="trip-modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsAddFundsOpen(false)}>
-          <div className="trip-modal fly-card max-w-md">
+        <div className="trip-modal-overlay p-3 sm:p-4" onClick={(e) => e.target === e.currentTarget && setIsAddFundsOpen(false)}>
+          <div className="trip-modal fly-card max-w-md w-full max-h-[92vh] overflow-y-auto">
             <div className="trip-modal__header">
               <div>
                 <div className="fly-card-title">Add Funds to Wallet</div>
@@ -501,8 +517,8 @@ const WalletPage: React.FC = () => {
 
       {/* Withdraw Funds Modal */}
       {isWithdrawOpen && (
-        <div className="trip-modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsWithdrawOpen(false)}>
-          <div className="trip-modal fly-card max-w-md">
+        <div className="trip-modal-overlay p-3 sm:p-4" onClick={(e) => e.target === e.currentTarget && setIsWithdrawOpen(false)}>
+          <div className="trip-modal fly-card max-w-md w-full max-h-[92vh] overflow-y-auto">
             <div className="trip-modal__header">
               <div>
                 <div className="fly-card-title">Withdraw Funds</div>
@@ -546,8 +562,8 @@ const WalletPage: React.FC = () => {
 
       {/* Transfer Funds Modal */}
       {isTransferOpen && (
-        <div className="trip-modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsTransferOpen(false)}>
-          <div className="trip-modal fly-card max-w-md">
+        <div className="trip-modal-overlay p-3 sm:p-4" onClick={(e) => e.target === e.currentTarget && setIsTransferOpen(false)}>
+          <div className="trip-modal fly-card max-w-md w-full max-h-[92vh] overflow-y-auto">
             <div className="trip-modal__header">
               <div>
                 <div className="fly-card-title">Transfer Funds</div>
@@ -577,8 +593,8 @@ const WalletPage: React.FC = () => {
 
       {/* Transaction Details Modal */}
       {selectedTxForDetail && (
-        <div className="trip-modal-overlay" onClick={(e) => e.target === e.currentTarget && setSelectedTxForDetail(null)}>
-          <div className="trip-modal fly-card max-w-lg bg-white rounded-2xl shadow-2xl p-0 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="trip-modal-overlay p-3 sm:p-4" onClick={(e) => e.target === e.currentTarget && setSelectedTxForDetail(null)}>
+          <div className="trip-modal fly-card max-w-lg w-full max-h-[92vh] bg-white rounded-2xl shadow-2xl p-0 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="p-6 bg-slate-900 text-white flex items-start justify-between relative overflow-hidden">
               <div className="relative z-10">

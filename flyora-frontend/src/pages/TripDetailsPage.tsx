@@ -155,7 +155,7 @@ const TripDetailsPage: React.FC = () => {
   const handleSubmitParcelVerification = async () => {
     if (!selectedBookingToVerify) return;
     if (verificationPreviews.length === 0) {
-      alert("Please upload at least 1 photo of the physical parcel at pickup handover.");
+      addToast('Photos Required', 'Please upload at least 1 photo of the physical parcel at pickup handover.', 'warning');
       return;
     }
     setIsSubmittingVerification(true);
@@ -167,12 +167,12 @@ const TripDetailsPage: React.FC = () => {
           payload: { images: verificationPreviews }
         })
       });
-      alert("✅ Parcel Pickup Verification Completed! Status updated to Ready for Transit.");
+      addToast('Pickup Verified', 'Parcel pickup verification completed! Status updated to Ready for Transit.', 'success');
       setSelectedBookingToVerify(null);
       setVerificationPreviews([]);
       fetchTripDetails();
     } catch (err: any) {
-      alert("Verification failed: " + err.message);
+      addToast('Verification Failed', err.message || 'Verification failed. Please try again.', 'error');
     } finally {
       setIsSubmittingVerification(false);
     }
@@ -196,7 +196,7 @@ const TripDetailsPage: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({ action: 'CONFIRM_DELIVERY', otp: codeToVerify })
       });
-      alert("🎉 Handover OTP / QR Code Verified! Escrow reward released to your Wallet!");
+      addToast('Handover Completed', 'Handover OTP verified! Escrow reward released to your Wallet!', 'success');
       setSelectedBookingForOtp(null);
       setInputOtp('');
       fetchTripDetails();
@@ -210,47 +210,53 @@ const TripDetailsPage: React.FC = () => {
   const associatedBookings = trip?.bookings || [];
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
       <Sidebar activeItem="Traveler" />
 
       {/* Main Panel */}
-      <main className="flex-1 lg:ml-[240px] flex flex-col min-h-screen overflow-y-auto pb-24 lg:pb-10">
-        
+      <main className="flex-1 min-w-0 w-full lg:ml-[240px] flex flex-col min-h-screen relative pb-20 lg:pb-12">
+        {/* Subtle Ambient Flyora Teal Wave Gradient in Background */}
+        <div className="absolute top-0 right-0 w-full h-[460px] overflow-hidden pointer-events-none -z-0">
+          <svg className="w-full h-full" viewBox="0 0 1440 460" fill="none" preserveAspectRatio="none">
+            <path
+              d="M620 0 C860 130, 1120 40, 1440 140 L1440 0 Z"
+              fill="#F0FDFA"
+              fillOpacity="0.75"
+            />
+            <path
+              d="M450 0 C680 180, 1020 200, 1440 70 L1440 0 Z"
+              fill="#CCFBF1"
+              fillOpacity="0.4"
+            />
+          </svg>
+        </div>
+
         {/* Top Header */}
-        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0 sticky top-0 z-30 shadow-xs">
+        <header className="flex h-20 items-center justify-between px-4 sm:px-8 xl:px-10 shrink-0 gap-3 sm:gap-6 relative z-30">
           <button
             type="button"
             onClick={() => navigate('/traveler')}
-            className="flex items-center gap-2 text-xs font-black text-slate-700 hover:text-flyora-teal transition bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-xl border border-slate-200"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-700 hover:text-flyora-teal transition bg-white hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-full border border-slate-200/90 shadow-[0_2px_8px_rgba(10,22,40,0.02)]"
           >
-            <ArrowLeft size={16} /> Back to Traveler Dashboard
+            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Traveler Dashboard</span><span className="sm:hidden">Back</span>
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <NotificationDropdown />
             <HeaderProfileDropdown />
           </div>
         </header>
 
-        {/* Content Container */}
-        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
-          <div className="lg:hidden flex items-center justify-between pb-2">
-            <button
-              type="button"
-              onClick={() => navigate('/traveler')}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-flyora-teal bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
-            >
-              <ArrowLeft size={14} /> Back to Traveler
-            </button>
-          </div>
+        {/* Content Container - Exact same padding as Dashboard (px-4 sm:px-8 xl:px-10) */}
+        <div className="px-4 sm:px-8 xl:px-10 space-y-6 sm:space-y-8 relative z-20">
 
           {loading ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-12 text-center border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)]">
               <div className="w-12 h-12 rounded-full border-4 border-teal-500 border-t-transparent animate-spin mx-auto mb-4"></div>
               <h3 className="text-slate-800 font-extrabold text-base">Loading Trip Details...</h3>
             </div>
           ) : !trip ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs max-w-lg mx-auto mt-8">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-12 text-center border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)] max-w-lg mx-auto mt-8">
               <h2 className="text-xl font-black text-slate-800">Trip Not Found</h2>
               <button
                 type="button"
@@ -263,31 +269,54 @@ const TripDetailsPage: React.FC = () => {
           ) : (
             <>
               {/* Header Banner */}
-              <section className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <section className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-7 border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)] flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">{trip.from} ➔ {trip.to}</h1>
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                  <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{trip.from} ➔ {trip.to}</h1>
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                       {trip.status}
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-slate-500">{trip.airline} • {trip.flightNo} • Departs {trip.depDate}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500">{trip.airline} • {trip.flightNo} • Departs {trip.depDate}</p>
+                </div>
+
+                <div className="flex items-center gap-4 sm:gap-6 text-xs font-bold text-slate-600 bg-slate-50/80 px-4 py-2.5 rounded-2xl border border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">Available Weight</span>
+                    <span className="text-slate-800 font-black text-sm">{trip.availableWeight || trip.totalWeight || 10} KG</span>
+                  </div>
+                  <div className="w-px h-8 bg-slate-200" />
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">Price / KG</span>
+                    <span className="text-flyora-teal font-black text-sm">{trip.price}</span>
+                  </div>
                 </div>
               </section>
 
               {/* Incoming Parcel Requests Section */}
-              <section className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+              <section className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-7 border border-slate-100/90 shadow-[0_4px_25px_rgba(10,22,40,0.02)] space-y-6">
                 <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-800 tracking-tight">
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight">
                       Incoming Parcel Requests ({associatedBookings.length})
                     </h3>
-                    <p className="text-xs text-slate-500 font-medium">
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
                       Requests sent by Senders for your flight trip
                     </p>
                   </div>
                 </div>
 
+                {associatedBookings.length === 0 ? (
+                  <div className="py-16 px-4 text-center flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-teal-50 text-flyora-teal flex items-center justify-center mb-3 border border-teal-100/80">
+                      <Package size={28} />
+                    </div>
+                    <h4 className="text-base font-extrabold text-slate-800">No Incoming Parcel Requests</h4>
+                    <p className="text-xs text-slate-500 mt-1.5 max-w-md leading-relaxed">
+                      You do not have any incoming requests from senders yet for this trip route ({trip.from} ➔ {trip.to}). Once senders submit requests for your trip, they will appear here with verification and handover tools.
+                    </p>
+                  </div>
+                ) : (
                 <div className="space-y-6">
                   {associatedBookings.map((b: any) => {
                     const isKycApproved = b.sender?.is_kyc_verified || b.sender?.kyc_status === 'APPROVED';
@@ -297,6 +326,11 @@ const TripDetailsPage: React.FC = () => {
                     const rawImgs = b.accepted_parcel_types || [];
                     const pImg = b.package_image || b.package?.image;
                     let allImgs: string[] = [];
+
+                    const vImgs = Array.isArray(b.verification_images) ? b.verification_images : [];
+                    vImgs.forEach((img: string) => {
+                      if (img && typeof img === 'string' && !allImgs.includes(img)) allImgs.push(img);
+                    });
 
                     if (pImg && typeof pImg === 'string' && pImg.startsWith('[')) {
                       try {
@@ -313,6 +347,10 @@ const TripDetailsPage: React.FC = () => {
 
                     if (pImg && typeof pImg === 'string' && !pImg.startsWith('[') && pImg.length > 30 && !allImgs.includes(pImg)) {
                       allImgs.unshift(pImg);
+                    }
+
+                    if (vImgs.length > 0) {
+                      allImgs = [...vImgs, ...allImgs.filter(img => !vImgs.includes(img))];
                     }
 
                     const validImgs = allImgs.filter(img => img && (img.startsWith('data:image') || img.startsWith('http') || img.startsWith('/')));
@@ -373,9 +411,20 @@ const TripDetailsPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Package Photos */}
+                        {/* Package & Verified Handover Photos */}
                         {mainPhoto && (
                           <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                <Camera size={13} className={vImgs.length > 0 ? "text-emerald-600" : "text-flyora-teal"} />
+                                {vImgs.length > 0 ? 'Verified Pickup Handover Photos 📷' : 'Parcel Photos'}
+                              </span>
+                              {validImgs.length > 1 && (
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {(activePhotoIndex || 0) + 1} of {validImgs.length}
+                                </span>
+                              )}
+                            </div>
                             <div
                               className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video max-h-52 flex items-center justify-center relative cursor-zoom-in group shadow-xs"
                               onClick={() => setZoomImg(mainPhoto)}
@@ -385,6 +434,22 @@ const TripDetailsPage: React.FC = () => {
                                 <Eye size={16} /> Click to Enlarge Image
                               </div>
                             </div>
+                            {validImgs.length > 1 && (
+                              <div className="flex gap-2 overflow-x-auto py-1">
+                                {validImgs.map((img, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setActivePhotoIndexes(prev => ({ ...prev, [b.id]: idx }))}
+                                    className={`w-12 h-12 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${
+                                      (activePhotoIndex || 0) === idx ? 'border-teal-500 ring-2 ring-teal-200 scale-105' : 'border-slate-200 opacity-60 hover:opacity-100'
+                                    }`}
+                                  >
+                                    <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -519,6 +584,7 @@ const TripDetailsPage: React.FC = () => {
                     );
                   })}
                 </div>
+              )}
               </section>
             </>
           )}
@@ -528,30 +594,30 @@ const TripDetailsPage: React.FC = () => {
 
       {/* TRAVELER PARCEL HANDOVER VERIFICATION & IMAGE UPLOAD MODAL */}
       {selectedBookingToVerify && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setSelectedBookingToVerify(null)}>
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setSelectedBookingToVerify(null)}>
+          <div className="bg-white w-full max-w-lg max-h-[92vh] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
-                  <Camera size={20} />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">
+                  <Camera size={18} />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-800 text-base">Traveler Parcel Pickup Verification</h3>
-                  <p className="text-xs text-slate-500">Upload photos of the physical parcel received from sender at handover</p>
+                  <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">Traveler Parcel Pickup Verification</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500">Upload photos of the physical parcel received at handover</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedBookingToVerify(null)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setSelectedBookingToVerify(null)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
                 Before starting flight transit, inspect the physical parcel carefully and upload at least 1 verification photo of the package at handover.
               </p>
 
               {/* Upload Dropzone */}
-              <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-teal-500 transition cursor-pointer bg-slate-50 relative">
+              <div className="border-2 border-dashed border-slate-300 rounded-2xl p-5 sm:p-6 text-center hover:border-teal-500 transition cursor-pointer bg-slate-50 relative">
                 <input
                   type="file"
                   multiple
@@ -559,7 +625,7 @@ const TripDetailsPage: React.FC = () => {
                   onChange={handleVerificationFileSelect}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
-                <Upload size={28} className="text-slate-400 mx-auto mb-2" />
+                <Upload size={24} className="text-slate-400 mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-700">Click or drag photos to upload</p>
                 <p className="text-[10px] text-slate-400 mt-1">Upload up to 5 parcel verification images</p>
               </div>
@@ -568,7 +634,7 @@ const TripDetailsPage: React.FC = () => {
               {verificationPreviews.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto p-2 bg-slate-50 rounded-2xl border border-slate-200">
                   {verificationPreviews.map((img, idx) => (
-                    <div key={idx} className="w-16 h-16 rounded-xl border-2 border-teal-500 overflow-hidden relative group shrink-0">
+                    <div key={idx} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-teal-500 overflow-hidden relative group shrink-0">
                       <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
                     </div>
                   ))}
@@ -576,11 +642,11 @@ const TripDetailsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex gap-2.5 sm:gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setSelectedBookingToVerify(null)}
-                className="py-3 px-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition"
+                className="py-2.5 sm:py-3 px-4 sm:px-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition"
               >
                 Cancel
               </button>
@@ -588,7 +654,7 @@ const TripDetailsPage: React.FC = () => {
                 type="button"
                 disabled={isSubmittingVerification || verificationPreviews.length === 0}
                 onClick={handleSubmitParcelVerification}
-                className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 sm:py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 sm:gap-2"
               >
                 {isSubmittingVerification ? 'Submitting Verification...' : 'Submit Photos & Verify Pickup 📷'}
               </button>
@@ -599,16 +665,16 @@ const TripDetailsPage: React.FC = () => {
 
       {/* TRAVELER OTP & QR HANDOVER VERIFICATION MODAL */}
       {selectedBookingForOtp && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setSelectedBookingForOtp(null)}>
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setSelectedBookingForOtp(null)}>
+          <div className="bg-white w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-teal-500 text-white flex items-center justify-center font-bold">
-                  <KeyRound size={20} />
+                <div className="w-9 h-9 rounded-xl bg-teal-500 text-white flex items-center justify-center font-bold shrink-0">
+                  <KeyRound size={18} />
                 </div>
-                <h3 className="font-extrabold text-slate-800 text-base">Verify Handover OTP & QR Code</h3>
+                <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">Verify Handover OTP & QR Code</h3>
               </div>
-              <button onClick={() => setSelectedBookingForOtp(null)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setSelectedBookingForOtp(null)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X size={18} />
               </button>
             </div>
@@ -625,7 +691,7 @@ const TripDetailsPage: React.FC = () => {
                 placeholder="e.g. 839201"
                 value={inputOtp}
                 onChange={e => setInputOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full text-center text-3xl font-mono tracking-widest py-3 px-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-teal-500 font-black text-slate-800"
+                className="w-full text-center text-2xl sm:text-3xl font-mono tracking-widest py-2.5 sm:py-3 px-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-teal-500 font-black text-slate-800"
               />
 
               {/* QR Code Auto Scan / Verify Option */}
@@ -650,7 +716,7 @@ const TripDetailsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2.5 sm:gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setSelectedBookingForOtp(null)}

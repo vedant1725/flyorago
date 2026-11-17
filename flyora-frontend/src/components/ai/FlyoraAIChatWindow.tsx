@@ -32,8 +32,8 @@ export const FlyoraAIChatWindow: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isGenerating]);
 
-  // Completely hide on all Admin routes
-  if (!isOpen || location.pathname.startsWith('/admin')) return null;
+  // Floating AI Chat window is exclusive to Dashboard
+  if (!isOpen || location.pathname !== '/dashboard') return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

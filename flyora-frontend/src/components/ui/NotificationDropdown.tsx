@@ -97,20 +97,18 @@ export const NotificationDropdown: React.FC = () => {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors focus:outline-none"
+        className="relative w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none"
         title="Notifications"
       >
-        <Bell size={18} />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white font-black text-[10px] rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
+        <Bell size={20} className="text-slate-700" />
+        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white font-black text-[10px] rounded-full flex items-center justify-center ring-2 ring-white">
+          {unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : '3'}
+        </span>
       </button>
 
       {/* Dropdown Overlay */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl shadow-slate-900/15 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute right-0 mt-3 w-[calc(100vw-32px)] max-w-xs sm:w-80 md:w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl shadow-slate-900/15 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-2">

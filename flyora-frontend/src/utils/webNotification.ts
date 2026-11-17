@@ -32,8 +32,8 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
     if (permission === 'granted') {
       playNotificationChime();
       triggerNativeNotification(
-        '🔔 FlyoraGo Alerts Enabled',
-        'You will now receive instant match, payment, and luggage updates in your device shade & tray even when browsing other apps!',
+        'Flyora Alerts Enabled',
+        'You will now receive instant match, payment, and journey updates.',
         '/notifications'
       );
     }
@@ -54,8 +54,8 @@ export const autoRequestNotificationOnInteraction = () => {
         if (perm === 'granted') {
           playNotificationChime();
           triggerNativeNotification(
-            '🔔 FlyoraGo Alerts Active',
-            'Real-time updates will now appear in your mobile notification shade and desktop system tray.',
+            'Flyora Alerts Active',
+            'Real-time updates will appear in your notification tray.',
             '/notifications'
           );
         }

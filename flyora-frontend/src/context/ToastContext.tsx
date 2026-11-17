@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, AlertOctagon, AlertTriangle, Info, X, Sparkles, ShieldCheck } from 'lucide-react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { CheckCircle2, AlertOctagon, AlertTriangle, Bell, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -7,7 +7,7 @@ export interface ToastItem {
   id: string;
   type: ToastType;
   title: string;
-  message: string;
+  message?: string;
   duration?: number;
   actionLabel?: string;
   onAction?: () => void;
@@ -15,7 +15,7 @@ export interface ToastItem {
 
 interface ToastContextType {
   showToast: (toast: Omit<ToastItem, 'id'>) => void;
-  addToast: (title: string, message?: string, type?: ToastType) => void;
+  addToast: (titleOrObj: string | Omit<ToastItem, 'id'>, messageOrType?: string | ToastType, type?: ToastType) => void;
   success: (title: string, message?: string) => void;
   error: (title: string, message?: string) => void;
   warning: (title: string, message?: string) => void;
@@ -27,24 +27,23 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const recentToastsRef = useRef<Map<string, number>>(new Map());
 
   const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const recentToastsRef = React.useRef<Map<string, number>>(new Map());
-
   const showToast = useCallback((toast: Omit<ToastItem, 'id'>) => {
-    // Deduplication check: prevent identical title+message from showing multiple times within 2.5 seconds
+    // Deduplication check: prevent duplicate popups within 2.5 seconds
     const key = `${(toast.title || '').trim()}:::${(toast.message || '').trim()}`;
     const now = Date.now();
     const lastSeen = recentToastsRef.current.get(key) || 0;
     if (now - lastSeen < 2500) {
-      return; // Skip duplicate toast
+      return;
     }
     recentToastsRef.current.set(key, now);
 
-    // Housekeeping: clean up keys older than 10 seconds
+    // Clean up old deduplication cache entries
     if (recentToastsRef.current.size > 20) {
       for (const [k, time] of recentToastsRef.current.entries()) {
         if (now - time > 10000) {
@@ -55,8 +54,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const id = Math.random().toString(36).substring(2, 9);
     const newToast: ToastItem = { ...toast, id, duration: toast.duration || 4500 };
-    
-    setToasts(prev => [newToast, ...prev].slice(0, 4)); // Keep max 4 active popups
+
+    setToasts(prev => [newToast, ...prev].slice(0, 4));
 
     if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
@@ -65,7 +64,35 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [removeToast]);
 
-  const addToast = useCallback((title: string, message: string = '', type: ToastType = 'info') => {
+  const addToast = useCallback((
+    titleOrObj: string | Omit<ToastItem, 'id'>,
+    messageOrType?: string | ToastType,
+    maybeType?: ToastType
+  ) => {
+    if (typeof titleOrObj === 'object') {
+      showToast(titleOrObj);
+      return;
+    }
+
+    const isToastType = (val?: string): val is ToastType => {
+      return val === 'success' || val === 'error' || val === 'warning' || val === 'info';
+    };
+
+    let type: ToastType = 'info';
+    let title: string = titleOrObj;
+    let message: string = '';
+
+    if (isToastType(messageOrType)) {
+      type = messageOrType;
+      title = titleOrObj;
+      message = '';
+    } else {
+      message = messageOrType || '';
+      if (maybeType && isToastType(maybeType)) {
+        type = maybeType;
+      }
+    }
+
     showToast({ type, title, message });
   }, [showToast]);
 
@@ -85,7 +112,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast({ type: 'info', title, message });
   }, [showToast]);
 
-  // Intercept native window.alert to render our custom Google/Microsoft style dark popups
+  // Clean interceptor for window.alert to render our friendly brand popups
   useEffect(() => {
     const originalAlert = window.alert;
     window.alert = (msg: string) => {
@@ -94,16 +121,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const isError = /fail|error|invalid|incorrect|exceed|denied|wrong|reject/i.test(strMsg);
       const isSuccess = /success|confirm|verified|release|created|posted|updated|accepted|done|🎉|✅/i.test(strMsg);
       const type: ToastType = isError ? 'error' : isSuccess ? 'success' : 'info';
-      
-      let title = 'System Notification';
-      if (isError) title = 'Action Required / Error';
-      else if (isSuccess) title = 'Success Confirmation';
+
+      let title = 'Notification';
+      if (isError) title = 'Notice';
+      else if (isSuccess) title = 'Success';
 
       showToast({
         type,
         title,
         message: strMsg,
-        duration: 5000,
+        duration: 4000,
       });
     };
 
@@ -116,66 +143,63 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ showToast, addToast, success, error, warning, info, removeToast }}>
       {children}
 
-      {/* Floating Dark Popup Toast Container (Top Right Position) */}
-      <aside aria-label="System Notifications" className="fixed top-5 right-5 z-[99999] flex flex-col gap-3 max-w-md w-full pointer-events-none px-4 sm:px-0">
+      {/* ─── Simple, Clean Floating Notification Popup (Flyora Brand Palette, No Top/Border Strips) ─── */}
+      <aside
+        aria-label="Notifications"
+        className="fixed top-5 right-5 z-[99999] flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full pointer-events-none px-4 sm:px-0"
+      >
         {toasts.map(toast => {
           const isSuccess = toast.type === 'success';
           const isError = toast.type === 'error';
           const isWarning = toast.type === 'warning';
 
-          const glowColor = isSuccess 
-            ? 'shadow-[0_0_25px_rgba(16,185,129,0.25)] border-emerald-500/40' 
-            : isError 
-            ? 'shadow-[0_0_25px_rgba(244,63,94,0.25)] border-rose-500/40' 
-            : isWarning 
-            ? 'shadow-[0_0_25px_rgba(245,158,11,0.25)] border-amber-500/40' 
-            : 'shadow-[0_0_25px_rgba(6,182,212,0.25)] border-cyan-500/40';
+          const iconContainer = isSuccess
+            ? 'bg-teal-50 text-flyora-teal border-teal-100'
+            : isError
+            ? 'bg-rose-50 text-rose-500 border-rose-100'
+            : isWarning
+            ? 'bg-amber-50 text-amber-600 border-amber-100'
+            : 'bg-teal-50 text-flyora-teal border-teal-100';
 
-          const accentBg = isSuccess 
-            ? 'bg-emerald-500 text-emerald-950' 
-            : isError 
-            ? 'bg-rose-500 text-rose-950' 
-            : isWarning 
-            ? 'bg-amber-500 text-amber-950' 
-            : 'bg-cyan-500 text-cyan-950';
-
-          const badgeText = isSuccess 
-            ? 'ACTION SUCCESSFUL' 
-            : isError 
-            ? 'ACTION FAILED' 
-            : isWarning 
-            ? 'SYSTEM WARNING' 
-            : 'SYSTEM NOTIFICATION';
+          const badgeLabel = isSuccess
+            ? 'Success'
+            : isError
+            ? 'Notice'
+            : isWarning
+            ? 'Warning'
+            : 'Notification';
 
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto relative overflow-hidden bg-slate-950/95 backdrop-blur-2xl border rounded-2xl p-4 text-white shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-top-4 ${glowColor}`}
+              className="pointer-events-auto relative bg-white border border-slate-200/90 rounded-2xl p-4 shadow-[0_8px_30px_rgba(10,22,40,0.08)] transition-all duration-200 animate-in fade-in slide-in-from-top-2"
             >
-              {/* Top Accent Line */}
-              <div className={`absolute top-0 left-0 right-0 h-1 ${accentBg}`} />
-
-              <div className="flex items-start gap-3 pt-1">
-                {/* Status Icon Badge */}
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${accentBg}`}>
-                  {isSuccess && <CheckCircle2 size={20} strokeWidth={2.5} />}
-                  {isError && <AlertOctagon size={20} strokeWidth={2.5} />}
-                  {isWarning && <AlertTriangle size={20} strokeWidth={2.5} />}
-                  {!isSuccess && !isError && !isWarning && <Sparkles size={20} strokeWidth={2.5} />}
+              <div className="flex items-start gap-3">
+                {/* Clean Brand Icon */}
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${iconContainer}`}>
+                  {isSuccess && <CheckCircle2 size={16} strokeWidth={2.5} />}
+                  {isError && <AlertOctagon size={16} strokeWidth={2.5} />}
+                  {isWarning && <AlertTriangle size={16} strokeWidth={2.5} />}
+                  {!isSuccess && !isError && !isWarning && <Bell size={16} strokeWidth={2.5} />}
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0 pr-6">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/60">
-                      {badgeText}
+                {/* Notification Text Content */}
+                <div className="flex-1 min-w-0 pr-2">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      {badgeLabel}
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      Just now
                     </span>
                   </div>
-                  <h4 className="text-sm font-black text-white tracking-tight leading-snug truncate">
+
+                  <h4 className="text-xs sm:text-sm font-black text-slate-800 tracking-tight leading-snug">
                     {toast.title}
                   </h4>
+
                   {toast.message && (
-                    <p className="text-xs text-slate-300 font-medium leading-relaxed mt-1 break-words">
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed mt-0.5 break-words">
                       {toast.message}
                     </p>
                   )}
@@ -187,7 +211,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         if (toast.onAction) toast.onAction();
                         removeToast(toast.id);
                       }}
-                      className="mt-3 text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 underline underline-offset-4"
+                      className="mt-2 text-xs font-bold text-flyora-teal hover:text-teal-700 flex items-center gap-1 underline underline-offset-4 cursor-pointer"
                     >
                       {toast.actionLabel}
                     </button>
@@ -198,32 +222,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 <button
                   type="button"
                   onClick={() => removeToast(toast.id)}
-                  className="absolute top-3 right-3 w-7 h-7 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors border border-slate-800"
+                  className="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                  aria-label="Close notification"
                 >
                   <X size={14} />
                 </button>
-              </div>
-
-              {/* Progress Bar Animation */}
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-800/80 overflow-hidden">
-                <div
-                  className={`h-full ${accentBg} transition-all ease-linear`}
-                  style={{
-                    animation: `toastProgress ${toast.duration || 4500}ms linear forwards`,
-                  }}
-                />
               </div>
             </div>
           );
         })}
       </aside>
-
-      <style>{`
-        @keyframes toastProgress {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
     </ToastContext.Provider>
   );
 };

@@ -87,7 +87,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const data = JSON.parse(event.data);
             setLastMessage(data);
 
-            const title = data.title || (data.status ? `Trip & Booking: ${data.status}` : 'FlyoraGo Notification');
+            const title = data.title || (data.status ? `Trip Update: ${data.status}` : 'Notification');
             const message = data.message || 'You have a new update regarding your journey.';
 
             // Deduplicate incoming WebSocket messages within 3 seconds
@@ -102,7 +102,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             playNotificationChime();
 
             // 2. In-app toast banner
-            const toastType = data.type === 'payment_secured' ? 'success' : 'info';
+            const toastType: 'success' | 'info' | 'warning' = 
+              data.type === 'payment_secured' || data.status === 'ACCEPTED' || data.status === 'DELIVERED'
+                ? 'success'
+                : data.status === 'CANCELLED' || data.status === 'REJECTED'
+                ? 'warning'
+                : 'info';
             addToast(title, message, toastType);
 
             // 3. Native mobile notification shade / desktop system tray

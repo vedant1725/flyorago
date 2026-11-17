@@ -1,90 +1,49 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useFlyoraAI } from '../../context/FlyoraAIContext';
-import { Sparkles, Bot, X, Zap } from 'lucide-react';
+import { Headphones, Bot, X } from 'lucide-react';
 
 export const FlyoraAIFloatingButton: React.FC = () => {
   const { isOpen, openAI, closeAI } = useFlyoraAI();
   const location = useLocation();
 
-  // Completely hide on all Admin routes (/admin, /admin/dashboard, /admin/kyc, etc.)
-  if (location.pathname.startsWith('/admin')) {
+  // Only show floating assistant on the Dashboard
+  if (location.pathname !== '/dashboard') {
     return null;
   }
 
-  // Determine if the current page is a dashboard page (has mobile bottom navigation bar)
-  const isDashboardRoute = [
-    '/dashboard',
-    '/trips',
-    '/traveler',
-    '/sender',
-    '/bookings',
-    '/shipments',
-    '/wallet',
-    '/earnings',
-    '/messages',
-    '/support',
-    '/profile',
-    '/settings',
-    '/analytics',
-    '/reports',
-    '/booking',
-    '/trip',
-    '/shipment',
-    '/trust',
-    '/notifications'
-  ].some(route => location.pathname === route || location.pathname.startsWith(route + '/'));
-
-  // On dashboard pages, hide on mobile to never block bottom navigation bar.
-  // On landing / public pages (like /), show on BOTH mobile and desktop!
-  const containerVisibility = isDashboardRoute ? 'hidden lg:flex' : 'flex';
-
   return (
-    <div className={`${containerVisibility} fixed bottom-6 right-5 sm:right-6 z-[999] items-center gap-3 select-none`}>
-      {/* Floating Pill Badge (Gemini / Copilot Style) - visible on tablets/desktops */}
+    <div className="fixed bottom-6 right-5 sm:right-8 z-40 flex items-center gap-2 select-none animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {/* Pill: Ask Flyora AI PRO */}
       {!isOpen && (
         <div
           onClick={() => openAI()}
-          className="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/95 text-slate-800 font-extrabold text-xs border border-teal-200/80 shadow-2xl shadow-teal-500/10 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all duration-300 group border-l-4 border-l-flyora-teal"
+          className="bg-white rounded-full py-2 px-3.5 border border-slate-100 shadow-[0_4px_20px_rgba(10,22,40,0.06)] hover:shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95"
         >
-          <div className="relative flex items-center justify-center">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping absolute"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative"></span>
-          </div>
-          <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-700 bg-clip-text text-transparent">
+          <Headphones size={16} className="text-flyora-teal" />
+          <span className="text-xs sm:text-sm font-bold text-slate-800">
             Ask Flyora AI
           </span>
-          <span className="px-1.5 py-0.5 rounded-full bg-teal-50 text-flyora-teal text-[10px] font-black uppercase tracking-wider border border-teal-200">
+          <span className="bg-teal-50 text-flyora-teal text-[10px] font-black px-2 py-0.5 rounded-full tracking-wide border border-teal-200/60">
             PRO
           </span>
         </div>
       )}
 
-      {/* Advanced Google / Copilot Style Floating Trigger Button */}
+      {/* Circular Flyora Teal bot button */}
       <button
         onClick={() => (isOpen ? closeAI() : openAI())}
         aria-label="Toggle Flyora AI Assistant"
-        className={`relative group w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl flex items-center justify-center text-white shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+        className={`w-11 h-11 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 ${
           isOpen
-            ? 'bg-slate-900 border-2 border-slate-700 shadow-slate-900/40 rotate-90'
-            : 'bg-gradient-to-tr from-flyora-teal via-teal-600 to-emerald-400 shadow-teal-500/40 hover:shadow-teal-500/60'
+            ? 'bg-slate-900 shadow-slate-900/30 rotate-90'
+            : 'bg-gradient-to-tr from-flyora-teal to-teal-600 hover:from-teal-600 hover:to-teal-700 shadow-teal-600/30'
         }`}
       >
-        {/* Outer Pulsing Glow Aura */}
-        {!isOpen && (
-          <>
-            <span className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400 opacity-40 animate-pulse blur-md group-hover:opacity-75 transition duration-500"></span>
-            <span className="absolute -inset-0.5 rounded-3xl bg-white/20 animate-spin-slow"></span>
-          </>
-        )}
-
         {isOpen ? (
-          <X size={26} className="text-white transition-transform duration-300" />
+          <X size={20} className="text-white" />
         ) : (
-          <div className="relative flex items-center justify-center">
-            <Bot size={28} className="text-white drop-shadow-md group-hover:rotate-12 transition-transform duration-300" />
-            <Sparkles size={14} className="absolute -top-1 -right-1 text-amber-300 animate-bounce" />
-          </div>
+          <Bot size={22} className="text-white" />
         )}
       </button>
     </div>

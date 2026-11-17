@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, ChevronDown, Camera, Trash2, Save, CheckCircle2,
-  Mail, Phone, MessageCircle, Send, Users, ShieldCheck, Headphones
+  Mail, Phone, MessageCircle, Send, Users, ShieldCheck, Headphones,
+  Search, X, UserRound, ArrowRight, Copy, Check, Globe
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
+import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { apiFetch } from '../utils/api';
 import './dashboard.css';
 
@@ -13,14 +15,15 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [headerSearchQuery, setHeaderSearchQuery] = useState('');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'notifications' | 'invite' | 'guidelines' | 'support'>('profile');
+
   // Saved user profile values from localStorage
   const savedFullName = localStorage.getItem('flyora_user_name') || 'User';
   const nameParts = savedFullName.trim().split(/\s+/);
   const defaultFirst = nameParts[0] || 'User';
   const defaultLast = nameParts.slice(1).join(' ') || 'Sharma';
 
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'notifications' | 'invite' | 'guidelines' | 'support'>('profile');
-  
   // Profile Form State
   const [firstName, setFirstName] = useState(defaultFirst);
   const [lastName, setLastName] = useState(defaultLast);
@@ -28,9 +31,12 @@ const SettingsPage: React.FC = () => {
   const [phone, setPhone] = useState(localStorage.getItem('flyora_user_phone') || '+91 98765 43210');
   const [userAvatar, setUserAvatar] = useState(localStorage.getItem('flyora_user_avatar') || '');
   const [successMsg, setSuccessMsg] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
 
-  // Notification State
-  const [pushNotify, setPushNotify] = useState(false);
+  // Notification Preferences
+  const [pushNotify, setPushNotify] = useState(true);
+  const [emailTripNotify, setEmailTripNotify] = useState(true);
+  const [escrowNotify, setEscrowNotify] = useState(true);
 
   const fullName = `${firstName} ${lastName}`.trim() || 'User Account';
   const initials = fullName
@@ -110,7 +116,6 @@ const SettingsPage: React.FC = () => {
     const updatedEmail = email.trim();
     const updatedPhone = phone.trim();
 
-    // 1. Immediately persist to LocalStorage
     localStorage.setItem('flyora_user_name', updatedFullName);
     localStorage.setItem('flyora_user_email', updatedEmail);
     localStorage.setItem('flyora_user_phone', updatedPhone);
@@ -118,14 +123,11 @@ const SettingsPage: React.FC = () => {
       localStorage.setItem('flyora_user_avatar', userAvatar);
     }
 
-    // 2. Dispatch custom event so top headers and profile dropdown update live
     window.dispatchEvent(new Event('profileUpdated'));
 
-    // 3. Show success notification
     setSuccessMsg('Profile settings saved successfully!');
     setTimeout(() => setSuccessMsg(''), 3500);
 
-    // 4. Optionally sync with backend
     try {
       await apiFetch('/api/profiles/me', {
         method: 'PATCH',
@@ -145,36 +147,49 @@ const SettingsPage: React.FC = () => {
 
   const handleDeleteAccount = () => {
     if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      alert('Account deletion requested.');
+      alert('Account deletion requested. Our compliance team will review your account.');
     }
   };
 
-  const renderProfile = () => (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Profile <span className="text-slate-900">Settings</span></h1>
-        <p className="text-sm text-slate-500 font-medium mt-1">Manage your account preferences and settings.</p>
-      </div>
+  const handleCopyInviteLink = () => {
+    navigator.clipboard.writeText(`https://flyorago.me/signup?ref=${firstName.toLowerCase()}`);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
 
-      <form onSubmit={handleSaveProfile} className="bg-white border border-flyora-teal/30 rounded-[24px] p-8 shadow-sm relative mb-6">
+  // Tab switch options
+  const subTabs = [
+    { id: 'profile', label: 'My Profile', icon: UserRound },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'invite', label: 'Invite Friends', icon: Users },
+    { id: 'guidelines', label: 'Guidelines', icon: ShieldCheck },
+    { id: 'support', label: 'Help & Support', icon: Headphones },
+  ];
+
+  /* ───────────────────────────────────────────────────────────── */
+  /* TAB 1: Profile Settings                                      */
+  /* ───────────────────────────────────────────────────────────── */
+  const renderProfile = () => (
+    <div className="space-y-6">
+      <form onSubmit={handleSaveProfile} className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-[28px] p-4 sm:p-8 shadow-[0_4px_20px_rgba(10,22,40,0.03)] relative">
         {successMsg && (
-          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold rounded-2xl flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 size={18} />
+          <div className="mb-6 p-4 bg-teal-50 border border-teal-200 text-teal-800 text-sm font-bold rounded-2xl flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 size={18} className="text-flyora-teal" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        <div className="flex items-center gap-4 mb-8">
-          {/* Avatar upload container */}
+        {/* Avatar & Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-8 pb-6 border-b border-slate-100">
           <div 
             onClick={() => fileInputRef.current?.click()}
             className="relative cursor-pointer group shrink-0" 
             title="Click to change profile photo"
           >
             {userAvatar ? (
-              <img src={userAvatar} alt={fullName} className="w-16 h-16 rounded-full object-cover border-2 border-flyora-teal shadow-sm" />
+              <img src={userAvatar} alt={fullName} className="w-20 h-20 rounded-2xl object-cover border-2 border-flyora-teal shadow-md" />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-flyora-teal overflow-hidden flex items-center justify-center text-xl font-bold text-flyora-teal shadow-sm">
+              <div className="w-20 h-20 rounded-2xl bg-teal-50 border-2 border-flyora-teal overflow-hidden flex items-center justify-center text-2xl font-black text-flyora-teal shadow-md">
                 {initials}
               </div>
             )}
@@ -185,9 +200,9 @@ const SettingsPage: React.FC = () => {
                 e.stopPropagation();
                 fileInputRef.current?.click();
               }}
-              className="absolute -bottom-1 -right-1 w-6 h-6 bg-flyora-teal rounded-full text-white flex items-center justify-center border-2 border-white hover:bg-teal-600 transition shadow-sm group-hover:scale-110"
+              className="absolute -bottom-1 -right-1 w-7 h-7 bg-flyora-teal rounded-full text-white flex items-center justify-center border-2 border-white hover:bg-[#0F766E] transition shadow-sm group-hover:scale-110"
             >
-              <Camera size={12} />
+              <Camera size={13} />
             </button>
 
             <input 
@@ -200,33 +215,38 @@ const SettingsPage: React.FC = () => {
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Profile Information</h2>
-            <p className="text-xs text-slate-500">Click avatar or camera icon to upload photo, then update your personal details.</p>
+            <h2 className="text-lg font-black text-slate-800">Profile Information</h2>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Click the avatar to upload a fresh photo (max 5MB). Update your personal details below.
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Input Fields Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           <label className="block">
-            <span className="block text-xs font-bold text-slate-700 mb-1.5">First Name</span>
+            <span className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">First Name</span>
             <input 
               type="text" 
               value={firstName} 
               onChange={(e) => setFirstName(e.target.value)} 
               required 
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-800 focus:border-flyora-teal outline-none transition" 
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition" 
             />
           </label>
+
           <label className="block">
-            <span className="block text-xs font-bold text-slate-700 mb-1.5">Last Name</span>
+            <span className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Last Name</span>
             <input 
               type="text" 
               value={lastName} 
               onChange={(e) => setLastName(e.target.value)} 
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-800 focus:border-flyora-teal outline-none transition" 
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition" 
             />
           </label>
+
           <label className="block">
-            <span className="block text-xs font-bold text-slate-700 mb-1.5">Email Address</span>
+            <span className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Email Address</span>
             <div className="relative">
               <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -234,190 +254,373 @@ const SettingsPage: React.FC = () => {
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
-                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-800 focus:border-flyora-teal outline-none transition" 
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition" 
               />
             </div>
           </label>
+
           <label className="block">
-            <span className="block text-xs font-bold text-slate-700 mb-1.5">Phone Number</span>
-            <div className="flex gap-2">
+            <span className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Phone Number</span>
+            <div className="relative">
+              <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)} 
                 required 
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-[12px] text-sm font-semibold text-slate-800 focus:border-flyora-teal outline-none transition" 
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition" 
               />
             </div>
           </label>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-4 border-t border-slate-100">
           <button 
             type="submit" 
-            className="bg-flyora-teal text-white px-8 py-3 rounded-full text-sm font-bold shadow-lg shadow-teal-500/20 hover:bg-teal-600 transition flex items-center gap-2 cursor-pointer"
+            className="bg-flyora-teal hover:bg-[#0F766E] text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-teal-500/20 transition flex items-center gap-2 cursor-pointer"
           >
-            Save Changes <Save size={16} />
+            <Save size={16} /> Save Profile Changes
           </button>
         </div>
       </form>
 
-      <div className="bg-red-50 border border-red-100 rounded-[24px] p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+      {/* Danger Zone: Delete Account */}
+      <div className="bg-rose-50/70 border border-rose-200/80 rounded-[28px] p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h2 className="text-lg font-bold text-slate-800 mb-1">Delete Account</h2>
-          <p className="text-sm text-slate-500">This will shut down your profile and remove your data from our servers.</p>
+          <h2 className="text-base font-black text-rose-900 mb-1">Delete Account</h2>
+          <p className="text-xs text-rose-700 font-medium max-w-lg">
+            This will permanently close your traveler and sender profile and wipe your personal booking records.
+          </p>
         </div>
-        <button type="button" onClick={handleDeleteAccount} className="bg-white border border-red-200 text-red-500 px-6 py-3 rounded-full text-sm font-bold hover:bg-red-50 transition shrink-0">
+        <button 
+          type="button" 
+          onClick={handleDeleteAccount} 
+          className="bg-white border border-rose-300 text-rose-600 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-rose-600 hover:text-white transition shrink-0 shadow-2xs"
+        >
           Delete Account
         </button>
       </div>
     </div>
   );
 
+  /* ───────────────────────────────────────────────────────────── */
+  /* TAB 2: Notifications Settings                                */
+  /* ───────────────────────────────────────────────────────────── */
   const renderNotifications = () => (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-extrabold text-flyora-teal tracking-tight">Notification <span className="text-slate-900">Setting</span></h1>
-        <p className="text-sm text-slate-500 font-medium mt-1">Stay updated about what matters.</p>
-      </div>
-      
-      <div className="bg-white border border-flyora-teal/30 rounded-[24px] p-6 shadow-sm flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-500">
-            <Bell size={20} />
+    <div className="space-y-4">
+      <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-[28px] p-4 sm:p-8 shadow-[0_4px_20px_rgba(10,22,40,0.03)] space-y-6">
+        <div>
+          <h2 className="text-xl font-black text-slate-800 tracking-tight">Notification Preferences</h2>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">Choose how you want FlyoraGo to keep you updated about matches, luggage space, and payments.</p>
+        </div>
+
+        <div className="divide-y divide-slate-100">
+          {/* Push Notifications */}
+          <div className="py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-flyora-teal flex items-center justify-center shrink-0 border border-teal-100">
+                <Bell size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-800">Browser & Mobile Push Notifications</h3>
+                <p className="text-xs text-slate-500 font-medium">Receive real-time alerts when travelers match or message you.</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" className="sr-only peer" checked={pushNotify} onChange={() => setPushNotify(!pushNotify)} />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-flyora-teal"></div>
+            </label>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800">Push Notification</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Get notified when review completes</p>
+
+          {/* Email Trip Updates */}
+          <div className="py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                <Mail size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-800">Email Flight & Delivery Summaries</h3>
+                <p className="text-xs text-slate-500 font-medium">Get journey receipts, flight itinerary updates, and booking PDFs.</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" className="sr-only peer" checked={emailTripNotify} onChange={() => setEmailTripNotify(!emailTripNotify)} />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-flyora-teal"></div>
+            </label>
+          </div>
+
+          {/* Escrow & Payment Alerts */}
+          <div className="py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-800">Escrow Security & Payout Alerts</h3>
+                <p className="text-xs text-slate-500 font-medium">Instant alerts when payments are deposited into escrow or released to wallet.</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" className="sr-only peer" checked={escrowNotify} onChange={() => setEscrowNotify(!escrowNotify)} />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-flyora-teal"></div>
+            </label>
           </div>
         </div>
-        
-        {/* Custom Toggle */}
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" className="sr-only peer" checked={pushNotify} onChange={() => setPushNotify(!pushNotify)} />
-          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-flyora-teal"></div>
-        </label>
       </div>
     </div>
   );
 
+  /* ───────────────────────────────────────────────────────────── */
+  /* TAB 3: Invite Friends                                        */
+  /* ───────────────────────────────────────────────────────────── */
   const renderInvite = () => (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-8">
-      <div className="bg-white border border-flyora-teal/30 rounded-[24px] p-8 shadow-sm flex flex-col md:flex-row items-center justify-between mb-10 overflow-hidden relative">
-        <div className="relative z-10 md:max-w-[50%]">
-          <h1 className="text-3xl font-extrabold text-flyora-teal tracking-tight mb-3">Invite <span className="text-slate-900">Friend</span></h1>
-          <p className="text-sm text-slate-500 font-medium mb-6 leading-relaxed">Join us in our journey and invite your friends to Smart experience!</p>
-          <button className="bg-flyora-teal text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-teal-500/20 hover:bg-teal-600 transition flex items-center gap-2">
-            <Users size={16} /> Refer a Friend
-          </button>
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_4px_20px_rgba(10,22,40,0.03)] flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="flex-1 space-y-4">
+          <span className="px-3 py-1 rounded-full bg-teal-50 text-flyora-teal text-[10px] font-black uppercase tracking-widest border border-teal-200/70 inline-block">
+            REFERRAL PROGRAM
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+            Invite Friends & Earn Bonus Luggage Credits
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-lg">
+            Invite your traveler and sender friends to FlyoraGo. When they complete their first delivery, both of you earn ₹250 wallet credits!
+          </p>
+
+          {/* Copy Link Input Bar */}
+          <div className="flex items-center gap-2 max-w-md pt-2">
+            <input 
+              type="text" 
+              readOnly 
+              value={`https://flyorago.me/signup?ref=${firstName.toLowerCase()}`}
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 outline-none"
+            />
+            <button
+              onClick={handleCopyInviteLink}
+              className="px-4 py-2.5 rounded-xl bg-flyora-teal hover:bg-[#0F766E] text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+            >
+              {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+              <span>{copiedLink ? 'Copied!' : 'Copy Link'}</span>
+            </button>
+          </div>
         </div>
-        <div className="mt-8 md:mt-0 relative w-64 h-64 flex-shrink-0 bg-teal-50 rounded-full flex items-center justify-center">
-          <Users size={80} className="text-flyora-teal" />
+
+        <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl bg-teal-50 border border-teal-100 flex items-center justify-center text-flyora-teal shrink-0">
+          <Users size={72} strokeWidth={1.5} />
         </div>
       </div>
 
-      <h3 className="font-bold text-slate-800 mb-4">Share via Platforms</h3>
-      <div className="flex flex-wrap gap-3">
-        <button className="px-5 py-2.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold flex items-center gap-2 border border-emerald-100 hover:bg-emerald-100 transition"><MessageCircle size={14} /> WhatsApp</button>
-        <button className="px-5 py-2.5 rounded-full bg-red-50 text-red-500 text-xs font-bold flex items-center gap-2 border border-red-100 hover:bg-red-100 transition"><Mail size={14} /> Gmail</button>
-        <button className="px-5 py-2.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center gap-2 border border-blue-100 hover:bg-blue-100 transition"><Users size={14} /> Facebook</button>
-        <button className="px-5 py-2.5 rounded-full bg-pink-50 text-pink-600 text-xs font-bold flex items-center gap-2 border border-pink-100 hover:bg-pink-100 transition"><Camera size={14} /> Instagram</button>
-        <button className="px-5 py-2.5 rounded-full bg-sky-50 text-sky-500 text-xs font-bold flex items-center gap-2 border border-sky-100 hover:bg-sky-100 transition"><Send size={14} /> Telegram</button>
-        <button className="px-5 py-2.5 rounded-full bg-slate-100 text-slate-800 text-xs font-bold flex items-center gap-2 border border-slate-200 hover:bg-slate-200 transition"><MessageCircle size={14} /> Twitter</button>
+      <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_4px_20px_rgba(10,22,40,0.03)]">
+        <h3 className="font-black text-slate-800 text-sm mb-4 uppercase tracking-wider">Share via Platforms</h3>
+        <div className="flex flex-wrap gap-3">
+          <a href={`https://api.whatsapp.com/send?text=Join%20FlyoraGo%20and%20monetize%20your%20luggage%20space!%20https://flyorago.me/signup?ref=${firstName.toLowerCase()}`} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-black flex items-center gap-2 border border-emerald-200 hover:bg-emerald-100 transition"><MessageCircle size={15} /> WhatsApp</a>
+          <a href={`mailto:?subject=Join%20FlyoraGo&body=Hey,%20check%20out%20FlyoraGo%20for%20peer-to-peer%20luggage%20delivery:%20https://flyorago.me/signup?ref=${firstName.toLowerCase()}`} className="px-5 py-2.5 rounded-xl bg-red-50 text-red-600 text-xs font-black flex items-center gap-2 border border-red-200 hover:bg-red-100 transition"><Mail size={15} /> Email</a>
+          <button onClick={handleCopyInviteLink} className="px-5 py-2.5 rounded-xl bg-blue-50 text-blue-600 text-xs font-black flex items-center gap-2 border border-blue-200 hover:bg-blue-100 transition"><Send size={15} /> Telegram</button>
+          <button onClick={handleCopyInviteLink} className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-black flex items-center gap-2 border border-slate-200 hover:bg-slate-200 transition"><Globe size={15} /> Direct Share</button>
+        </div>
       </div>
     </div>
   );
 
+  /* ───────────────────────────────────────────────────────────── */
+  /* TAB 4: Community Guidelines                                  */
+  /* ───────────────────────────────────────────────────────────── */
   const renderGuidelines = () => (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-8">
-      <h1 className="text-3xl font-extrabold text-flyora-teal tracking-tight mb-6">Community <span className="text-slate-900">Guidelines</span></h1>
-      <p className="text-sm text-slate-600 mb-6 font-medium">To keep FlyoraGo safe and respectful for everyone, users must follow these community guidelines:</p>
-      
-      <ul className="space-y-4 mb-8">
+    <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_4px_20px_rgba(10,22,40,0.03)] space-y-6">
+      <div>
+        <h2 className="text-xl font-black text-slate-800 tracking-tight">Community Guidelines</h2>
+        <p className="text-xs text-slate-500 font-medium mt-0.5">
+          To keep FlyoraGo safe, trusted, and respectful for travelers and senders, all users must adhere to these policies:
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[
-          "Be respectful and kind to other users.",
-          "Do not share harmful, abusive, hateful, or illegal content.",
-          "No bullying, harassment, impersonation, or threats.",
-          "Avoid sharing spam, fake information, or misleading links.",
-          "Respect user privacy and personal information.",
-          "Do not upload inappropriate, explicit, or offensive content.",
-          "Follow all applicable laws while using the platform."
-        ].map((rule, i) => (
-          <li key={i} className="flex items-start gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-flyora-teal mt-2"></div>
-            <span className="text-sm text-slate-600">{rule}</span>
-          </li>
+          { title: "Physical Inspection Required", desc: "Travelers must physically inspect all contents before accepting any parcel for travel." },
+          { title: "Strictly Prohibited Goods", desc: "Never carry hazardous substances, contraband, unpackaged perishables, or illegal materials." },
+          { title: "Secure Escrow Only", desc: "Never exchange off-platform cash. All payments must stay secured in Flyora Escrow." },
+          { title: "OTP Handover Verification", desc: "Only release package at dropoff upon matching the secure receiver OTP code." },
+          { title: "Honest Space & Weight", desc: "Accurately declare parcel weight and dimensions to avoid airline overweight baggage penalties." },
+          { title: "Respect & Communication", desc: "Maintain respectful, prompt communication between travelers and senders at all times." }
+        ].map((rule, idx) => (
+          <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-teal-50 text-flyora-teal flex items-center justify-center shrink-0 border border-teal-100 mt-0.5">
+              <CheckCircle2 size={16} />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-slate-800">{rule.title}</h4>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-snug">{rule.desc}</p>
+            </div>
+          </div>
         ))}
-      </ul>
-      <p className="text-sm text-slate-500 font-medium">Violation of these guidelines may result in warnings, temporary suspension, or permanent account removal from FlyoraGo.</p>
+      </div>
+
+      <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200 text-teal-800 text-xs font-medium flex items-center gap-2">
+        <ShieldCheck size={16} className="text-flyora-teal shrink-0" />
+        <span>Failure to follow community guidelines may result in trust score deduction, payout freeze, or account termination.</span>
+      </div>
     </div>
   );
 
+  /* ───────────────────────────────────────────────────────────── */
+  /* TAB 5: Help & Support                                        */
+  /* ───────────────────────────────────────────────────────────── */
   const renderSupport = () => (
-    <div className="max-w-5xl mx-auto py-8 px-4 sm:px-8 text-center">
-      <div className="inline-block bg-orange-50 text-orange-500 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-md mb-4 border border-orange-100">
-        • 24/7 Support Available
-      </div>
-      <h1 className="text-4xl font-extrabold text-flyora-teal tracking-tight mb-3">Help <span className="text-slate-900">& Support</span></h1>
-      <p className="text-sm text-slate-500 font-medium mb-12 max-w-md mx-auto">Got questions or issues? Our support team is ready to help you out anytime.</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-slate-200 rounded-[24px] p-8 shadow-sm text-left hover:border-flyora-teal/50 transition cursor-pointer group">
-          <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-6">
-            <Mail size={24} />
-          </div>
-          <h3 className="font-bold text-slate-800 mb-1">Email US</h3>
-          <p className="text-sm font-semibold text-flyora-teal group-hover:text-teal-700 flex items-center gap-2">support@flyorago.com ↗</p>
-        </div>
-        
-        <div className="bg-white border border-slate-200 rounded-[24px] p-8 shadow-sm text-left hover:border-flyora-teal/50 transition cursor-pointer group">
-          <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-6">
-            <Phone size={24} />
-          </div>
-          <h3 className="font-bold text-slate-800 mb-1">Call US</h3>
-          <p className="text-sm font-semibold text-flyora-teal group-hover:text-teal-700 flex items-center gap-2">+1 800 555 1234 ↗</p>
-        </div>
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_4px_20px_rgba(10,22,40,0.03)] text-left">
+        <span className="px-3 py-1 rounded-full bg-teal-50 text-flyora-teal text-[10px] font-black uppercase tracking-widest border border-teal-200/70 inline-block mb-3">
+          24/7 SUPPORT DESK
+        </span>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+          Help & Customer Support
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 max-w-xl">
+          Got questions about your trip, baggage booking, or escrow release? Our dedicated support team is available 24/7.
+        </p>
 
-        <div className="bg-white border border-slate-200 rounded-[24px] p-8 shadow-sm text-left hover:border-flyora-teal/50 transition cursor-pointer group">
-          <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-6">
-            <MessageCircle size={24} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-8">
+          {/* Email Support */}
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 hover:border-flyora-teal transition cursor-pointer group">
+            <div className="w-12 h-12 bg-teal-50 text-flyora-teal rounded-xl flex items-center justify-center mb-4 border border-teal-100 group-hover:scale-105 transition-transform">
+              <Mail size={22} />
+            </div>
+            <h3 className="font-black text-slate-800 text-sm mb-1">Email Support</h3>
+            <p className="text-xs text-slate-500 font-medium mb-3">For detailed inquiries & disputes</p>
+            <p className="text-xs font-black text-flyora-teal group-hover:text-teal-700 flex items-center gap-1.5">
+              support@flyorago.me <ArrowRight size={13} />
+            </p>
           </div>
-          <h3 className="font-bold text-slate-800 mb-1">Chat on Whatsapp</h3>
-          <p className="text-sm font-semibold text-flyora-teal group-hover:text-teal-700 flex items-center gap-2">+1 800 555 1234 ↗</p>
+
+          {/* Call Support */}
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 hover:border-flyora-teal transition cursor-pointer group">
+            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4 border border-blue-100 group-hover:scale-105 transition-transform">
+              <Phone size={22} />
+            </div>
+            <h3 className="font-black text-slate-800 text-sm mb-1">Toll-Free Helpline</h3>
+            <p className="text-xs text-slate-500 font-medium mb-3">Instant phone assistance</p>
+            <p className="text-xs font-black text-flyora-teal group-hover:text-teal-700 flex items-center gap-1.5">
+              +91 1800 200 4567 <ArrowRight size={13} />
+            </p>
+          </div>
+
+          {/* WhatsApp Support */}
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 hover:border-flyora-teal transition cursor-pointer group">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4 border border-emerald-100 group-hover:scale-105 transition-transform">
+              <MessageCircle size={22} />
+            </div>
+            <h3 className="font-black text-slate-800 text-sm mb-1">WhatsApp Live Chat</h3>
+            <p className="text-xs text-slate-500 font-medium mb-3">Quick questions & tracking help</p>
+            <p className="text-xs font-black text-flyora-teal group-hover:text-teal-700 flex items-center gap-1.5">
+              Chat on WhatsApp <ArrowRight size={13} />
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
       <Sidebar 
         activeItem="Settings" 
         activeSubItem={activeSubTab} 
         onSubItemClick={(id) => setActiveSubTab(id as any)} 
       />
 
-      <main className="flex-1 lg:ml-[240px] flex flex-col h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
-        {/* Top Header */}
-        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-end px-8 shrink-0">
-          <div className="flex items-center gap-4">
-            <button 
-              type="button" 
-              onClick={() => navigate('/notifications')}
-              className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
-            >
-              <Bell size={18} />
-            </button>
+      <main className="flex-1 min-w-0 w-full lg:ml-[240px] flex flex-col min-h-screen relative pb-20 lg:pb-12">
+        {/* Subtle Ambient Flyora Teal Background Wave */}
+        <div className="absolute top-0 right-0 w-full h-[460px] overflow-hidden pointer-events-none -z-0">
+          <svg className="w-full h-full" viewBox="0 0 1440 460" fill="none" preserveAspectRatio="none">
+            <path
+              d="M620 0 C860 130, 1120 40, 1440 140 L1440 0 Z"
+              fill="#F0FDFA"
+              fillOpacity="0.75"
+            />
+            <path
+              d="M450 0 C680 180, 1020 200, 1440 70 L1440 0 Z"
+              fill="#CCFBF1"
+              fillOpacity="0.4"
+            />
+          </svg>
+        </div>
+
+        {/* ─── Top Header (Global Search + Notification + Profile) ─── */}
+        <header className="flex h-20 items-center justify-between px-4 sm:px-8 xl:px-10 shrink-0 gap-4 sm:gap-6 relative z-30">
+          <div className="relative flex-1 max-w-md">
+            <div className="flex items-center gap-3 bg-white border border-slate-200/80 hover:border-slate-300 rounded-full px-4 py-2.5 shadow-[0_2px_8px_rgba(10,22,40,0.02)] transition-all">
+              <Search size={16} className="text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={headerSearchQuery}
+                onChange={e => setHeaderSearchQuery(e.target.value)}
+                placeholder="Search settings, preferences..."
+                className="flex-1 bg-transparent text-sm text-slate-800 font-medium border-0 outline-none ring-0 placeholder:text-slate-400"
+              />
+              {headerSearchQuery ? (
+                <button onClick={() => setHeaderSearchQuery('')} className="text-slate-400 hover:text-slate-600">
+                  <X size={15} />
+                </button>
+              ) : (
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-semibold text-slate-400 bg-slate-100 rounded-md">
+                  Ctrl K
+                </kbd>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <NotificationDropdown />
             <HeaderProfileDropdown />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-[#FFFDFB] pb-28 lg:pb-0">
-          {activeSubTab === 'profile' && renderProfile()}
-          {activeSubTab === 'notifications' && renderNotifications()}
-          {activeSubTab === 'invite' && renderInvite()}
-          {activeSubTab === 'guidelines' && renderGuidelines()}
-          {activeSubTab === 'support' && renderSupport()}
+        {/* ─── Main Content Container (Consistent px-4 sm:px-8 xl:px-10 margins) ─── */}
+        <div className="px-4 sm:px-8 xl:px-10 space-y-6 sm:space-y-8 relative z-20">
+
+          {/* ─── Page Title & Sub-tabs switcher bar ─── */}
+          <div className="flex flex-col gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                <span>Account &amp;</span>
+                <span className="text-flyora-teal">Settings</span>
+              </h1>
+              <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1 max-w-xl">
+                Manage your personal profile, notification preferences, community guidelines, and support.
+              </p>
+            </div>
+
+            {/* Quick Horizontal Sub-tab Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {subTabs.map(tab => {
+                const Icon = tab.icon;
+                const isSelected = activeSubTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveSubTab(tab.id as any)}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-flyora-teal text-white shadow-md shadow-teal-500/20'
+                        : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── Active Tab Content ─── */}
+          <div>
+            {activeSubTab === 'profile' && renderProfile()}
+            {activeSubTab === 'notifications' && renderNotifications()}
+            {activeSubTab === 'invite' && renderInvite()}
+            {activeSubTab === 'guidelines' && renderGuidelines()}
+            {activeSubTab === 'support' && renderSupport()}
+          </div>
+
         </div>
       </main>
     </div>

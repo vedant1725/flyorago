@@ -25,6 +25,7 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
   const [userName, setUserName] = useState(propName || localStorage.getItem('flyora_user_name') || 'User Account');
   const [userEmail, setUserEmail] = useState(propEmail || localStorage.getItem('flyora_user_email') || 'user@flyorago.com');
   const [userAvatar, setUserAvatar] = useState(propAvatar || localStorage.getItem('flyora_user_avatar') || '');
+  const [userRole, setUserRole] = useState(localStorage.getItem('flyora_user_role') || '');
   const [kycStatus, setKycStatus] = useState<string>(
     localStorage.getItem('flyora_kyc_status') || 'NOT_SUBMITTED'
   );
@@ -34,6 +35,8 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
       setUserName(localStorage.getItem('flyora_user_name') || 'User Account');
       setUserEmail(localStorage.getItem('flyora_user_email') || 'user@flyorago.com');
       setUserAvatar(localStorage.getItem('flyora_user_avatar') || '');
+      setUserRole(localStorage.getItem('flyora_user_role') || '');
+      setKycStatus(localStorage.getItem('flyora_kyc_status') || 'NOT_SUBMITTED');
     };
 
     const userId = localStorage.getItem('flyora_user_id');
@@ -62,13 +65,30 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
     if (propAvatar !== undefined) setUserAvatar(propAvatar);
   }, [propName, propEmail, propAvatar]);
 
-  const initials = (userName || 'User')
-    .trim()
-    .split(/\s+/)
-    .map(n => (n ? n[0] : ''))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || 'U';
+  // Resolve Real Display Name: Prefer propName > userName state > localStorage flyora_user_name > email prefix
+  const rawEmail = userEmail || localStorage.getItem('flyora_user_email') || '';
+  const emailPrefix = rawEmail.includes('@') ? rawEmail.split('@')[0] : rawEmail;
+  const resolvedName = (userName && userName !== 'User Account' && userName !== 'Flyora User')
+    ? userName
+    : (localStorage.getItem('flyora_user_name') || emailPrefix || 'User');
+
+  const displayName = resolvedName.trim();
+
+  // Compute clean 1 or 2 letter Initials from the REAL Name (e.g. "Akash Sharma" -> "AS", "Akash" -> "A")
+  const nameParts = displayName.split(/\s+/).filter(Boolean);
+  const initials = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : (nameParts[0] ? nameParts[0].slice(0, 2).toUpperCase() : 'U');
+
+  // Compute Role Subtitle dynamically (No longer hardcoded as "Admin User")
+  const normalizedRole = (userRole || localStorage.getItem('flyora_user_role') || '').toLowerCase();
+  const roleDisplay = normalizedRole === 'admin'
+    ? 'Admin'
+    : normalizedRole === 'traveler'
+      ? 'Traveler'
+      : normalizedRole === 'sender'
+        ? 'Sender'
+        : (kycStatus === 'APPROVED' ? 'Verified Member' : 'Member');
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -154,19 +174,21 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
         <button
           type="button"
           onClick={() => setIsOpen(prev => !prev)}
-          className="flex items-center gap-3 pl-2 pr-4 py-1.5 border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-all bg-white shadow-sm focus:outline-none"
+          className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100/60 transition-all cursor-pointer focus:outline-none select-none"
         >
           {userAvatar ? (
-            <img src={userAvatar} alt={userName} className="w-8 h-8 rounded-full object-cover border border-teal-200 shadow-sm" />
+            <img src={userAvatar} alt={displayName} className="w-8 h-8 rounded-full object-cover border border-teal-200 shadow-sm" />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-flyora-teal to-teal-600 text-white flex items-center justify-center text-xs font-black shadow-sm">
               {initials}
             </div>
           )}
-          <div className="flex flex-col text-left">
-            <span className="text-xs font-extrabold text-slate-800 leading-tight">{userName}</span>
-            <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
-              Account Options <ChevronDown size={10} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <div className="hidden sm:flex flex-col text-left">
+            <span className="text-xs font-extrabold text-slate-800 leading-tight max-w-[130px] truncate" title={displayName}>
+              {displayName}
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+              {roleDisplay} <ChevronDown size={10} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </span>
           </div>
         </button>
@@ -177,7 +199,7 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200/80 shadow-2xl z-50 p-2 transform transition-all duration-200 animate-in fade-in slide-in-from-top-2">
           {/* Header User Details */}
           <div className="px-3 py-3 border-b border-slate-100 mb-1">
-            <p className="text-xs font-black text-slate-900 truncate">{userName}</p>
+            <p className="text-xs font-black text-slate-900 truncate" title={displayName}>{displayName}</p>
             <p className="text-[11px] text-slate-500 truncate">{userEmail}</p>
           </div>
 
@@ -191,7 +213,7 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
               <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
                 <Home size={14} />
               </div>
-              <span>Go to Home (Landing Page)</span>
+              <span>Go to Home</span>
             </button>
 
             <button
@@ -242,47 +264,44 @@ export const HeaderProfileDropdown: React.FC<HeaderProfileDropdownProps> = ({
         </div>
       )}
 
-      {/* ─── Advanced Logout Confirmation Modal (Portal) ─── */}
+      {/* ─── Simple Clean Logout Confirmation Modal (Portal) ─── */}
       {showLogoutModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          {/* Backdrop with strong blur and fade-in animation */}
+          {/* Backdrop with soft blur */}
           <div 
-            className="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-md animate-in fade-in duration-300"
+            className="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={() => setShowLogoutModal(false)}
           ></div>
           
-          {/* Modal Content with advanced pop animation */}
-          <div className="relative bg-white w-full max-w-sm rounded-[32px] p-8 shadow-[0_32px_64px_rgba(10,22,40,0.3)] border border-slate-100 animate-in zoom-in-[0.95] fade-in slide-in-from-bottom-4 duration-300 flex flex-col items-center text-center overflow-hidden">
-            {/* Decorative Top Gradient */}
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-400 to-rose-600"></div>
+          {/* Simple Clean Modal without top strip/patti */}
+          <div className="relative bg-white w-full max-w-sm rounded-[24px] p-6 sm:p-7 shadow-[0_20px_50px_rgba(10,22,40,0.18)] border border-slate-200/90 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center">
             
-            {/* Animated Icon Circle */}
-            <div className="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center mb-6 relative group">
-              <div className="absolute inset-0 bg-rose-100 rounded-full scale-[1.2] opacity-50 animate-pulse"></div>
-              <LogOut size={36} strokeWidth={2.5} className="text-rose-500 relative z-10 transform transition-transform duration-500 group-hover:-translate-x-1" />
+            {/* Soft Brand Icon */}
+            <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-flyora-teal mb-3.5">
+              <LogOut size={22} strokeWidth={2.2} />
             </div>
             
             {/* Text Content */}
-            <h3 className="text-2xl font-black text-slate-800 mb-2">Leaving so soon?</h3>
-            <p className="text-sm font-bold text-slate-500 mb-8 leading-relaxed">
-              Are you sure you want to log out of your FlyoraGo account? You'll need to log back in to manage your trips.
+            <h3 className="text-lg font-black text-slate-800 tracking-tight mb-1">Confirm Log Out</h3>
+            <p className="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
+              Are you sure you want to sign out of FlyoraGo? You can sign back in at any time.
             </p>
             
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row w-full gap-3">
+            <div className="flex w-full gap-2.5">
               <button
                 type="button"
-                className="flex-1 py-3.5 px-4 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
                 onClick={() => setShowLogoutModal(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="flex-1 py-3.5 px-4 rounded-xl text-sm font-bold bg-rose-500 text-white shadow-lg shadow-rose-500/30 hover:bg-rose-600 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider bg-flyora-teal hover:bg-[#0F766E] text-white shadow-md shadow-teal-500/20 transition flex items-center justify-center"
                 onClick={confirmLogout}
               >
-                Yes, Logout
+                Log Out
               </button>
             </div>
           </div>

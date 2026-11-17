@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
-import { Package, Search, Plus, Filter, Bell, ChevronDown, Upload, X, Edit2, Trash2, Plane, Shield, CreditCard, CalendarDays, Eye, Wallet, ArrowRight } from 'lucide-react';
+import {
+  Package, Search, Plus, Filter, Plane, Shield, CreditCard,
+  CalendarDays, Eye, Wallet, ArrowRight, Trash2, X, Upload, CheckCircle2, Send
+} from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { useKycValidation } from '../hooks/useKycValidation';
 import { KycValidationModal } from '../components/ui/KycValidationModal';
@@ -9,25 +12,29 @@ import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
 import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { LocationAutocomplete } from '../components/ui/LocationAutocomplete';
 import { useSocket } from '../context/SocketContext';
+import { useToast } from '../context/ToastContext';
 import '../pages/dashboard.css';
 
 const SenderPage: React.FC = () => {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const { validateAction, isModalOpen: isKycModalOpen, closeModal: closeKycModal, kycStatus } = useKycValidation();
-  const userName = localStorage.getItem('flyora_user_name') || 'User';
-  const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2);
+
+  const [headerSearchQuery, setHeaderSearchQuery] = useState('');
+  const [filterText, setFilterText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRequestToMatch, setSelectedRequestToMatch] = useState<any | null>(null);
-  const [filterText, setFilterText] = useState('');
+  const [selectedBookingToPay, setSelectedBookingToPay] = useState<any | null>(null);
 
   const [files, setFiles] = useState<File[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [allAvailableTrips, setAllAvailableTrips] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [selectedBookingToPay, setSelectedBookingToPay] = useState<any | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id?: any; email?: string } | null>(null);
   const [platformFee, setPlatformFee] = useState<number>(10.00);
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   const fetchUserProfile = async () => {
     try {
@@ -88,7 +95,6 @@ const SenderPage: React.FC = () => {
     }
   };
 
-
   const fetchTravelers = async () => {
     try {
       const res = await apiFetch('/api/trips/');
@@ -119,7 +125,7 @@ const SenderPage: React.FC = () => {
 
   const handleOpenFindTraveler = (req: any) => {
     setSelectedRequestToMatch(req);
-    fetchTravelers(); // Re-fetch to ensure fresh data
+    fetchTravelers();
   };
 
   const [formData, setFormData] = useState({
@@ -173,10 +179,10 @@ const SenderPage: React.FC = () => {
       const payload = {
         flight_number: "REQ",
         airline: "SENDER_REQUEST",
-        aircraft: formData.category, // store category here
+        aircraft: formData.category,
         from_location: formData.pickup,
         to_location: formData.dropoff,
-        from_airport: formData.description.slice(0, 150), // description here (max 150)
+        from_airport: formData.description.slice(0, 150),
         to_airport: "N/A",
         departure_date: formData.deliveryDate,
         departure_time: "12:00:00",
@@ -196,8 +202,7 @@ const SenderPage: React.FC = () => {
       };
 
       const res = await apiFetch('/api/trips/', { method: 'POST', body: JSON.stringify(payload) });
-      
-      // Also create corresponding booking record with full receiver info
+
       try {
         await apiFetch('/api/bookings/', {
           method: 'POST',
@@ -215,7 +220,7 @@ const SenderPage: React.FC = () => {
       } catch (e) {}
 
       setRequests([res.data, ...requests]);
-      alert("Request created successfully!");
+      addToast?.("Request created successfully!", "success");
       setIsModalOpen(false);
       setFormData({ pickup: '', dropoff: '', deliveryDate: '', weight: '', category: '', description: '', receiverName: '', receiverPhone: '', receiverAddress: '' });
       setFiles([]);
@@ -225,18 +230,20 @@ const SenderPage: React.FC = () => {
   };
 
   const handleDeleteRequest = async (id: number) => {
+    if (!window.confirm("Are you sure you want to cancel this package request?")) return;
     try {
-      await apiFetch(`/api/trips/${id}`, { method: 'DELETE' });
-      setRequests(requests.filter(r => r.id !== id));
+      await apiFetch(`/api/trips/${id}/`, { method: 'DELETE' });
+      setRequests(prev => prev.filter(r => r.id !== id));
+      addToast?.("Package request cancelled", "success");
     } catch (err: any) {
       alert("Failed to delete request: " + err.message);
     }
   };
 
   const handleSendRequestToTraveler = async (travelerTrip: any) => {
-    if (!selectedRequestToMatch) return;
+    if (!selectedRequestToMatch || isSendingRequest) return;
+    setIsSendingRequest(true);
     try {
-      // Fix for float precision issues or slight mismatches: cap the requested weight to whatever the traveler has available
       const reqWeight = parseFloat(selectedRequestToMatch.capacity_weight) || 1;
       const availWeight = parseFloat(travelerTrip.available_weight) || 0;
       const safeWeight = reqWeight > availWeight ? availWeight : reqWeight;
@@ -265,7 +272,7 @@ const SenderPage: React.FC = () => {
         package_name: selectedRequestToMatch.aircraft || selectedRequestToMatch.package_name || 'Parcel',
         package_category: selectedRequestToMatch.aircraft || 'General',
         package_image: JSON.stringify(selectedRequestToMatch.accepted_parcel_types || []),
-        weight: safeWeight > 0 ? safeWeight : 0.1, // Ensure it's at least > 0 if there's any anomaly
+        weight: safeWeight > 0 ? safeWeight : 0.1,
         reward: Number((safeWeight * (parseFloat(travelerTrip.price_per_kg) || 10.0)).toFixed(2)),
         receiver_name: recName || 'Receiver',
         receiver_phone: recPhone || '',
@@ -273,19 +280,20 @@ const SenderPage: React.FC = () => {
       };
       await apiFetch('/api/bookings/', { method: 'POST', body: JSON.stringify(payload) });
 
-      fetchData();
-
-      alert(`Request sent to traveler!`);
+      await fetchData();
+      addToast?.("Request sent to traveler successfully!", "success");
       setSelectedRequestToMatch(null);
     } catch (err: any) {
       alert("Failed to send request: " + err.message);
+    } finally {
+      setIsSendingRequest(false);
     }
   };
 
   const handleDepositEscrow = async (bookingId: number) => {
     try {
       await apiFetch(`/api/bookings/${bookingId}/action`, { method: 'POST', body: JSON.stringify({ action: 'PAY' }) });
-      alert("Payment successful! Funds are now securely held in escrow.");
+      addToast?.("Payment successful! Funds are securely held in escrow.", "success");
       setSelectedBookingToPay(null);
       fetchData();
     } catch (err: any) {
@@ -293,282 +301,420 @@ const SenderPage: React.FC = () => {
     }
   };
 
-  const acceptedBookings = bookings.filter((b: any) => b.status === 'ACCEPTED' && (b.paymentStatus === 'Pending' || b.paymentStatus === 'Unpaid' || !b.paymentStatus));
+  // Metrics computation
+  const inTransitCount = useMemo(() => {
+    return bookings.filter((b: any) =>
+      b.status === 'IN_TRANSIT' || b.status === 'OUT_FOR_DELIVERY' || b.status === 'ARRIVED'
+    ).length;
+  }, [bookings]);
+
+  const deliveredCount = useMemo(() => {
+    return bookings.filter((b: any) =>
+      b.status === 'DELIVERED' || b.status === 'PAYMENT_RELEASED'
+    ).length;
+  }, [bookings]);
+
+  const pendingCount = useMemo(() => {
+    return requests.filter((r: any) => {
+      const linkedBk = bookings.find(b =>
+        (b.sender_trip && String(b.sender_trip) === String(r.id)) ||
+        (b.trip && String(b.trip) === String(r.id)) ||
+        (b.trip_details && String(b.trip_details.id) === String(r.id))
+      );
+      if (!linkedBk) return r.status === 'Active' || !r.status;
+      return linkedBk.status === 'PENDING' || linkedBk.status === 'REQUESTED' || r.status === 'Active';
+    }).length;
+  }, [requests, bookings]);
+
+  // Filtered requests
+  const filteredRequests = useMemo(() => {
+    const q = (filterText || headerSearchQuery).toLowerCase().trim();
+    return requests.filter(req => {
+      const matchesSearch = !q ||
+        (req.aircraft && req.aircraft.toLowerCase().includes(q)) ||
+        (req.from_location && req.from_location.toLowerCase().includes(q)) ||
+        (req.to_location && req.to_location.toLowerCase().includes(q)) ||
+        (req.from_airport && req.from_airport.toLowerCase().includes(q)) ||
+        (req.capacity_weight && String(req.capacity_weight).includes(q)) ||
+        (String(req.id).includes(q));
+
+      if (!statusFilter) return matchesSearch;
+
+      const linkedBk = bookings.find(b =>
+        (b.sender_trip && String(b.sender_trip) === String(req.id)) ||
+        (b.trip && String(b.trip) === String(req.id)) ||
+        (b.trip_details && String(b.trip_details.id) === String(req.id))
+      );
+
+      const cardStatus = linkedBk ? (
+        linkedBk.status === 'PAYMENT_RELEASED' || linkedBk.status === 'DELIVERED' ? 'Delivered' :
+        linkedBk.status === 'IN_TRANSIT' || linkedBk.status === 'OUT_FOR_DELIVERY' ? 'In Transit' :
+        linkedBk.status === 'ACCEPTED' ? 'Accepted' : 'Pending'
+      ) : (req.status || 'Active');
+
+      const matchesStatus = cardStatus.toLowerCase().includes(statusFilter.toLowerCase());
+      return matchesSearch && matchesStatus;
+    });
+  }, [requests, bookings, filterText, headerSearchQuery, statusFilter]);
+
+  const getStatusBadge = (cardStatus: string) => {
+    const s = (cardStatus || '').toUpperCase();
+    if (s.includes('DELIVERED') || s.includes('COMPLETED') || s.includes('PAID') || s.includes('RELEASED')) {
+      return {
+        cls: 'bg-blue-50 text-blue-600 border-blue-200',
+        gradient: 'from-blue-400 to-blue-500'
+      };
+    }
+    if (s.includes('IN_TRANSIT') || s.includes('OUT_FOR_DELIVERY') || s.includes('TRANSIT')) {
+      return {
+        cls: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+        gradient: 'from-emerald-400 to-emerald-500'
+      };
+    }
+    if (s.includes('ACCEPTED') || s.includes('VERIFIED')) {
+      return {
+        cls: 'bg-teal-50 text-teal-700 border-teal-200',
+        gradient: 'from-teal-400 to-teal-500'
+      };
+    }
+    if (s.includes('CANCELLED') || s.includes('REJECTED')) {
+      return {
+        cls: 'bg-rose-50 text-rose-600 border-rose-200',
+        gradient: 'from-rose-400 to-rose-500'
+      };
+    }
+    return {
+      cls: 'bg-amber-50 text-amber-600 border-amber-200',
+      gradient: 'from-amber-400 to-amber-500'
+    };
+  };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FFFDFB] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-[#FFFDFB] flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
       <Sidebar activeItem="Sender" />
 
-      <main className="flex-1 min-w-0 w-full max-w-full lg:ml-[240px] flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
-        {/* Top Header */}
-        <header className="hidden lg:flex h-[80px] bg-white border-b border-slate-100 items-center justify-end px-8 shrink-0">
-          <div className="flex items-center gap-4">
+      <main className="flex-1 min-w-0 w-full lg:ml-[240px] flex flex-col min-h-screen relative pb-20 lg:pb-12">
+        {/* Subtle Ambient Flyora Teal Background Wave */}
+        <div className="absolute top-0 right-0 w-full h-[460px] overflow-hidden pointer-events-none -z-0">
+          <svg className="w-full h-full" viewBox="0 0 1440 460" fill="none" preserveAspectRatio="none">
+            <path
+              d="M620 0 C860 130, 1120 40, 1440 140 L1440 0 Z"
+              fill="#F0FDFA"
+              fillOpacity="0.75"
+            />
+            <path
+              d="M450 0 C680 180, 1020 200, 1440 70 L1440 0 Z"
+              fill="#CCFBF1"
+              fillOpacity="0.4"
+            />
+          </svg>
+        </div>
+
+        {/* ─── Top Header (Global Search + Notification + Profile) ─── */}
+        <header className="flex h-20 items-center justify-between px-4 sm:px-8 xl:px-10 shrink-0 gap-4 sm:gap-6 relative z-30">
+          {/* Global Search Pill */}
+          <div className="relative flex-1 max-w-md">
+            <div className="flex items-center gap-3 bg-white border border-slate-200/80 hover:border-slate-300 rounded-full px-4 py-2.5 shadow-[0_2px_8px_rgba(10,22,40,0.02)] transition-all">
+              <Search size={16} className="text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={headerSearchQuery}
+                onChange={e => setHeaderSearchQuery(e.target.value)}
+                placeholder="Search parcels, destinations..."
+                className="flex-1 bg-transparent text-sm text-slate-800 font-medium border-0 outline-none ring-0 placeholder:text-slate-400"
+              />
+              {headerSearchQuery ? (
+                <button onClick={() => setHeaderSearchQuery('')} className="text-slate-400 hover:text-slate-600">
+                  <X size={15} />
+                </button>
+              ) : (
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-semibold text-slate-400 bg-slate-100 rounded-md">
+                  Ctrl K
+                </kbd>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <NotificationDropdown />
             <HeaderProfileDropdown />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
+        {/* ─── Main Content Container ─── */}
+        <div className="px-4 sm:px-8 xl:px-10 space-y-6 sm:space-y-8 relative z-20">
 
-          <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          {/* ─── Title & Action Bar ─── */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight mb-1.5">
-                My <span className="text-transparent bg-clip-text bg-gradient-to-r from-flyora-teal to-teal-500">Package</span>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                <span>My</span>
+                <span className="text-flyora-teal">Packages</span>
               </h1>
-              <p className="text-sm font-bold text-slate-500 max-w-md leading-relaxed">
-                Send packages globally with our verified traveler network. Fast, safe, and reliable.
+              <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1 max-w-xl">
+                Send packages across cities with verified travelers. Fast, transparent, and secured by escrow.
               </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-              <div className="relative w-full sm:w-[320px]">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="relative hidden sm:block w-64 md:w-72">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search by parcel name..."
-                  className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200/80 rounded-2xl text-sm font-semibold text-slate-700 outline-none focus:border-flyora-teal focus:ring-4 focus:ring-teal-500/10 transition-all shadow-sm placeholder:text-slate-400"
+                  value={filterText}
+                  onChange={e => setFilterText(e.target.value)}
+                  placeholder="Search parcels, routes..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-flyora-teal focus:ring-2 focus:ring-teal-500/10 transition shadow-xs"
                 />
               </div>
+
               <button
                 onClick={() => validateAction(() => navigate('/sender/new'))}
-                className="w-full sm:w-auto bg-gradient-to-r from-flyora-teal to-teal-600 text-white px-6 py-3.5 rounded-2xl text-sm font-black shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto justify-center bg-flyora-teal hover:bg-[#0F766E] text-white px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md shadow-teal-500/20 hover:-translate-y-0.5 transition flex items-center gap-2"
               >
-                <Plus size={18} strokeWidth={3} />
-                Create Request
+                <Plus size={16} strokeWidth={2.5} />
+                <span>Create Request</span>
               </button>
             </div>
           </div>
 
-          {/* Premium MNC-style Dashboard Card for Sender */}
-          <div className="relative rounded-[32px] p-8 md:p-10 mb-10 overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#0D1C33] to-[#0A1628] shadow-[0_20px_60px_rgba(10,22,40,0.15)] border border-slate-800">
-            {/* Abstract Decorative Background */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-flyora-teal/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
-            
-            {/* Glossy Overlay Line */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          {/* ─── Premium MNC Dark Overview Card ─── */}
+          <div className="relative rounded-2xl sm:rounded-[28px] p-5 sm:p-8 bg-[#0A1628] shadow-[0_20px_50px_rgba(10,22,40,0.18)] border border-slate-800 overflow-hidden">
+            {/* Abstract glow */}
+            <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-flyora-teal/15 rounded-full blur-[90px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[70px] translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
-              
-              {/* Main Info Section */}
+            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 sm:gap-8">
+              {/* Left Info */}
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
-                    <Package size={12} className="text-teal-400" />
+                  <div className="w-6 h-6 rounded-lg bg-teal-500/20 flex items-center justify-center border border-teal-500/30">
+                    <Package size={13} className="text-teal-400" />
                   </div>
-                  <span className="text-[11px] font-black tracking-[0.2em] text-teal-100 uppercase">Sender Profile</span>
+                  <span className="text-[11px] font-black tracking-[0.2em] text-teal-300 uppercase">
+                    PACKAGE OVERVIEW
+                  </span>
                 </div>
-                <div className="text-4xl md:text-5xl font-black text-white tracking-tight flex flex-col gap-1">
-                  SEND A PACKAGE
-                  <span className="text-lg md:text-xl font-medium text-slate-400 tracking-normal">Find trusted travelers worldwide</span>
-                </div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>SEND A</span>
+                  <span className="text-flyora-teal">PACKAGE</span>
+                </h2>
+                <p className="text-xs sm:text-sm font-medium text-slate-400 mt-1 max-w-md">
+                  Connect with verified travelers flying to your destination and deliver safely.
+                </p>
               </div>
 
-              {/* Stats Section */}
-              <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto pb-4 lg:pb-0">
-                <div className="flex-1 lg:flex-none flex flex-col items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-colors min-w-[100px]">
-                  <div className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Total</div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-black text-white">{requests.length.toString().padStart(2, '0')}</span>
-                  </div>
+              {/* Right Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition min-w-[95px] text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{requests.length.toString().padStart(2, '0')}</p>
                 </div>
-
-                <div className="flex-1 lg:flex-none flex flex-col items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-colors min-w-[100px]">
-                  <div className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">In Transit</div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-black text-emerald-400">00</span>
-                  </div>
+                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition min-w-[95px] text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">In Transit</p>
+                  <p className="text-2xl sm:text-3xl font-black text-emerald-400">{inTransitCount.toString().padStart(2, '0')}</p>
                 </div>
-
-                <div className="flex-1 lg:flex-none flex flex-col items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-colors min-w-[100px]">
-                  <div className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Delivered</div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-black text-blue-400">00</span>
-                  </div>
+                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition min-w-[95px] text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Delivered</p>
+                  <p className="text-2xl sm:text-3xl font-black text-cyan-400">{deliveredCount.toString().padStart(2, '0')}</p>
                 </div>
-
-                <div className="flex-1 lg:flex-none flex flex-col items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-colors min-w-[100px]">
-                  <div className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Pending</div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-black text-amber-400">{(requests.filter(r => r.status === 'Active').length).toString().padStart(2, '0')}</span>
-                  </div>
+                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition min-w-[95px] text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pending</p>
+                  <p className="text-2xl sm:text-3xl font-black text-amber-400">{pendingCount.toString().padStart(2, '0')}</p>
                 </div>
               </div>
-              
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-extrabold text-slate-800">Package Requests</h2>
-            <div className="relative">
-              <button className="bg-flyora-teal text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm shadow-teal-500/20 hover:bg-teal-600 transition">
-                <Filter size={16} /> Filter
+          {/* ─── Package Requests Header & Filter ─── */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-1.5 h-6 bg-flyora-teal rounded-full" />
+              <h2 className="text-xl font-black text-slate-800 tracking-tight">Package Requests</h2>
+            </div>
+
+            <div className="relative inline-block">
+              <button className="bg-flyora-teal hover:bg-[#0F766E] text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition">
+                <Filter size={14} />
+                <span>Filter</span>
+                {statusFilter && <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full">{statusFilter}</span>}
               </button>
               <select
+                aria-label="Filter packages by status"
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
               >
-                <option value="">All Status</option>
-                <option value="Active">Pending</option>
-                <option value="Completed">Requested</option>
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="In Transit">In Transit</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Accepted">Accepted</option>
               </select>
             </div>
           </div>
 
-          {requests.filter(r => filterText === '' || r.status === filterText).length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-[24px] p-16 flex flex-col items-center justify-center text-center shadow-sm">
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
-                <Package size={32} />
+          {/* ─── Requests List or Empty State ─── */}
+          {filteredRequests.length === 0 ? (
+            <div className="bg-white border border-slate-200/80 rounded-[28px] p-12 sm:p-16 flex flex-col items-center justify-center text-center shadow-[0_4px_20px_rgba(10,22,40,0.03)]">
+              <div className="w-16 h-16 bg-teal-50/60 rounded-full flex items-center justify-center text-flyora-teal mb-4 border border-teal-100">
+                <Package size={28} />
               </div>
-              <h3 className="text-slate-700 font-bold mb-1">No requests found</h3>
-              <p className="text-slate-500 text-sm max-w-sm">Create a new request by clicking the Create Request button or search for other terms.</p>
+              <h3 className="text-slate-800 font-black text-lg mb-1">No package requests found</h3>
+              <p className="text-slate-500 text-xs sm:text-sm max-w-sm font-medium mb-6">
+                Create a new request by clicking the Create Request button or search for other terms.
+              </p>
+              <button
+                onClick={() => validateAction(() => navigate('/sender/new'))}
+                className="bg-flyora-teal hover:bg-[#0F766E] text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-teal-500/20 hover:-translate-y-0.5 transition flex items-center gap-2"
+              >
+                <Plus size={16} strokeWidth={2.5} />
+                <span>Create Request</span>
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {requests
-                .filter(r => filterText === '' || r.status === filterText)
-                .map(req => {
-                  const linkedBk = bookings.find(b => 
-                    (b.sender_trip && String(b.sender_trip) === String(req.id)) ||
-                    (b.trip && String(b.trip) === String(req.id)) || 
-                    (b.trip_details && String(b.trip_details.id) === String(req.id))
-                  );
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+              {filteredRequests.map(req => {
+                const linkedBk = bookings.find(b =>
+                  (b.sender_trip && String(b.sender_trip) === String(req.id)) ||
+                  (b.trip && String(b.trip) === String(req.id)) ||
+                  (b.trip_details && String(b.trip_details.id) === String(req.id))
+                );
 
-                  const cardStatus = linkedBk ? (
-                    linkedBk.status === 'PAYMENT_RELEASED' || linkedBk.status === 'DELIVERED' || linkedBk.status === 'DISPUTED' || linkedBk.status === 'DISPUTE_RESOLVED' || linkedBk.status === 'DISPUTE_REJECTED' ? 'Completed' :
-                    linkedBk.status === 'IN_TRANSIT' ? 'In Transit' :
-                    linkedBk.status === 'OUT_FOR_DELIVERY' || linkedBk.status === 'ARRIVED' ? 'Out For Delivery' :
-                    linkedBk.status === 'PARCEL_VERIFIED' || linkedBk.status === 'PARCEL_VERIFIED' ? 'Parcel Verified' :
-                    linkedBk.payment_status === 'Escrow Hold' || linkedBk.payment_status === 'PAID' || linkedBk.status === 'PAID' || linkedBk.status === 'PAID' ? 'Paid' :
-                    linkedBk.status === 'ACCEPTED' ? 'Accepted' : linkedBk.status
-                  ) : (req.status === 'Active' ? 'Active' : 'Requested');
+                const cardStatus = linkedBk ? (
+                  linkedBk.status === 'PAYMENT_RELEASED' || linkedBk.status === 'DELIVERED' || linkedBk.status === 'DISPUTED' || linkedBk.status === 'DISPUTE_RESOLVED' ? 'Delivered' :
+                  linkedBk.status === 'IN_TRANSIT' ? 'In Transit' :
+                  linkedBk.status === 'OUT_FOR_DELIVERY' || linkedBk.status === 'ARRIVED' ? 'Out For Delivery' :
+                  linkedBk.status === 'PARCEL_VERIFIED' ? 'Parcel Verified' :
+                  linkedBk.payment_status === 'Escrow Hold' || linkedBk.payment_status === 'PAID' || linkedBk.status === 'PAID' ? 'Paid' :
+                  linkedBk.status === 'ACCEPTED' ? 'Accepted' : linkedBk.status
+                ) : (req.status === 'Active' ? 'Active' : 'Requested');
 
-                  const getStatusStyle = (status: string) => {
-                    const s = (status || '').toUpperCase();
-                    if (s.includes('COMPLETED') || s.includes('PAID') || s.includes('DELIVERED')) return 'bg-blue-50 text-blue-600 border-blue-200';
-                    if (s.includes('ACCEPTED') || s.includes('IN_TRANSIT') || s.includes('PARCEL_VERIFIED')) return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-                    if (s.includes('PENDING') || s.includes('REQUESTED') || s.includes('ACTIVE')) return 'bg-amber-50 text-amber-600 border-amber-200';
-                    if (s.includes('CANCELLED') || s.includes('REJECTED')) return 'bg-rose-50 text-rose-600 border-rose-200';
-                    return 'bg-slate-50 text-slate-600 border-slate-200';
-                  };
+                const badge = getStatusBadge(cardStatus);
 
-                  const getGradientStyle = (status: string) => {
-                    const s = (status || '').toUpperCase();
-                    if (s.includes('COMPLETED') || s.includes('PAID') || s.includes('DELIVERED')) return 'from-blue-400 to-blue-500';
-                    if (s.includes('ACCEPTED') || s.includes('IN_TRANSIT') || s.includes('PARCEL_VERIFIED')) return 'from-emerald-400 to-emerald-500';
-                    if (s.includes('PENDING') || s.includes('REQUESTED') || s.includes('ACTIVE')) return 'from-amber-400 to-amber-500';
-                    if (s.includes('CANCELLED') || s.includes('REJECTED')) return 'from-rose-400 to-rose-500';
-                    return 'from-slate-300 to-slate-400';
-                  };
+                return (
+                  <div
+                    key={req.id}
+                    className="group bg-white rounded-[24px] border border-slate-200/80 shadow-[0_4px_20px_rgba(10,22,40,0.03)] hover:shadow-[0_12px_32px_rgba(13,148,136,0.1)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col"
+                  >
+                    {/* Top Status Gradient Bar */}
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${badge.gradient}`} />
 
-                  return (
-                    <div key={req.id} className="group bg-white rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(13,148,136,0.08)] transition-all duration-300 relative overflow-hidden flex flex-col">
-                      {/* Decorative top border gradient based on status */}
-                      <div className={`h-1.5 w-full bg-gradient-to-r ${getGradientStyle(cardStatus)}`}></div>
-
-                      <div className="p-6 flex-1 flex flex-col">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                              <Package size={14} className="text-slate-400" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Parcel #{req.id}</span>
-                              <span className="text-xs font-black text-slate-700 tracking-tight">{req.aircraft || 'Package'}</span>
-                            </div>
+                    <div className="p-5 sm:p-6 flex-1 flex flex-col">
+                      {/* Card Header */}
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center border border-teal-100">
+                            <Package size={16} className="text-flyora-teal" />
                           </div>
-                          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border shadow-sm ${getStatusStyle(cardStatus)}`}>
-                            {cardStatus.replace(/[^A-Za-z ]/g, '').trim()}
-                          </span>
+                          <div>
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase block">
+                              Parcel #{req.id}
+                            </span>
+                            <span className="text-xs font-black text-slate-800 tracking-tight">
+                              {req.aircraft || 'General Parcel'}
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Route Map Design */}
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className="flex-1">
-                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pickup</div>
-                            <div className="text-sm font-bold text-slate-800 line-clamp-1" title={req.from_location}>{req.from_location}</div>
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border shadow-2xs ${badge.cls}`}>
+                          {cardStatus.replace(/[^A-Za-z ]/g, '').trim()}
+                        </span>
+                      </div>
+
+                      {/* Route Section */}
+                      <div className="bg-slate-50/70 rounded-2xl p-3.5 mb-4 border border-slate-100">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Pickup</p>
+                            <p className="text-xs font-black text-slate-800 truncate" title={req.from_location}>
+                              {req.from_location}
+                            </p>
                           </div>
-                          
-                          <div className="flex-1 flex flex-col items-center px-2">
-                            <div className="w-full flex items-center">
-                              <div className="h-[2px] w-full border-t-2 border-dashed border-slate-200"></div>
-                              <ArrowRight size={14} className="text-slate-300 mx-1 shrink-0" />
-                              <div className="h-[2px] w-full border-t-2 border-dashed border-slate-200"></div>
+
+                          <div className="flex flex-col items-center px-2 shrink-0">
+                            <div className="flex items-center gap-1 text-flyora-teal">
+                              <span className="w-1.5 h-1.5 rounded-full bg-flyora-teal" />
+                              <div className="w-8 border-t border-dashed border-flyora-teal/40" />
+                              <ArrowRight size={12} className="text-flyora-teal" />
                             </div>
-                            <div className="text-[10px] font-bold text-slate-400 mt-2 flex items-center gap-1">
+                            <span className="text-[9px] font-bold text-slate-400 mt-1 flex items-center gap-1">
                               <CalendarDays size={10} /> {req.departure_date}
-                            </div>
+                            </span>
                           </div>
 
-                          <div className="flex-1 text-right">
-                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Dropoff</div>
-                            <div className="text-sm font-bold text-slate-800 line-clamp-1" title={req.to_location}>{req.to_location}</div>
+                          <div className="flex-1 min-w-0 text-right">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Dropoff</p>
+                            <p className="text-xs font-black text-slate-800 truncate" title={req.to_location}>
+                              {req.to_location}
+                            </p>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Info Chips */}
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 text-xs font-bold">
-                            <Package size={14} className="text-flyora-teal" /> {req.capacity_weight} kg
-                          </div>
-                          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 text-xs font-bold">
-                            <span className="w-3 h-3 border-2 border-flyora-teal rounded-sm"></span> 7x4x55 cm
-                          </div>
+                      {/* Info Chips */}
+                      <div className="flex items-center gap-2 mb-4 flex-wrap">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50/60 border border-teal-100 text-teal-800 text-xs font-bold">
+                          <Package size={13} className="text-flyora-teal" />
+                          <span>{req.capacity_weight} kg</span>
                         </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200/70 text-slate-600 text-xs font-bold">
+                          <span>Category:</span>
+                          <span className="text-slate-800 font-black">{req.aircraft || 'General'}</span>
+                        </div>
+                      </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center justify-between border-t border-slate-100 pt-5 gap-2 mt-auto">
-                          <button
-                            onClick={() => navigate(`/booking/${req.id}`)}
-                            className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[11px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-2 border border-slate-200/60"
-                            title="View Full Package Request Details"
-                          >
-                            <Eye size={14} /> Details
-                          </button>
-                          
-                          {(!linkedBk || (linkedBk.status !== 'ACCEPTED' && linkedBk.status !== 'PAID' && linkedBk.status !== 'IN_TRANSIT' && linkedBk.status !== 'PAYMENT_RELEASED' && linkedBk.status !== 'DELIVERED' && linkedBk.status !== 'OUT_FOR_DELIVERY')) && (
-                            <button
-                              onClick={() => handleOpenFindTraveler(req)}
-                              className="flex-1 bg-slate-900 text-white hover:bg-slate-800 text-[11px] font-black uppercase tracking-wider py-2.5 rounded-xl shadow-lg shadow-slate-900/20 transition flex items-center justify-center gap-2"
-                            >
-                              <Search size={14} /> Find Traveler
-                            </button>
-                          )}
-                          
-                          {linkedBk && linkedBk.status === 'ACCEPTED' && (
-                            <button
-                              onClick={() => {
-                                if (linkedBk) {
-                                    setSelectedBookingToPay(linkedBk);
-                                } else {
-                                    navigate(`/booking/${req.id}`);
-                                }
-                              }}
-                              className="flex-1 bg-emerald-500 text-white hover:bg-emerald-600 text-[10px] font-black uppercase tracking-wider py-2 rounded-xl shadow-sm shadow-emerald-500/20 transition flex items-center justify-center gap-1"
-                            >
-                          <Wallet size={14} /> Pay Now
+                      {/* Card Actions */}
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-4 gap-2 mt-auto">
+                        <button
+                          onClick={() => navigate(`/booking/${req.id}`)}
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black rounded-xl transition flex items-center gap-1.5"
+                          title="View Request Details"
+                        >
+                          <Eye size={13} />
+                          <span>Details</span>
                         </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteRequest(req.id)}
-                        className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"
-                        title="Cancel Request"
-                      >
-                        <X size={15} />
-                      </button>
+
+                        {(!linkedBk || (linkedBk.status !== 'ACCEPTED' && linkedBk.status !== 'PAID' && linkedBk.status !== 'IN_TRANSIT' && linkedBk.status !== 'DELIVERED')) && (
+                          <button
+                            onClick={() => handleOpenFindTraveler(req)}
+                            className="flex-1 bg-slate-900 hover:bg-flyora-teal text-white text-xs font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <Search size={13} />
+                            <span>Find Traveler</span>
+                          </button>
+                        )}
+
+                        {linkedBk && linkedBk.status === 'ACCEPTED' && (
+                          <button
+                            onClick={() => setSelectedBookingToPay(linkedBk)}
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <Wallet size={13} />
+                            <span>Pay Escrow</span>
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleDeleteRequest(req.id)}
+                          className="w-8 h-8 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition shrink-0"
+                          title="Cancel Request"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
                 );
               })}
             </div>
           )}
+
         </div>
       </main>
 
-      {/* Create Request Modal */}
+      {/* ─── Create Request Modal ─── */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false) }}>
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -715,134 +861,188 @@ const SenderPage: React.FC = () => {
 
               <div className="mt-6 flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-flyora-teal hover:bg-teal-600 shadow-lg shadow-teal-500/20 transition">Create Request</button>
+                <button type="submit" className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-flyora-teal hover:bg-[#0F766E] shadow-lg shadow-teal-500/20 transition">Create Request</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Find Traveler Modal */}
-      {selectedRequestToMatch && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setSelectedRequestToMatch(null) }}>
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <div>
-                <h3 className="font-bold text-slate-800">Available Travelers ({allAvailableTrips.length})</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Matching route: {selectedRequestToMatch.from_location} to {selectedRequestToMatch.to_location}</p>
-              </div>
-              <button onClick={() => setSelectedRequestToMatch(null)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-500 transition">
-                <X size={18} />
-              </button>
-            </div>
+      {/* ─── Find Traveler Modal ─── */}
+      {selectedRequestToMatch && (() => {
+        try {
+          const reqFrom = String(selectedRequestToMatch?.from_location || '').toLowerCase().trim();
+          const reqTo = String(selectedRequestToMatch?.to_location || '').toLowerCase().trim();
+          const reqWeight = parseFloat(selectedRequestToMatch?.capacity_weight) || 1.0;
 
-            <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
-              {(() => {
-                const reqFrom = (selectedRequestToMatch.from_location || '').toLowerCase().trim();
-                const reqTo = (selectedRequestToMatch.to_location || '').toLowerCase().trim();
-                const reqWeight = parseFloat(selectedRequestToMatch.capacity_weight) || 1.0;
+          const fuzzyMatch = (locA: any, locB: any): boolean => {
+            if (!locA || !locB) return false;
+            const a = String(locA).toLowerCase().replace(/[().,]/g, ' ').trim();
+            const b = String(locB).toLowerCase().replace(/[().,]/g, ' ').trim();
+            if (!a || !b) return false;
+            if (a === b || a.includes(b) || b.includes(a)) return true;
+            const tokensA = a.split(/\s+/).filter((w: string) => w.length >= 3);
+            const tokensB = b.split(/\s+/).filter((w: string) => w.length >= 3);
+            return tokensA.some((ta: string) => tokensB.some((tb: string) => ta === tb || ta.includes(tb) || tb.includes(ta)));
+          };
 
-                // Fuzzy location match - token-level word overlap
-                const fuzzyMatch = (locA: string, locB: string): boolean => {
-                  const a = locA.toLowerCase().replace(/[().,]/g, ' ').trim();
-                  const b = locB.toLowerCase().replace(/[().,]/g, ' ').trim();
-                  if (a === b || a.includes(b) || b.includes(a)) return true;
-                  const tokensA = a.split(/\s+/).filter((w: string) => w.length >= 3);
-                  const tokensB = b.split(/\s+/).filter((w: string) => w.length >= 3);
-                  return tokensA.some((ta: string) => tokensB.some((tb: string) => ta === tb || ta.includes(tb) || tb.includes(ta)));
-                };
+          const currentUserId = currentUser?.id ? String(currentUser.id) : (localStorage.getItem('flyora_user_id') || '');
+          const currentUserEmail = (currentUser?.email || localStorage.getItem('flyora_user_email') || '').toLowerCase().trim();
 
-                // 1. Exclude Current User's Own Traveler Trips
-                const otherUsersTrips = allAvailableTrips.filter((t: any) => {
-                  if (t.airline === 'SENDER_REQUEST') return false;
-                  if (currentUser?.id && (String(t.user) === String(currentUser.id) || String(t.user?.id) === String(currentUser.id))) return false;
-                  if (currentUser?.email && t.traveler_email && t.traveler_email.toLowerCase() === currentUser.email.toLowerCase()) return false;
-                  return true;
-                });
+          const otherUsersTrips = (Array.isArray(allAvailableTrips) ? allAvailableTrips : []).filter((t: any) => {
+            if (!t) return false;
+            if (t.airline === 'SENDER_REQUEST') return false;
+            
+            // Exclude trips belonging to current user
+            const tripUserId = t.user ? (typeof t.user === 'object' ? String(t.user.id || '') : String(t.user)) : '';
+            if (currentUserId && tripUserId && currentUserId === tripUserId) return false;
+            
+            const travelerEmail = (t.traveler_email || (typeof t.user === 'object' ? t.user.email : '') || '').toLowerCase().trim();
+            if (currentUserEmail && travelerEmail && currentUserEmail === travelerEmail) return false;
+            
+            return true;
+          });
 
-                // 2. Full route match (fuzzy)
-                const fullRouteTrips = otherUsersTrips.filter((t: any) => {
-                  const fromMatch = fuzzyMatch(t.from_location || '', reqFrom) || fuzzyMatch(t.from_airport || '', reqFrom);
-                  const toMatch = fuzzyMatch(t.to_location || '', reqTo) || fuzzyMatch(t.to_airport || '', reqTo);
-                  return fromMatch && toMatch;
-                });
+          const fullRouteTrips = otherUsersTrips.filter((t: any) => {
+            const fromMatch = fuzzyMatch(t?.from_location || '', reqFrom) || fuzzyMatch(t?.from_airport || '', reqFrom);
+            const toMatch = fuzzyMatch(t?.to_location || '', reqTo) || fuzzyMatch(t?.to_airport || '', reqTo);
+            return fromMatch && toMatch;
+          });
 
-                // 3. Strict: Only show travelers where BOTH Route and Available Weight match
-                const perfectMatches = fullRouteTrips.filter((t: any) => parseFloat(t.available_weight) >= reqWeight);
+          const perfectMatches = fullRouteTrips.filter((t: any) => (parseFloat(t?.available_weight) || 0) >= reqWeight);
 
-                if (perfectMatches.length === 0) {
-                  return (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
+          const fromLabel = String(selectedRequestToMatch?.from_location || 'Origin');
+          const toLabel = String(selectedRequestToMatch?.to_location || 'Destination');
+
+          return (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) setSelectedRequestToMatch(null); }}>
+              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm sm:text-base">Available Matching Travelers ({perfectMatches.length})</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Matching route: {fromLabel} to {toLabel}</p>
+                  </div>
+                  <button onClick={() => setSelectedRequestToMatch(null)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-500 transition cursor-pointer">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="p-3 sm:p-6 overflow-y-auto flex-1 bg-slate-50">
+                  {perfectMatches.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-white rounded-2xl border border-slate-200 shadow-2xs">
                       <div className="w-14 h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-3">
                         <Search size={28} />
                       </div>
                       <h4 className="text-slate-800 font-bold text-base mb-1">No Matching Travelers Found</h4>
                       <p className="text-slate-500 text-xs max-w-md leading-relaxed">
-                        No travelers from other users are currently flying on route <span className="font-bold text-slate-800">{selectedRequestToMatch.from_location} → {selectedRequestToMatch.to_location}</span> with at least <span className="font-bold text-emerald-600">{reqWeight} KG</span> available baggage space.
+                        No travelers from other users are currently flying on route <span className="font-bold text-slate-800">{fromLabel} → {toLabel}</span> with at least <span className="font-bold text-emerald-600">{reqWeight} KG</span> available baggage space.
                       </p>
                       <p className="text-slate-400 text-[11px] mt-3 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
                         ✨ Note: Only travelers with matching route AND sufficient available space (≥ {reqWeight} KG) are shown.
                       </p>
                     </div>
-                  );
-                }
-
-                const TCard = ({ t }: { t: any }) => {
-                  const avail = parseFloat(t.available_weight) || 0;
-                  const name = t.traveler_name || (t.user?.first_name ? `${t.user.first_name} ${t.user.last_name || ''}`.trim() : null) || t.traveler_email?.split('@')[0] || 'Verified Traveler';
-                  return (
-                    <div className="bg-white border border-emerald-200 hover:border-teal-400 rounded-xl p-4 shadow-xs hover:shadow-md transition-all">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[11px] font-extrabold shrink-0">{name.charAt(0).toUpperCase()}</div>
-                            <span className="text-xs font-bold text-slate-800">{name}</span>
-                            <span className="w-1 h-1 bg-slate-300 rounded-full shrink-0" />
-                            <span className="text-xs text-slate-500">{t.departure_date}</span>
-                          </div>
-                          <div className="text-xs font-black text-slate-800 flex items-center gap-1.5 mb-1.5 min-w-0">
-                            <span className="truncate max-w-[130px]" title={t.from_location}>{t.from_location}</span>
-                            <Plane size={12} className="text-teal-500 rotate-90 shrink-0" />
-                            <span className="truncate max-w-[130px]" title={t.to_location}>{t.to_location}</span>
-                          </div>
-                          <div className="text-xs text-slate-500 flex flex-wrap gap-2">
-                            <span>Space: <strong className="text-emerald-700">{avail} KG Available</strong></span>
-                            <span>•</span>
-                            <span>Airline: <strong className="text-slate-700">{t.airline && t.airline !== 'TRAVELER_TRIP' ? t.airline : 'Commercial'}</strong></span>
-                          </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between mb-3">
+                          <span>✅ Matching Route & Available Space Travelers</span>
+                          <span className="bg-emerald-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">{perfectMatches.length} Match{perfectMatches.length > 1 ? 'es' : ''}</span>
                         </div>
-                        <button onClick={() => handleSendRequestToTraveler(t)} className="px-4 py-2.5 bg-flyora-teal hover:bg-teal-600 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap shrink-0">
-                          Send Request
-                        </button>
-                      </div>
-                    </div>
-                  );
-                };
+                        <div className="flex flex-col gap-3">
+                          {perfectMatches.map((t: any) => {
+                            const avail = parseFloat(t?.available_weight) || 0;
+                            const name = t?.traveler_name || 
+                              (t?.user && typeof t.user === 'object' && t.user.first_name ? `${t.user.first_name} ${t.user.last_name || ''}`.trim() : null) || 
+                              (typeof t?.user === 'string' ? t.user : null) ||
+                              (t?.traveler_email ? t.traveler_email.split('@')[0] : null) || 
+                              'Verified Traveler';
+                            
+                            const isAlreadyRequested = Array.isArray(bookings) && bookings.some((b: any) =>
+                              b &&
+                              (Number(b.trip?.id || b.trip_id || b.trip) === Number(t.id)) &&
+                              (Number(b.sender_trip?.id || b.sender_trip_id || b.sender_trip) === Number(selectedRequestToMatch?.id)) &&
+                              b.status !== 'CANCELLED' && b.status !== 'REJECTED'
+                            );
 
-                return (
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between mb-3">
-                        <span>✅ Matching Route & Available Space Travelers</span>
-                        <span className="bg-emerald-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">{perfectMatches.length} Match{perfectMatches.length > 1 ? 'es' : ''}</span>
+                            const initialLetter = (name && typeof name === 'string' && name.trim().length > 0) ? name.trim().charAt(0).toUpperCase() : 'T';
+
+                            return (
+                              <div key={t.id || Math.random()} className="bg-white border border-emerald-200 hover:border-teal-400 rounded-xl p-4 shadow-2xs hover:shadow-md transition-all">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                      <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[11px] font-extrabold shrink-0">
+                                        {initialLetter}
+                                      </div>
+                                      <span className="text-xs font-bold text-slate-800">{name}</span>
+                                      <span className="w-1 h-1 bg-slate-300 rounded-full shrink-0" />
+                                      <span className="text-xs text-slate-500">{String(t.departure_date || '')}</span>
+                                    </div>
+                                    <div className="text-xs font-black text-slate-800 flex items-center gap-1.5 mb-1.5 min-w-0">
+                                      <span className="truncate max-w-[130px]" title={String(t.from_location || '')}>{String(t.from_location || '')}</span>
+                                      <Plane size={12} className="text-teal-500 rotate-90 shrink-0" />
+                                      <span className="truncate max-w-[130px]" title={String(t.to_location || '')}>{String(t.to_location || '')}</span>
+                                    </div>
+                                    <div className="text-xs text-slate-500 flex flex-wrap gap-2">
+                                      <span>Space: <strong className="text-emerald-700">{avail} KG Available</strong></span>
+                                      <span>•</span>
+                                      <span>Airline: <strong className="text-slate-700">{t.airline && t.airline !== 'TRAVELER_TRIP' ? String(t.airline) : 'Commercial'}</strong></span>
+                                    </div>
+                                  </div>
+
+                                  {isAlreadyRequested ? (
+                                    <div className="px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl flex items-center gap-1.5 shrink-0 shadow-xs">
+                                      <CheckCircle2 size={14} className="text-emerald-600" /> Request Sent
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      disabled={isSendingRequest}
+                                      onClick={() => handleSendRequestToTraveler(t)}
+                                      className="px-4 py-2.5 bg-flyora-teal hover:bg-[#0F766E] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      <Send size={13} /> {isSendingRequest ? 'Sending...' : 'Send Request'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-3">{perfectMatches.map((t: any) => <TCard key={t.id} t={t} />)}</div>
                     </div>
-                  </div>
-                );
-              })()}
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        } catch (modalErr) {
+          console.error("Error rendering Find Traveler Modal:", modalErr);
+          return (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white p-6 rounded-2xl max-w-md w-full text-center shadow-2xl">
+                <p className="text-sm font-bold text-slate-800">Unable to load travelers</p>
+                <p className="text-xs text-slate-500 mt-1 mb-4">An error occurred while displaying matching travelers.</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRequestToMatch(null)}
+                  className="px-4 py-2 bg-flyora-teal text-white rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          );
+        }
+      })()}
 
-      {/* Payment Modal */}
+      {/* ─── Secure Escrow Payment Modal ─── */}
       {selectedBookingToPay && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setSelectedBookingToPay(null) }}>
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <CreditCard size={18} className="text-flyora-teal" /> Secure Payment
+                <CreditCard size={18} className="text-flyora-teal" /> Secure Escrow Payment
               </h3>
               <button onClick={() => setSelectedBookingToPay(null)} className="text-slate-400 hover:text-slate-600 transition"><X size={20} /></button>
             </div>
@@ -896,7 +1096,7 @@ const SenderPage: React.FC = () => {
 
               <button
                 onClick={() => handleDepositEscrow(selectedBookingToPay.id)}
-                className="w-full py-3.5 bg-flyora-teal hover:bg-teal-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-teal-500/20 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-flyora-teal hover:bg-[#0F766E] text-white rounded-xl font-bold text-sm shadow-lg shadow-teal-500/20 transition flex items-center justify-center gap-2"
               >
                 Confirm Payment <Plane size={16} className="rotate-45" />
               </button>
@@ -904,6 +1104,7 @@ const SenderPage: React.FC = () => {
           </div>
         </div>
       )}
+
       <KycValidationModal isOpen={isKycModalOpen} onClose={closeKycModal} kycStatus={kycStatus} />
     </div>
   );
