@@ -38,6 +38,11 @@ const SettingsPage: React.FC = () => {
   const [emailTripNotify, setEmailTripNotify] = useState(true);
   const [escrowNotify, setEscrowNotify] = useState(true);
 
+  // Delete Account Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const fullName = `${firstName} ${lastName}`.trim() || 'User Account';
   const initials = fullName
     .split(/\s+/)
@@ -146,8 +151,27 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      alert('Account deletion requested. Our compliance team will review your account.');
+    setDeleteError('');
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await apiFetch('/api/profiles/me/', { method: 'DELETE' });
+      if (res?.status === 'success' || res?.message) {
+        localStorage.clear();
+        sessionStorage.clear();
+        setShowDeleteModal(false);
+        navigate('/login', { replace: true });
+      } else {
+        setDeleteError(res?.message || 'Failed to delete account. Please try again.');
+      }
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Failed to connect to server.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -623,6 +647,96 @@ const SettingsPage: React.FC = () => {
 
         </div>
       </main>
+
+      {/* ─── Delete Account Confirmation Modal ─── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => !isDeleting && setShowDeleteModal(false)}
+          />
+
+          {/* Dialog Card */}
+          <div className="relative bg-white w-full max-w-md rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 shadow-2xl border border-slate-200/90 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center z-10 max-h-[92vh] overflow-y-auto">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => !isDeleting && setShowDeleteModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-all cursor-pointer"
+              disabled={isDeleting}
+              aria-label="Close modal"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Danger Icon */}
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-3.5 text-rose-600 shadow-xs">
+              <Trash2 size={26} strokeWidth={2.2} />
+            </div>
+
+            {/* Badge */}
+            <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border mb-2.5 bg-rose-50 text-rose-700 border-rose-200/80">
+              Permanent Action
+            </span>
+
+            {/* Title */}
+            <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-2">
+              Delete Account
+            </h3>
+
+            {/* Description */}
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-4 leading-relaxed max-w-sm">
+              Are you sure you want to delete your FlyoraGo account? All your personal profile records, bookings, and active trips will be permanently erased.
+            </p>
+
+            {/* Warning Box */}
+            <div className="w-full p-3.5 mb-5 rounded-2xl bg-rose-50/60 border border-rose-100 text-left space-y-1.5 text-xs text-rose-800">
+              <div className="font-bold flex items-center gap-1.5">
+                <span>⚠️ Important Information:</span>
+              </div>
+              <ul className="text-[11px] text-rose-700 leading-snug space-y-1 pl-1">
+                <li>• This action cannot be reversed or undone.</li>
+                <li>• Any pending transactions or deliveries must be completed first.</li>
+                <li>• You will be immediately logged out upon deletion.</li>
+              </ul>
+            </div>
+
+            {deleteError && (
+              <div className="w-full p-3 mb-4 rounded-xl bg-red-100 border border-red-200 text-red-700 text-xs font-semibold text-center">
+                {deleteError}
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-2.5 w-full">
+              <button
+                onClick={confirmDeleteAccount}
+                disabled={isDeleting}
+                className="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-rose-500/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isDeleting ? (
+                  <span>Deleting Account...</span>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    <span>Permanently Delete My Account</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Cancel &amp; Keep Account
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

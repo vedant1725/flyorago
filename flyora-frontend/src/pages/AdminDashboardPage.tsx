@@ -4305,10 +4305,11 @@ const AdminDashboardPage: React.FC = () => {
                                 {!u.isStaff && (
                                   <button 
                                     onClick={() => deleteUser(u)} 
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" 
+                                    className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 font-extrabold text-xs transition flex items-center gap-1 shadow-2xs" 
                                     title="Delete User Account"
                                   >
-                                    <Trash2 size={13} />
+                                    <Trash2 size={12} />
+                                    <span>Delete</span>
                                   </button>
                                 )}
                               </div>
