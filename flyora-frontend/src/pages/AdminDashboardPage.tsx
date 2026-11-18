@@ -92,7 +92,20 @@ interface Booking {
 }
 interface Shipment { id: number; booking: { id: number; trip: Trip | null; sender: { first_name: string; last_name: string }; traveler: { first_name: string; last_name: string } } | null; status: string; created_at: string; }
 interface KycUser { userId: string; fullName: string; email: string; phone: string; documentType: string; frontImage: string; backImage: string; passportImage: string; selfieImage: string; status: string; rejectionReason?: string; submittedAt: string; }
-interface AppUser { id: string; fullName: string; email: string; phone: string; role: string; isActive: boolean; isStaff: boolean; dateJoined: string; kycStatus: string; }
+interface AppUser { 
+  id: string; 
+  fullName: string; 
+  email: string; 
+  phone: string; 
+  role: string; 
+  isActive: boolean; 
+  isStaff: boolean; 
+  dateJoined: string; 
+  kycStatus: string;
+  deletionRequested?: boolean;
+  deletionRequestedAt?: string | null;
+  deletionReason?: string | null;
+}
 interface Dispute { id: number; booking: number; booking_details: Booking; raised_by: number; raised_by_name: string; raised_by_email: string; reason: string; description: string; status: string; resolution: string; created_at: string; images: { id: number; image: string; uploaded_at: string }[]; }
 interface ContactMessage { id: number; full_name: string; email: string; phone?: string; user_type: string; subject: string; message: string; status: string; created_at: string; }
 interface Toast { id: number; type: 'success' | 'error' | 'info' | 'warning'; msg: string; }
@@ -543,6 +556,7 @@ const UserDetailsModal: React.FC<{
   onClose: () => void;
   onToggleActive: (u: AppUser) => void;
   onDelete: (u: AppUser) => void;
+  onRejectDeletion?: (u: AppUser) => void;
   onViewKyc: (k: KycUser) => void;
 }> = ({
   user,
@@ -553,6 +567,7 @@ const UserDetailsModal: React.FC<{
   onClose,
   onToggleActive,
   onDelete,
+  onRejectDeletion,
   onViewKyc
 }) => {
   return (
@@ -603,6 +618,41 @@ const UserDetailsModal: React.FC<{
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {user.deletionRequested && (
+            <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-200 text-left space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="flex items-center gap-1.5 text-xs font-black text-rose-900 uppercase tracking-wide">
+                  <AlertTriangle size={15} className="text-rose-600" /> Account Deletion Requested by User
+                </span>
+                {user.deletionRequestedAt && (
+                  <span className="text-[11px] text-rose-600 font-mono font-bold">
+                    Requested on: {new Date(user.deletionRequestedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-rose-800 font-medium">
+                User Reason: <span className="font-bold">{user.deletionReason ? `"${user.deletionReason}"` : 'No specific reason provided.'}</span>
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => onDelete(user)}
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-xs transition"
+                >
+                  Approve & Delete Account
+                </button>
+                {onRejectDeletion && (
+                  <button
+                    type="button"
+                    onClick={() => onRejectDeletion(user)}
+                    className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-slate-700 hover:bg-slate-100 font-extrabold text-xs transition"
+                  >
+                    Dismiss Request
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           {/* 4 Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
@@ -2430,6 +2480,19 @@ const AdminDashboardPage: React.FC = () => {
     }
   });
 
+  const handleRejectDeletion = async (user: AppUser) => {
+    try {
+      await api(`/api/admin/users/${user.id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'reject_deletion' })
+      });
+      setUsers(p => p.map(u => u.id === user.id ? { ...u, deletionRequested: false, deletionReason: null } : u));
+      toast('success', `Deletion request for ${user.fullName} dismissed.`);
+    } catch (e: any) {
+      toast('error', e.message || 'Failed to dismiss deletion request.');
+    }
+  };
+
   const handleKyc = async (userId: string, action: 'APPROVE' | 'REJECT', reason?: string) => {
     const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
     try {
@@ -2540,10 +2603,11 @@ const AdminDashboardPage: React.FC = () => {
     if (userKycFilter !== 'ALL' && (u.kycStatus || 'NOT_SUBMITTED').toUpperCase() !== userKycFilter.toUpperCase()) {
       return false;
     }
-    // 4. Status Filter (Active vs Blocked)
+    // 4. Status Filter (Active vs Blocked vs Deletion Requests)
     if (userStatusFilter !== 'ALL') {
       if (userStatusFilter === 'active' && !u.isActive) return false;
       if (userStatusFilter === 'blocked' && u.isActive) return false;
+      if (userStatusFilter === 'deletion_requested' && !u.deletionRequested) return false;
     }
     return true;
   }).sort((a, b) => {
@@ -3989,7 +4053,7 @@ const AdminDashboardPage: React.FC = () => {
               </div>
 
               {/* Quick Metrics Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div 
                   onClick={() => { setUserRoleFilter('ALL'); setUserStatusFilter('ALL'); setUserKycFilter('ALL'); setUserPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${userRoleFilter === 'ALL' && userStatusFilter === 'ALL' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
@@ -4025,6 +4089,19 @@ const AdminDashboardPage: React.FC = () => {
                   <div className={`text-[10px] font-black uppercase tracking-wider ${userStatusFilter === 'blocked' ? 'text-rose-200' : 'text-rose-600'}`}>Restricted / Blocked</div>
                   <div className="text-2xl font-black mt-1 text-rose-600" style={userStatusFilter === 'blocked' ? { color: 'white' } : {}}>
                     {users.filter(u => !u.isActive).length}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => { setUserStatusFilter(userStatusFilter === 'deletion_requested' ? 'ALL' : 'deletion_requested'); setUserPage(1); }}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer relative ${userStatusFilter === 'deletion_requested' ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${userStatusFilter === 'deletion_requested' ? 'text-amber-200' : 'text-amber-700'}`}>Deletion Requests</div>
+                  <div className="text-2xl font-black mt-1 text-amber-600 flex items-center justify-between" style={userStatusFilter === 'deletion_requested' ? { color: 'white' } : {}}>
+                    <span>{users.filter(u => u.deletionRequested).length}</span>
+                    {users.filter(u => u.deletionRequested).length > 0 && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                    )}
                   </div>
                 </div>
               </div>
@@ -4103,6 +4180,7 @@ const AdminDashboardPage: React.FC = () => {
                         <option value="ALL">All Status</option>
                         <option value="active">Active Only</option>
                         <option value="blocked">Blocked Only</option>
+                        <option value="deletion_requested">Deletion Requests (Action Needed)</option>
                       </select>
                     </div>
 
@@ -4261,22 +4339,36 @@ const AdminDashboardPage: React.FC = () => {
                               {u.dateJoined ? new Date(u.dateJoined).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                             </td>
 
-                            {/* Status (Active / Blocked) */}
+                            {/* Status (Active / Blocked / Deletion Requested) */}
                             <td className="whitespace-nowrap">
-                              <span
-                                className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-full ${
-                                  u.isActive ? 'admin-badge-active' : 'admin-badge-error'
-                                }`}
-                              >
-                                <span 
-                                  className="w-1.5 h-1.5 rounded-full" 
-                                  style={{
-                                    background: u.isActive ? '#059669' : '#DC2626', 
-                                    animation: u.isActive ? 'admin-status-dot 2s ease infinite' : 'none'
-                                  }} 
-                                />
-                                {u.isActive ? 'Active' : 'Blocked'}
-                              </span>
+                              {u.deletionRequested ? (
+                                <div className="flex flex-col gap-0.5 items-start">
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                                    Deletion Requested
+                                  </span>
+                                  {u.deletionReason && (
+                                    <span className="text-[10px] text-slate-500 truncate max-w-[150px]" title={u.deletionReason}>
+                                      "{u.deletionReason}"
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span
+                                  className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-full ${
+                                    u.isActive ? 'admin-badge-active' : 'admin-badge-error'
+                                  }`}
+                                >
+                                  <span 
+                                    className="w-1.5 h-1.5 rounded-full" 
+                                    style={{
+                                      background: u.isActive ? '#059669' : '#DC2626', 
+                                      animation: u.isActive ? 'admin-status-dot 2s ease infinite' : 'none'
+                                    }} 
+                                  />
+                                  {u.isActive ? 'Active' : 'Blocked'}
+                                </span>
+                              )}
                             </td>
 
                             {/* Actions (View Profile, Block/Unblock, Delete) */}
@@ -4303,14 +4395,30 @@ const AdminDashboardPage: React.FC = () => {
                                 </button>
 
                                 {!u.isStaff && (
-                                  <button 
-                                    onClick={() => deleteUser(u)} 
-                                    className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 font-extrabold text-xs transition flex items-center gap-1 shadow-2xs" 
-                                    title="Delete User Account"
-                                  >
-                                    <Trash2 size={12} />
-                                    <span>Delete</span>
-                                  </button>
+                                  <>
+                                    <button 
+                                      onClick={() => deleteUser(u)} 
+                                      className={`px-2.5 py-1 rounded-lg font-extrabold text-xs transition flex items-center gap-1 shadow-2xs ${
+                                        u.deletionRequested
+                                          ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                          : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80'
+                                      }`}
+                                      title={u.deletionRequested ? "Approve User Deletion Request" : "Delete User Account"}
+                                    >
+                                      <Trash2 size={12} />
+                                      <span>{u.deletionRequested ? 'Approve & Delete' : 'Delete'}</span>
+                                    </button>
+
+                                    {u.deletionRequested && (
+                                      <button
+                                        onClick={() => handleRejectDeletion(u)}
+                                        className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+                                        title="Dismiss Deletion Request"
+                                      >
+                                        Dismiss
+                                      </button>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </td>
@@ -5796,6 +5904,10 @@ const AdminDashboardPage: React.FC = () => {
             onDelete={(u) => {
               setViewUserDrawer(null);
               deleteUser(u);
+            }}
+            onRejectDeletion={(u) => {
+              setViewUserDrawer(null);
+              handleRejectDeletion(u);
             }}
             onViewKyc={(k) => {
               setViewUserDrawer(null);

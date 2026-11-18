@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Bell, ChevronDown, Camera, Trash2, Save, CheckCircle2,
   Mail, Phone, MessageCircle, Send, Users, ShieldCheck, Headphones,
-  Search, X, UserRound, ArrowRight, Copy, Check, Globe
+  Search, X, UserRound, ArrowRight, Copy, Check, Globe, AlertTriangle, Clock
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
@@ -38,10 +38,16 @@ const SettingsPage: React.FC = () => {
   const [emailTripNotify, setEmailTripNotify] = useState(true);
   const [escrowNotify, setEscrowNotify] = useState(true);
 
-  // Delete Account Modal State
+  // Delete Account Request State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [deletionRequested, setDeletionRequested] = useState(false);
+  const [deletionRequestedAt, setDeletionRequestedAt] = useState<string | null>(null);
+  const [existingDeleteReason, setExistingDeleteReason] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isCancellingDeletion, setIsCancellingDeletion] = useState(false);
 
   const fullName = `${firstName} ${lastName}`.trim() || 'User Account';
   const initials = fullName
@@ -81,6 +87,20 @@ const SettingsPage: React.FC = () => {
       }
     };
     fetchUser();
+
+    const fetchDeletionStatus = async () => {
+      try {
+        const res = await apiFetch('/api/profiles/delete-request/');
+        if (res?.status === 'success' && res.data) {
+          setDeletionRequested(!!res.data.deletion_requested);
+          setDeletionRequestedAt(res.data.deletion_requested_at || null);
+          setExistingDeleteReason(res.data.deletion_reason || '');
+        }
+      } catch (err) {
+        console.error('Failed to fetch deletion status', err);
+      }
+    };
+    fetchDeletionStatus();
   }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,28 +170,58 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteAccount = () => {
+  const handleOpenDeleteModal = () => {
     setDeleteError('');
+    setDeleteReason('');
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteAccount = async () => {
-    setIsDeleting(true);
+  const handleSubmitDeleteRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingDelete(true);
     setDeleteError('');
     try {
-      const res = await apiFetch('/api/profiles/me/', { method: 'DELETE' });
-      if (res?.status === 'success' || res?.message) {
-        localStorage.clear();
-        sessionStorage.clear();
+      const res = await apiFetch('/api/profiles/delete-request/', {
+        method: 'POST',
+        body: JSON.stringify({ reason: deleteReason.trim() }),
+      });
+      if (res?.status === 'success' || res?.data?.deletion_requested) {
+        setDeletionRequested(true);
+        setDeletionRequestedAt(res.data?.deletion_requested_at || new Date().toISOString());
+        setExistingDeleteReason(deleteReason.trim());
         setShowDeleteModal(false);
-        navigate('/login', { replace: true });
+        setShowSuccessModal(true);
       } else {
-        setDeleteError(res?.message || 'Failed to delete account. Please try again.');
+        setDeleteError(res?.message || 'Failed to submit account deletion request.');
       }
     } catch (err: any) {
       setDeleteError(err?.message || 'Failed to connect to server.');
     } finally {
-      setIsDeleting(false);
+      setIsSubmittingDelete(false);
+    }
+  };
+
+  const handleCancelDeleteRequest = async () => {
+    if (!window.confirm('Do you want to cancel your account deletion request and keep your FlyoraGo account?')) {
+      return;
+    }
+    setIsCancellingDeletion(true);
+    try {
+      const res = await apiFetch('/api/profiles/delete-request/', {
+        method: 'DELETE',
+      });
+      if (res?.status === 'success' || res?.data?.deletion_requested === false) {
+        setDeletionRequested(false);
+        setDeletionRequestedAt(null);
+        setExistingDeleteReason('');
+        setDeleteReason('');
+        setSuccessMsg('Account deletion request has been cancelled.');
+        setTimeout(() => setSuccessMsg(''), 4000);
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Failed to cancel deletion request.');
+    } finally {
+      setIsCancellingDeletion(false);
     }
   };
 
@@ -308,22 +358,57 @@ const SettingsPage: React.FC = () => {
         </div>
       </form>
 
-      {/* Danger Zone: Delete Account */}
-      <div className="bg-rose-50/70 border border-rose-200/80 rounded-[28px] p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-        <div>
-          <h2 className="text-base font-black text-rose-900 mb-1">Delete Account</h2>
-          <p className="text-xs text-rose-700 font-medium max-w-lg">
-            This will permanently close your traveler and sender profile and wipe your personal booking records.
-          </p>
+      {/* Danger Zone: Account Deletion Request Status */}
+      {deletionRequested ? (
+        <div className="bg-amber-50/80 border-2 border-amber-300 rounded-[28px] p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xs animate-in fade-in">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider border border-amber-300 flex items-center gap-1.5">
+                <Clock size={12} className="text-amber-700" /> Deletion Request Under Admin Review
+              </span>
+            </div>
+            <h2 className="text-base sm:text-lg font-black text-slate-800">
+              Your Account Deletion Request is Pending Admin Approval
+            </h2>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              You submitted a request to permanently delete your account{deletionRequestedAt ? ` on ${new Date(deletionRequestedAt).toLocaleDateString()}` : ''}. The FlyoraGo administration team is reviewing your active trips and escrow bookings. You can continue using your account normally until approved, or cancel this request at any time below.
+            </p>
+            {existingDeleteReason && (
+              <div className="text-xs bg-white/90 border border-amber-200 rounded-xl p-2.5 text-slate-700">
+                <span className="font-bold text-slate-900">Submitted Reason: </span>
+                <span className="italic">"{existingDeleteReason}"</span>
+              </div>
+            )}
+          </div>
+          <div className="shrink-0 flex flex-col gap-2 w-full md:w-auto">
+            <button
+              type="button"
+              onClick={handleCancelDeleteRequest}
+              disabled={isCancellingDeletion}
+              className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition shadow-2xs text-center cursor-pointer"
+            >
+              {isCancellingDeletion ? 'Cancelling Request...' : 'Cancel Deletion Request'}
+            </button>
+          </div>
         </div>
-        <button 
-          type="button" 
-          onClick={handleDeleteAccount} 
-          className="bg-white border border-rose-300 text-rose-600 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-rose-600 hover:text-white transition shrink-0 shadow-2xs"
-        >
-          Delete Account
-        </button>
-      </div>
+      ) : (
+        <div className="bg-rose-50/70 border border-rose-200/80 rounded-[28px] p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div>
+            <h2 className="text-base font-black text-rose-900 mb-1">Delete Account</h2>
+            <p className="text-xs text-rose-700 font-medium max-w-lg">
+              Submit a formal account deletion request to the FlyoraGo administration team. Your account will be safely closed after compliance review.
+            </p>
+          </div>
+          <button 
+            type="button" 
+            onClick={handleOpenDeleteModal} 
+            className="bg-white border border-rose-300 text-rose-600 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-rose-600 hover:text-white transition shrink-0 shadow-2xs cursor-pointer"
+          >
+            Delete Account
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -648,57 +733,75 @@ const SettingsPage: React.FC = () => {
         </div>
       </main>
 
-      {/* ─── Delete Account Confirmation Modal ─── */}
+      {/* ─── Delete Account Request Modal ─── */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => !isDeleting && setShowDeleteModal(false)}
+            onClick={() => !isSubmittingDelete && setShowDeleteModal(false)}
           />
 
           {/* Dialog Card */}
-          <div className="relative bg-white w-full max-w-md rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 shadow-2xl border border-slate-200/90 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center z-10 max-h-[92vh] overflow-y-auto">
-            
+          <form 
+            onSubmit={handleSubmitDeleteRequest}
+            className="relative bg-white w-full max-w-md rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 shadow-2xl border border-slate-200/90 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center z-10 max-h-[92vh] overflow-y-auto"
+          >
             {/* Close Button */}
             <button
-              onClick={() => !isDeleting && setShowDeleteModal(false)}
+              type="button"
+              onClick={() => !isSubmittingDelete && setShowDeleteModal(false)}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-all cursor-pointer"
-              disabled={isDeleting}
+              disabled={isSubmittingDelete}
               aria-label="Close modal"
             >
               <X size={16} />
             </button>
 
-            {/* Danger Icon */}
-            <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-3.5 text-rose-600 shadow-xs">
-              <Trash2 size={26} strokeWidth={2.2} />
+            {/* Warning Icon */}
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-3.5 text-amber-600 shadow-xs">
+              <AlertTriangle size={26} strokeWidth={2.2} />
             </div>
 
             {/* Badge */}
-            <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border mb-2.5 bg-rose-50 text-rose-700 border-rose-200/80">
-              Permanent Action
+            <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border mb-2.5 bg-amber-50 text-amber-800 border-amber-200">
+              Admin Review Required
             </span>
 
             {/* Title */}
             <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-2">
-              Delete Account
+              Request Account Deletion
             </h3>
 
             {/* Description */}
             <p className="text-xs sm:text-sm text-slate-500 font-medium mb-4 leading-relaxed max-w-sm">
-              Are you sure you want to delete your FlyoraGo account? All your personal profile records, bookings, and active trips will be permanently erased.
+              Account deletion requests are submitted to our administration team for compliance verification. You will <strong>not</strong> be logged out immediately.
             </p>
 
-            {/* Warning Box */}
-            <div className="w-full p-3.5 mb-5 rounded-2xl bg-rose-50/60 border border-rose-100 text-left space-y-1.5 text-xs text-rose-800">
-              <div className="font-bold flex items-center gap-1.5">
-                <span>⚠️ Important Information:</span>
+            {/* Reason Field */}
+            <div className="w-full text-left mb-4">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                Reason for Leaving (Optional)
+              </label>
+              <textarea
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="Help us understand why you are closing your account (e.g., duplicate account, no longer traveling, etc.)..."
+                rows={3}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition resize-none"
+              />
+            </div>
+
+            {/* Information Box */}
+            <div className="w-full p-3.5 mb-5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left space-y-1.5 text-xs text-slate-600">
+              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-flyora-teal" />
+                <span>How Deletion Review Works:</span>
               </div>
-              <ul className="text-[11px] text-rose-700 leading-snug space-y-1 pl-1">
-                <li>• This action cannot be reversed or undone.</li>
-                <li>• Any pending transactions or deliveries must be completed first.</li>
-                <li>• You will be immediately logged out upon deletion.</li>
+              <ul className="text-[11px] leading-snug space-y-1 pl-1 text-slate-500">
+                <li>• Admin checks for any active luggage trips or in-transit parcels.</li>
+                <li>• Pending escrow balances will be settled prior to account closure.</li>
+                <li>• You can keep using your account until the admin confirms deletion.</li>
               </ul>
             </div>
 
@@ -711,29 +814,95 @@ const SettingsPage: React.FC = () => {
             {/* Buttons */}
             <div className="flex flex-col gap-2.5 w-full">
               <button
-                onClick={confirmDeleteAccount}
-                disabled={isDeleting}
+                type="submit"
+                disabled={isSubmittingDelete}
                 className="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-rose-500/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                {isDeleting ? (
-                  <span>Deleting Account...</span>
+                {isSubmittingDelete ? (
+                  <span>Submitting Request...</span>
                 ) : (
                   <>
                     <Trash2 size={16} />
-                    <span>Permanently Delete My Account</span>
+                    <span>Submit Deletion Request</span>
                   </>
                 )}
               </button>
 
               <button
+                type="button"
                 onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
+                disabled={isSubmittingDelete}
                 className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
               >
-                Cancel &amp; Keep Account
+                Keep Account
               </button>
             </div>
+          </form>
+        </div>
+      )}
 
+      {/* ─── Deletion Request Submitted Confirmation Modal ─── */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setShowSuccessModal(false)}
+          />
+
+          {/* Dialog Card */}
+          <div className="relative bg-white w-full max-w-md rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 shadow-2xl border border-slate-200/90 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center z-10">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-all cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Success Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mb-4 text-flyora-teal shadow-xs">
+              <CheckCircle2 size={32} strokeWidth={2.2} />
+            </div>
+
+            {/* Badge */}
+            <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border mb-2.5 bg-teal-50 text-flyora-teal border-teal-200">
+              Request Sent to Admin
+            </span>
+
+            {/* Title */}
+            <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-2">
+              Request Submitted Successfully!
+            </h3>
+
+            {/* Subtitle / Details */}
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-5 leading-relaxed max-w-sm">
+              Your account deletion request has been forwarded to the FlyoraGo admin dashboard. An administrator will review your account status before processing.
+            </p>
+
+            <div className="w-full p-4 mb-5 rounded-2xl bg-teal-50/60 border border-teal-200 text-left space-y-2 text-xs text-slate-700">
+              <div className="flex items-center gap-2 font-black text-flyora-teal text-xs">
+                <Clock size={14} />
+                <span>What happens next?</span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                • You remain active and logged in.
+              </p>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                • The admin will verify no packages are in-transit and approve deletion.
+              </p>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                • If you change your mind, you can cancel your request from Settings anytime.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-3 px-4 bg-flyora-teal hover:bg-[#0F766E] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-teal-500/20 hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              Got It, Continue
+            </button>
           </div>
         </div>
       )}
