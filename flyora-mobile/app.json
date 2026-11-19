@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "FlyoraGo",
+    "slug": "flyorago",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon-1024.png",
+    "scheme": "flyorago",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "icon": "./assets/images/icon-1024.png",
+      "bundleIdentifier": "com.flyorago.app"
+    },
+    "android": {
+      "package": "com.flyorago.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#F4FCFA",
+        "foregroundImage": "./assets/images/icon-1024.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/app-icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F4FCFA",
+          "image": "./assets/images/flyorago-logo-transparent.png",
+          "imageWidth": 180
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

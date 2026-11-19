@@ -1,0 +1,442 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { FlyoraColors, BorderRadius, Shadows } from '../constants/theme';
+import { useAuth } from '../context/AuthContext';
+import { SplashView } from '../components/SplashView';
+import { LoginScreen } from '../screens/Auth/LoginScreen';
+import { SignupScreen } from '../screens/Auth/SignupScreen';
+import { DashboardScreen } from '../screens/Dashboard/DashboardScreen';
+import { TripsScreen } from '../screens/Trips/TripsScreen';
+import { ShipmentsScreen } from '../screens/Shipments/ShipmentsScreen';
+import { WalletScreen } from '../screens/Wallet/WalletScreen';
+import { KycScreen } from '../screens/Kyc/KycScreen';
+import { ChatScreen } from '../screens/Chat/ChatScreen';
+import { ProfileScreen } from '../screens/Profile/ProfileScreen';
+
+type MainTabKey = 'dashboard' | 'trips' | 'wallet' | 'shipments' | 'profile';
+type SubScreenKey = 'chat' | 'kyc' | null;
+
+export default function AppEntry() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+
+  // Navigation state: 5 Main Bottom Tabs + Chat/KYC Subscreens
+  const [mainTab, setMainTab] = useState<MainTabKey>('dashboard');
+  const [activeSubScreen, setActiveSubScreen] = useState<SubScreenKey>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 1. Initial Splash Screen
+  if (showSplash) {
+    return <SplashView onFinish={() => setShowSplash(false)} />;
+  }
+
+  // 2. Auth loading state
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={FlyoraColors.primary} />
+        <Text style={styles.loadingText}>Connecting to FlyoraGo...</Text>
+      </View>
+    );
+  }
+
+  // 3. Unauthenticated User Flow (Login / Signup with Google)
+  if (!isAuthenticated) {
+    if (authView === 'signup') {
+      return <SignupScreen onNavigateToLogin={() => setAuthView('login')} />;
+    }
+    return <LoginScreen onNavigateToSignup={() => setAuthView('signup')} />;
+  }
+
+  // 4. Authenticated Navigation Handlers
+  const handleOpenChat = () => setActiveSubScreen('chat');
+  const handleOpenKyc = () => setActiveSubScreen('kyc');
+  const handleCloseSubScreen = () => setActiveSubScreen(null);
+
+  const renderActiveView = () => {
+    // If a subscreen (Chat / KYC) is active
+    if (activeSubScreen) {
+      switch (activeSubScreen) {
+        case 'chat':
+          return (
+            <View style={{ flex: 1 }}>
+              <SubScreenHeader title="Direct Coordination" onBack={handleCloseSubScreen} />
+              <ChatScreen />
+            </View>
+          );
+        case 'kyc':
+          return (
+            <View style={{ flex: 1 }}>
+              <SubScreenHeader title="Identity Verification" onBack={handleCloseSubScreen} />
+              <KycScreen />
+            </View>
+          );
+      }
+    }
+
+    // 5 Main Tabs
+    switch (mainTab) {
+      case 'dashboard':
+        return (
+          <DashboardScreen
+            onNavigateTab={(tab) => {
+              if (tab === 'chat') handleOpenChat();
+              else if (tab === 'kyc') handleOpenKyc();
+              else if (tab === 'trips' || tab === 'shipments' || tab === 'wallet' || tab === 'profile') {
+                setMainTab(tab as MainTabKey);
+              }
+            }}
+            onOpenChat={handleOpenChat}
+            onPostTrip={() => setMainTab('trips')}
+            onPostShipment={() => setMainTab('shipments')}
+          />
+        );
+      case 'trips':
+        return <TripsScreen onOpenChat={handleOpenChat} />;
+      case 'wallet':
+        return <WalletScreen onOpenChat={handleOpenChat} />;
+      case 'shipments':
+        return <ShipmentsScreen onOpenChat={handleOpenChat} />;
+      case 'profile':
+        return (
+          <ProfileScreen
+            onNavigateTab={(tab) => {
+              if (tab === 'kyc') {
+                handleOpenKyc();
+              } else if (tab === 'wallet') {
+                setMainTab('wallet');
+              }
+            }}
+          />
+        );
+    }
+  };
+
+  const isWalletActive = !activeSubScreen && mainTab === 'wallet';
+
+  return (
+    <View style={styles.appContainer}>
+      <View style={styles.screenArea}>{renderActiveView()}</View>
+
+      {/* World-Class 5-Tab Navigation Bar with Elevated Center Wallet Button */}
+      <SafeAreaView style={styles.bottomNavWrapper}>
+        <View style={styles.bottomNavContainer}>
+          {/* 1. Left Tab 1: Home */}
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => {
+              setActiveSubScreen(null);
+              setMainTab('dashboard');
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.iconBox,
+                !activeSubScreen && mainTab === 'dashboard' && styles.iconBoxActive,
+              ]}
+            >
+              <Ionicons
+                name={!activeSubScreen && mainTab === 'dashboard' ? 'grid' : 'grid-outline'}
+                size={22}
+                color={!activeSubScreen && mainTab === 'dashboard' ? '#089A8D' : '#64748B'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.navLabel,
+                !activeSubScreen && mainTab === 'dashboard' && styles.navLabelActive,
+              ]}
+            >
+              Home
+            </Text>
+          </TouchableOpacity>
+
+          {/* 2. Left Tab 2: Trips */}
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => {
+              setActiveSubScreen(null);
+              setMainTab('trips');
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.iconBox,
+                !activeSubScreen && mainTab === 'trips' && styles.iconBoxActive,
+              ]}
+            >
+              <Ionicons
+                name={!activeSubScreen && mainTab === 'trips' ? 'airplane' : 'airplane-outline'}
+                size={22}
+                color={!activeSubScreen && mainTab === 'trips' ? '#089A8D' : '#64748B'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.navLabel,
+                !activeSubScreen && mainTab === 'trips' && styles.navLabelActive,
+              ]}
+            >
+              Trips
+            </Text>
+          </TouchableOpacity>
+
+          {/* 3. CENTER: Floating Masterpiece Wallet Button */}
+          <View style={styles.centerFloatingWrap}>
+            <TouchableOpacity
+              style={styles.centerFabTouchable}
+              onPress={() => {
+                setActiveSubScreen(null);
+                setMainTab('wallet');
+              }}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={
+                  isWalletActive
+                    ? ['#033D37', '#089A8D', '#14B8A6']
+                    : ['#044C47', '#066B65', '#089A8D']
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  styles.centerFabGradient,
+                  isWalletActive && styles.centerFabActiveRing,
+                ]}
+              >
+                <Ionicons
+                  name={isWalletActive ? 'shield-checkmark' : 'wallet-outline'}
+                  size={26}
+                  color="#FFFFFF"
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+            <Text
+              style={[
+                styles.centerFabLabel,
+                isWalletActive && styles.centerFabLabelActive,
+              ]}
+            >
+              Wallet
+            </Text>
+          </View>
+
+          {/* 4. Right Tab 1: Sender */}
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => {
+              setActiveSubScreen(null);
+              setMainTab('shipments');
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.iconBox,
+                !activeSubScreen && mainTab === 'shipments' && styles.iconBoxActive,
+              ]}
+            >
+              <Ionicons
+                name={!activeSubScreen && mainTab === 'shipments' ? 'cube' : 'cube-outline'}
+                size={22}
+                color={!activeSubScreen && mainTab === 'shipments' ? '#089A8D' : '#64748B'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.navLabel,
+                !activeSubScreen && mainTab === 'shipments' && styles.navLabelActive,
+              ]}
+            >
+              Sender
+            </Text>
+          </TouchableOpacity>
+
+          {/* 5. Right Tab 2: Profile */}
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => {
+              setActiveSubScreen(null);
+              setMainTab('profile');
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.iconBox,
+                !activeSubScreen && mainTab === 'profile' && styles.iconBoxActive,
+              ]}
+            >
+              <Ionicons
+                name={!activeSubScreen && mainTab === 'profile' ? 'person' : 'person-outline'}
+                size={22}
+                color={!activeSubScreen && mainTab === 'profile' ? '#089A8D' : '#64748B'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.navLabel,
+                !activeSubScreen && mainTab === 'profile' && styles.navLabelActive,
+              ]}
+            >
+              Profile
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+// Subscreen Header for back navigation
+const SubScreenHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
+  <View style={styles.subHeader}>
+    <TouchableOpacity style={styles.subBackBtn} onPress={onBack} activeOpacity={0.7}>
+      <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+    </TouchableOpacity>
+    <Text style={styles.subHeaderTitle}>{title}</Text>
+    <View style={{ width: 36 }} />
+  </View>
+);
+
+const styles = StyleSheet.create({
+  appContainer: {
+    flex: 1,
+    backgroundColor: '#F8FCFB',
+  },
+  screenArea: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#F4FCFA',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 14,
+    fontSize: 14,
+    color: '#089A8D',
+    fontWeight: '700',
+  },
+  subHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#033D37',
+    paddingTop: Platform.OS === 'ios' ? 52 : 38,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  subBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  subHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  bottomNavWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E6FAF6',
+    ...Shadows.card,
+  },
+  bottomNavContainer: {
+    flexDirection: 'row',
+    height: Platform.OS === 'ios' ? 62 : 66,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
+    position: 'relative',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 2,
+  },
+  iconBox: {
+    width: 38,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconBoxActive: {
+    backgroundColor: '#E6FAF6',
+  },
+  navLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  navLabelActive: {
+    color: '#089A8D',
+    fontWeight: '800',
+  },
+  centerFloatingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: -24,
+    zIndex: 10,
+  },
+  centerFabTouchable: {
+    ...Shadows.tealGlow,
+  },
+  centerFabGradient: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#089A8D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  centerFabActiveRing: {
+    borderColor: '#CCF5EF',
+  },
+  centerFabLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '700',
+    marginTop: 3,
+  },
+  centerFabLabelActive: {
+    color: '#089A8D',
+    fontWeight: '900',
+  },
+});
