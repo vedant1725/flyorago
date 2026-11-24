@@ -9,16 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
   Dimensions,
-  SafeAreaView,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { FlyoraColors, BorderRadius, Shadows } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
+import { apiFetch } from '../../services/api';
+import { getSafeHeaderPaddingTop } from '../../constants/responsive';
 
 const { width } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ interface SignupScreenProps {
 
 export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin }) => {
   const { signup, verifyOtp, loginWithGoogle } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -51,6 +53,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [resendCooldown, setResendCooldown] = useState(60);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     let timer: any;
@@ -59,6 +62,28 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
     }
     return () => clearTimeout(timer);
   }, [isOtpStep, resendCooldown]);
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
+    setOtpError('');
+    try {
+      const res = await apiFetch('/api/auth/request-otp/', {
+        method: 'POST',
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      if (!res.success) {
+        setOtpError(res.message || 'Failed to resend code.');
+      } else {
+        setResendCooldown(60);
+        Alert.alert('Code Sent', `A fresh 6-digit verification code was sent to ${email}`);
+      }
+    } catch (e: any) {
+      setOtpError(e.message || 'Error resending code.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSignup = async () => {
     if (!fullName.trim()) {
@@ -89,11 +114,14 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
     const firstName = nameParts[0] || 'Member';
     const lastName = nameParts.slice(1).join(' ') || '';
 
+    const cleanDigits = mobileNumber.replace(/\D/g, '');
+    const formattedPhone = cleanDigits.length >= 10 ? `${dialCode}${cleanDigits}` : '';
+
     const res = await signup({
       firstName,
       lastName,
       email: email.trim().toLowerCase(),
-      phone: `${dialCode}${mobileNumber.trim()}`,
+      phone: formattedPhone,
       password,
     });
 
@@ -135,164 +163,232 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Atmospheric Soft Mint Gradient */}
+      {/* Aqua Water Fluid Gradient: Deep Aqua Water-Green blending into crisp Pure White */}
       <LinearGradient
-        colors={['#CCF5EF', '#F0FCFA', '#FFFFFF']}
-        locations={[0, 0.25, 0.7]}
+        colors={['#A7F3D0', '#CCFBF1', '#E6FAF6', '#F4FBF9', '#FFFFFF', '#FFFFFF']}
+        locations={[0, 0.18, 0.38, 0.6, 0.85, 1]}
         style={StyleSheet.absoluteFill}
       />
+
+      {/* Decorative Water Glow Waves & Plane Watermark */}
+      <View style={styles.waterGlowCircle} pointerEvents="none" />
+      <View style={styles.planeArtWrap} pointerEvents="none">
+        <ExpoImage
+          source={require('../../../assets/images/home-header-plane.png')}
+          style={styles.planeArt}
+          contentFit="contain"
+          priority="high"
+        />
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: getSafeHeaderPaddingTop(insets.top) + 4 },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* Top Bar with Back Arrow */}
+          {/* Top Bar with Back Button */}
           <View style={styles.topBar}>
             <TouchableOpacity
               style={styles.backBtn}
               onPress={onNavigateToLogin}
               hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
             >
-              <Ionicons name="chevron-back" size={24} color={FlyoraColors.textNavy} />
+              <Ionicons name="chevron-back" size={22} color="#0D9488" />
             </TouchableOpacity>
             <View style={{ width: 40 }} />
           </View>
 
-          {/* Official Flyorago Branding */}
-          <View style={styles.brandingBlock}>
-            <Image
-              source={require('../../../assets/images/flyorago-logo-transparent.png')}
-              style={styles.brandLogo}
-              resizeMode="contain"
+          {/* Original Official Flyorago 3D Box & Flight Logo */}
+          <View style={styles.logoBlock}>
+            <ExpoImage
+              source={require('../../../assets/images/flyorago-original-symbol.png')}
+              style={styles.originalLogo}
+              contentFit="contain"
+              priority="high"
             />
+            <Text style={styles.brandTitleText}>
+              FLYORA<Text style={styles.brandTitleAccent}>GO</Text>
+            </Text>
           </View>
 
-          {/* Heading Block */}
+          {/* Heading Greeting */}
           <View style={styles.headingBlock}>
-            <Text style={styles.headingTitle}>Create Account</Text>
-            <Text style={styles.headingSubtitle}>
-              Join Flyorago and start shipping smarter
+            <View style={styles.pillBadge}>
+              <Ionicons name="globe-outline" size={13} color="#0D9488" />
+              <Text style={styles.pillBadgeText}>Global Community</Text>
+            </View>
+            <Text style={styles.welcomeTitle}>Create Account</Text>
+            <Text style={styles.welcomeSub}>
+              Earn money while traveling & send parcels globally with escrow security
             </Text>
           </View>
 
           {/* Error Banner */}
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={17} color={FlyoraColors.danger} />
+              <Ionicons name="alert-circle" size={18} color="#DC2626" />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           ) : null}
 
           {/* OTP Step View */}
           {isOtpStep ? (
-            <View style={styles.otpCard}>
-              <Ionicons name="mail-open-outline" size={40} color={FlyoraColors.primary} />
-              <Text style={styles.otpTitle}>Verify Your Email</Text>
-              <Text style={styles.otpDesc}>
-                We sent a 6-digit confirmation code to{' '}
-                <Text style={{ fontWeight: '700', color: FlyoraColors.textNavy }}>{email}</Text>
-              </Text>
+            <View style={styles.formContainer}>
+              <View style={styles.otpHeaderBox}>
+                <View style={styles.otpIconCircle}>
+                  <Ionicons name="mail-open" size={28} color="#0D9488" />
+                </View>
+                <Text style={styles.otpTitle}>Verify Your Email</Text>
+                <Text style={styles.otpDesc}>
+                  We sent a 6-digit confirmation code to{' '}
+                  <Text style={{ fontWeight: '800', color: '#0D9488' }}>{email}</Text>
+                </Text>
+              </View>
 
-              {otpError ? <Text style={styles.otpErrorText}>{otpError}</Text> : null}
+              {otpError ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle" size={17} color="#DC2626" />
+                  <Text style={styles.errorText}>{otpError}</Text>
+                </View>
+              ) : null}
 
-              <TextInput
-                style={styles.otpInput}
-                placeholder="• • • • • •"
-                placeholderTextColor={FlyoraColors.textPlaceholder}
-                keyboardType="number-pad"
-                maxLength={6}
-                value={otpCode}
-                onChangeText={setOtpCode}
-              />
+              <View style={styles.fieldWrapper}>
+                <Text style={styles.fieldLabel}>VERIFICATION CODE</Text>
+                <TextInput
+                  style={styles.otpInputField}
+                  placeholder="• • • • • •"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={otpCode}
+                  onChangeText={setOtpCode}
+                />
+              </View>
 
               <TouchableOpacity
-                style={styles.actionBtn}
+                style={styles.loginBtn}
                 onPress={handleVerifyOtp}
-                disabled={otpLoading}
+                disabled={otpLoading || otpCode.trim().length !== 6}
+                activeOpacity={0.88}
               >
-                {otpLoading ? (
-                  <ActivityIndicator color={FlyoraColors.white} />
-                ) : (
-                  <Text style={styles.actionBtnText}>Confirm Code & Continue</Text>
-                )}
+                <LinearGradient
+                  colors={['#0D9488', '#0F766E', '#065F56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.btnGradient}
+                >
+                  {otpLoading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <View style={styles.btnContent}>
+                      <Text style={styles.loginBtnText}>Verify & Continue</Text>
+                      <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                    </View>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Resend Code Button matching Web */}
+              <TouchableOpacity
+                style={styles.resendCodeRow}
+                onPress={handleResendOtp}
+                disabled={resendCooldown > 0 || resending}
+              >
+                <Ionicons
+                  name="refresh-outline"
+                  size={15}
+                  color={resendCooldown > 0 ? '#94A3B8' : '#0D9488'}
+                />
+                <Text
+                  style={[
+                    styles.resendCodeText,
+                    resendCooldown > 0 && { color: '#94A3B8' },
+                  ]}
+                >
+                  {resending
+                    ? 'Sending code...'
+                    : resendCooldown > 0
+                    ? `Resend Code (${resendCooldown}s)`
+                    : 'Resend Code'}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={{ marginTop: 14 }}
+                style={styles.changeEmailBtn}
                 onPress={() => setIsOtpStep(false)}
               >
-                <Text style={{ fontSize: 13, color: FlyoraColors.primary, fontWeight: '700' }}>
-                  ← Change Email Address
-                </Text>
+                <Text style={styles.changeEmailText}>Back to Signup</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            /* Registration Form Fields */
+            /* Registration Form Fields in Seamless Aqua-White Layout */
             <View style={styles.formContainer}>
-              {/* Full Name Field */}
-              <View style={styles.inputPill}>
-                <Ionicons
-                  name="person-outline"
-                  size={19}
-                  color={FlyoraColors.primary}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Full Name"
-                  placeholderTextColor={FlyoraColors.textPlaceholder}
-                  value={fullName}
-                  onChangeText={(text) => {
-                    setFullName(text);
-                    if (errorMessage) setErrorMessage('');
-                  }}
-                  autoCapitalize="words"
-                />
-              </View>
-
-              {/* Email Address Field */}
-              <View style={styles.inputPill}>
-                <Ionicons
-                  name="mail-outline"
-                  size={19}
-                  color={FlyoraColors.primary}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Email Address"
-                  placeholderTextColor={FlyoraColors.textPlaceholder}
-                  value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    if (errorMessage) setErrorMessage('');
-                  }}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-              </View>
-
-              {/* Mobile Number Row with Dial Code */}
-              <View style={styles.phoneRow}>
-                <View style={styles.dialCodePill}>
-                  <Ionicons name="call-outline" size={17} color={FlyoraColors.primary} />
-                  <Text style={styles.dialCodeText}>{dialCode}</Text>
-                  <Ionicons name="chevron-down" size={13} color={FlyoraColors.textMuted} />
-                </View>
-                <View style={[styles.inputPill, { flex: 1, marginBottom: 0 }]}>
+              {/* Full Name */}
+              <View style={styles.fieldWrapper}>
+                <Text style={styles.fieldLabel}>FULL NAME</Text>
+                <View style={styles.inputAquaGlass}>
+                  <View style={styles.inputIconCircle}>
+                    <Ionicons name="person-outline" size={18} color="#0D9488" />
+                  </View>
                   <TextInput
-                    style={styles.inputField}
-                    placeholder="Mobile Number"
-                    placeholderTextColor={FlyoraColors.textPlaceholder}
+                    style={styles.textInput}
+                    placeholder="e.g. Akash Patel"
+                    placeholderTextColor="#94A3B8"
+                    value={fullName}
+                    onChangeText={(text) => {
+                      setFullName(text);
+                      if (errorMessage) setErrorMessage('');
+                    }}
+                    autoCapitalize="words"
+                  />
+                </View>
+              </View>
+
+              {/* Email Address */}
+              <View style={styles.fieldWrapper}>
+                <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
+                <View style={styles.inputAquaGlass}>
+                  <View style={styles.inputIconCircle}>
+                    <Ionicons name="mail-outline" size={18} color="#0D9488" />
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="name@example.com"
+                    placeholderTextColor="#94A3B8"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errorMessage) setErrorMessage('');
+                    }}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoCorrect={false}
+                  />
+                </View>
+              </View>
+
+              {/* Phone Number */}
+              <View style={styles.fieldWrapper}>
+                <Text style={styles.fieldLabel}>MOBILE PHONE (OPTIONAL)</Text>
+                <View style={styles.inputAquaGlass}>
+                  <View style={styles.dialCodeBox}>
+                    <Text style={styles.dialCodeText}>{dialCode}</Text>
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="98765 43210"
+                    placeholderTextColor="#94A3B8"
                     value={mobileNumber}
                     onChangeText={setMobileNumber}
                     keyboardType="phone-pad"
@@ -300,90 +396,88 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
                 </View>
               </View>
 
-              {/* Password Field */}
-              <View style={[styles.inputPill, { marginTop: 12 }]}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={19}
-                  color={FlyoraColors.primary}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Password"
-                  placeholderTextColor={FlyoraColors.textPlaceholder}
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (errorMessage) setErrorMessage('');
-                  }}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={19}
-                    color={FlyoraColors.textSubtle}
+              {/* Password */}
+              <View style={styles.fieldWrapper}>
+                <Text style={styles.fieldLabel}>PASSWORD</Text>
+                <View style={styles.inputAquaGlass}>
+                  <View style={styles.inputIconCircle}>
+                    <Ionicons name="lock-closed-outline" size={18} color="#0D9488" />
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="At least 6 characters"
+                    placeholderTextColor="#94A3B8"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errorMessage) setErrorMessage('');
+                    }}
+                    secureTextEntry={!showPassword}
                   />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    style={styles.eyeBtn}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color="#64748B"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {/* Confirm Password Field */}
-              <View style={styles.inputPill}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={19}
-                  color={FlyoraColors.primary}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Confirm Password"
-                  placeholderTextColor={FlyoraColors.textPlaceholder}
-                  value={confirmPassword}
-                  onChangeText={(text) => {
-                    setConfirmPassword(text);
-                    if (errorMessage) setErrorMessage('');
-                  }}
-                  secureTextEntry={!showConfirmPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons
-                    name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={19}
-                    color={FlyoraColors.textSubtle}
+              {/* Confirm Password */}
+              <View style={styles.fieldWrapper}>
+                <Text style={styles.fieldLabel}>CONFIRM PASSWORD</Text>
+                <View style={styles.inputAquaGlass}>
+                  <View style={styles.inputIconCircle}>
+                    <Ionicons name="shield-checkmark-outline" size={18} color="#0D9488" />
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Re-enter password"
+                    placeholderTextColor="#94A3B8"
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errorMessage) setErrorMessage('');
+                    }}
+                    secureTextEntry={!showConfirmPassword}
                   />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    style={styles.eyeBtn}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color="#64748B"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {/* Terms and Conditions Checkbox */}
+              {/* Terms and Privacy Checkbox */}
               <TouchableOpacity
                 style={styles.termsRow}
                 onPress={() => setAgreed(!agreed)}
                 activeOpacity={0.8}
               >
                 <View style={[styles.checkbox, agreed && styles.checkboxActive]}>
-                  {agreed && (
-                    <Ionicons name="checkmark" size={12} color={FlyoraColors.white} />
-                  )}
+                  {agreed && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
                 </View>
                 <Text style={styles.termsText}>
-                  I agree to the{' '}
+                  I agree to Flyorago's{' '}
                   <Text
                     style={styles.termsLink}
                     onPress={() => Alert.alert('Terms & Conditions', 'FlyoraGo luggage sharing policy.')}
                   >
-                    Terms & Conditions
+                    Terms of Service
                   </Text>{' '}
-                  and{' '}
+                  &{' '}
                   <Text
                     style={styles.termsLink}
                     onPress={() => Alert.alert('Privacy Policy', 'FlyoraGo privacy policy.')}
@@ -393,21 +487,28 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
                 </Text>
               </TouchableOpacity>
 
-              {/* Primary Teal Create Account Button */}
+              {/* Create Account Button */}
               <TouchableOpacity
-                style={styles.actionBtn}
+                style={styles.loginBtn}
                 onPress={handleSignup}
                 disabled={loading}
                 activeOpacity={0.88}
               >
-                {loading ? (
-                  <ActivityIndicator color={FlyoraColors.white} size="small" />
-                ) : (
-                  <View style={styles.btnContent}>
-                    <Text style={styles.actionBtnText}>Create Account</Text>
-                    <Ionicons name="arrow-forward" size={17} color={FlyoraColors.white} />
-                  </View>
-                )}
+                <LinearGradient
+                  colors={['#0D9488', '#0F766E', '#065F56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.btnGradient}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <View style={styles.btnContent}>
+                      <Text style={styles.loginBtnText}>Create Account</Text>
+                      <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                    </View>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
 
               {/* Divider */}
@@ -417,229 +518,307 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigateToLogin })
                 <View style={styles.dividerLine} />
               </View>
 
-              {/* Google Sign Up Button (Apple Removed as requested) */}
+              {/* Google Social Button */}
               <TouchableOpacity
-                style={styles.googleBtn}
+                style={styles.googleAquaBtn}
                 onPress={handleGoogleSignup}
                 disabled={googleLoading || loading}
                 activeOpacity={0.85}
               >
                 {googleLoading ? (
-                  <ActivityIndicator size="small" color={FlyoraColors.primary} />
+                  <ActivityIndicator size="small" color="#0D9488" />
                 ) : (
                   <View style={styles.googleBtnInner}>
-                    <Image
+                    <ExpoImage
                       source={require('../../../assets/images/google-g.png')}
-                      style={styles.googleIconImage}
-                      resizeMode="contain"
+                      style={styles.googleIcon}
+                      contentFit="contain"
                     />
                     <Text style={styles.googleBtnText}>Continue with Google</Text>
                   </View>
                 )}
               </TouchableOpacity>
 
-              {/* Log In Redirect Footer */}
+              {/* Footer Prompt */}
               <View style={styles.footerRow}>
                 <Text style={styles.footerPrompt}>Already have an account? </Text>
                 <TouchableOpacity onPress={onNavigateToLogin}>
-                  <Text style={styles.footerLink}>Log In</Text>
+                  <Text style={styles.footerLink}>Sign In</Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* Bottom Skyline Artwork from Reference */}
-      <View style={styles.bottomSkylineContainer} pointerEvents="none">
-        <Image
-          source={require('../../../assets/images/signup-skyline-art.png')}
-          style={styles.bottomSkylineImage}
-          resizeMode="cover"
-        />
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#F6FBF9',
+    backgroundColor: '#FFFFFF',
   },
   keyboardContainer: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 24 : 10,
-    paddingBottom: 75,
+    paddingHorizontal: 22,
+    paddingBottom: 40,
+    justifyContent: 'center',
+  },
+  waterGlowCircle: {
+    position: 'absolute',
+    top: -50,
+    left: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(45, 212, 191, 0.25)',
+    zIndex: 0,
+  },
+  planeArtWrap: {
+    position: 'absolute',
+    top: 20,
+    right: -25,
+    width: 240,
+    height: 240,
+    opacity: 0.14,
+    zIndex: 0,
+  },
+  planeArt: {
+    width: '100%',
+    height: '100%',
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
+    zIndex: 2,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2,
+    borderColor: '#CCFBF1',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  brandingBlock: {
+  logoBlock: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-    marginBottom: 2,
+    marginBottom: 10,
+    zIndex: 2,
   },
-  brandLogo: {
-    width: 155,
-    height: 60,
+  originalLogo: {
+    width: 90,
+    height: 90,
+    marginBottom: 6,
+  },
+  brandTitleText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0A1628',
+    letterSpacing: 1.2,
+  },
+  brandTitleAccent: {
+    color: '#0D9488',
   },
   headingBlock: {
     alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 14,
+    marginBottom: 16,
+    zIndex: 2,
   },
-  headingTitle: {
-    fontSize: 24,
+  pillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+    marginBottom: 8,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  pillBadgeText: {
+    fontSize: 11,
     fontWeight: '800',
-    color: FlyoraColors.textNavy,
-    letterSpacing: -0.4,
+    color: '#0F766E',
+    letterSpacing: 0.4,
   },
-  headingSubtitle: {
+  welcomeTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#062738',
+    letterSpacing: -0.5,
+  },
+  welcomeSub: {
     fontSize: 13,
-    color: FlyoraColors.textMuted,
+    color: '#475569',
     marginTop: 4,
     fontWeight: '500',
     textAlign: 'center',
+    lineHeight: 18,
+    maxWidth: 290,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: FlyoraColors.dangerBg,
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: FlyoraColors.dangerBorder,
-    borderRadius: BorderRadius.md,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    marginBottom: 12,
+    borderColor: '#FEE2E2',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 16,
     gap: 8,
+    zIndex: 2,
   },
   errorText: {
-    fontSize: 12,
-    color: FlyoraColors.danger,
+    fontSize: 12.5,
+    color: '#DC2626',
     fontWeight: '600',
     flex: 1,
   },
   formContainer: {
     width: '100%',
+    zIndex: 2,
   },
-  inputPill: {
+  fieldWrapper: {
+    marginBottom: 13,
+  },
+  fieldLabel: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#0F766E',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  inputAquaGlass: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: FlyoraColors.white,
-    borderWidth: 1.2,
-    borderColor: FlyoraColors.border,
-    borderRadius: BorderRadius.pill,
-    height: 50,
-    paddingHorizontal: 16,
-    marginBottom: 11,
-    ...Shadows.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderWidth: 1.4,
+    borderColor: '#CCFBF1',
+    borderRadius: 16,
+    height: 52,
+    paddingHorizontal: 12,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
-  inputIcon: {
+  inputIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E6FAF6',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 10,
   },
-  inputField: {
-    flex: 1,
-    fontSize: 14,
-    color: FlyoraColors.textNavy,
-    fontWeight: '500',
-  },
-  eyeIcon: {
-    padding: 4,
-  },
-  phoneRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-  },
-  dialCodePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: FlyoraColors.white,
-    borderWidth: 1.2,
-    borderColor: FlyoraColors.border,
-    borderRadius: BorderRadius.pill,
-    height: 50,
-    paddingHorizontal: 12,
-    gap: 6,
-    ...Shadows.sm,
+  dialCodeBox: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#F0FDFA',
+    borderRadius: 8,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
   },
   dialCodeText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: FlyoraColors.textNavy,
+    color: '#0D9488',
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 14.5,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  eyeBtn: {
+    padding: 6,
   },
   termsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
     marginTop: 4,
-    marginBottom: 16,
-    paddingHorizontal: 4,
+    marginBottom: 18,
+    gap: 10,
   },
   checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
+    width: 19,
+    height: 19,
+    borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: '#94A3B8',
-    backgroundColor: FlyoraColors.white,
+    borderColor: '#5EEAD4',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 1,
+    marginTop: 2,
   },
   checkboxActive: {
-    backgroundColor: FlyoraColors.primary,
-    borderColor: FlyoraColors.primary,
+    backgroundColor: '#0D9488',
+    borderColor: '#0D9488',
   },
   termsText: {
     flex: 1,
     fontSize: 12,
-    color: '#334155',
+    color: '#475569',
     lineHeight: 18,
+    fontWeight: '500',
   },
   termsLink: {
-    color: FlyoraColors.primary,
+    color: '#0D9488',
     fontWeight: '700',
   },
-  actionBtn: {
+  loginBtn: {
     height: 52,
-    backgroundColor: FlyoraColors.primary,
-    borderRadius: BorderRadius.pill,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 4,
+    marginBottom: 18,
+  },
+  btnGradient: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
-    ...Shadows.tealGlow,
   },
   btnContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  actionBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: FlyoraColors.white,
-    letterSpacing: 0.2,
+  loginBtnText: {
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
     gap: 12,
   },
   dividerLine: {
@@ -649,33 +828,37 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 12,
-    color: FlyoraColors.textSubtle,
-    fontWeight: '500',
+    color: '#94A3B8',
+    fontWeight: '600',
   },
-  googleBtn: {
+  googleAquaBtn: {
     height: 50,
-    backgroundColor: FlyoraColors.white,
-    borderRadius: BorderRadius.pill,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1.2,
-    borderColor: '#E2E8F0',
+    borderColor: '#CCFBF1',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 18,
-    ...Shadows.sm,
+    marginBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 1,
   },
   googleBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  googleIconImage: {
+  googleIcon: {
     width: 20,
     height: 20,
   },
   googleBtnText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#1E293B',
   },
   footerRow: {
     flexDirection: 'row',
@@ -684,67 +867,79 @@ const styles = StyleSheet.create({
   },
   footerPrompt: {
     fontSize: 13,
-    color: '#475569',
+    color: '#64748B',
     fontWeight: '500',
   },
   footerLink: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: FlyoraColors.primary,
+    fontSize: 13.5,
+    fontWeight: '900',
+    color: '#0D9488',
   },
-  bottomSkylineContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 55,
-    overflow: 'hidden',
-  },
-  bottomSkylineImage: {
-    width: '100%',
-    height: '100%',
-  },
-  otpCard: {
-    backgroundColor: FlyoraColors.white,
-    borderRadius: BorderRadius.lg,
-    padding: 24,
+  otpHeaderBox: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: FlyoraColors.border,
-    ...Shadows.card,
+    marginBottom: 20,
+  },
+  otpIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E6FAF6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   otpTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: FlyoraColors.textNavy,
-    marginTop: 10,
-    marginBottom: 4,
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#062738',
   },
   otpDesc: {
     fontSize: 13,
-    color: FlyoraColors.textMuted,
+    color: '#64748B',
     textAlign: 'center',
-    marginBottom: 16,
+    marginTop: 6,
+    lineHeight: 18,
   },
   otpErrorText: {
-    color: FlyoraColors.danger,
+    color: '#DC2626',
     fontSize: 12,
     fontWeight: '600',
+    textAlign: 'center',
     marginBottom: 10,
   },
-  otpInput: {
-    backgroundColor: FlyoraColors.background,
+  otpInputField: {
+    height: 56,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: FlyoraColors.primary,
-    borderRadius: BorderRadius.md,
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 8,
+    borderColor: '#0D9488',
     textAlign: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    width: '80%',
-    color: FlyoraColors.textNavy,
-    marginBottom: 18,
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 8,
+    color: '#062738',
+  },
+  resendCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 12,
+    paddingVertical: 6,
+  },
+  resendCodeText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#0D9488',
+  },
+  changeEmailBtn: {
+    alignItems: 'center',
+    marginTop: 8,
+    paddingVertical: 6,
+  },
+  changeEmailText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
   },
 });

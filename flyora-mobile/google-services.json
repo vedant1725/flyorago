@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "127367897020",
+    "project_id": "flyorago",
+    "storage_bucket": "flyorago.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127367897020:android:f45e112a87b9660d0b95b9",
+        "android_client_info": {
+          "package_name": "com.flyorago.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127367897020-r0o87cbs3nl67em3ga16dg5j8vl9oa24.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC67PxIbtG7nuDjW6NiUp14wDeXYp98o3o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127367897020-r0o87cbs3nl67em3ga16dg5j8vl9oa24.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127367897020:android:4501a250ad992bbf0b95b9",
+        "android_client_info": {
+          "package_name": "flyorago.me"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127367897020-r0o87cbs3nl67em3ga16dg5j8vl9oa24.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC67PxIbtG7nuDjW6NiUp14wDeXYp98o3o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127367897020-r0o87cbs3nl67em3ga16dg5j8vl9oa24.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

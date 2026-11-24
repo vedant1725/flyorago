@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getSafeHeaderPaddingTop } from '../../constants/responsive';
 import { FlyoraColors, BorderRadius, Shadows } from '../../constants/theme';
 import {
   ChatConversation,
@@ -68,6 +70,7 @@ const INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
 };
 
 export const ChatScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [conversations] = useState<ChatConversation[]>(MOCK_CONVERSATIONS);
   const [activeConv, setActiveConv] = useState<ChatConversation | null>(null);
   const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>(INITIAL_MESSAGES);
@@ -125,7 +128,7 @@ export const ChatScreen: React.FC = () => {
               colors={['#062738', '#089A8D']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.chatHeaderGradient}
+              style={[styles.chatHeaderGradient, { paddingTop: getSafeHeaderPaddingTop(insets.top) }]}
             >
               <View style={styles.chatHeaderTop}>
                 <TouchableOpacity
@@ -253,7 +256,7 @@ export const ChatScreen: React.FC = () => {
               colors={['#062738', '#089A8D']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.headerGradient}
+              style={[styles.headerGradient, { paddingTop: getSafeHeaderPaddingTop(insets.top) }]}
             >
               <Text style={styles.subtitle}>Direct Coordination</Text>
               <Text style={styles.title}>Messages & Handover</Text>

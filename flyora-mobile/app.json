@@ -4,18 +4,34 @@
     "slug": "flyorago",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon-1024.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "flyorago",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/splash-logo-clean.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "ios": {
-      "icon": "./assets/images/icon-1024.png",
-      "bundleIdentifier": "com.flyorago.app"
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.flyorago.app",
+      "splash": {
+        "image": "./assets/images/splash-logo-clean.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "android": {
-      "package": "com.flyorago.app",
+      "package": "flyorago.me",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#F4FCFA",
-        "foregroundImage": "./assets/images/icon-1024.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
+      },
+      "splash": {
+        "image": "./assets/images/splash-logo-clean.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -28,15 +44,27 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F4FCFA",
-          "image": "./assets/images/flyorago-logo-transparent.png",
-          "imageWidth": 180
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/splash-logo-clean.png",
+          "imageWidth": 260,
+          "resizeMode": "contain"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "7e1e5b24-8143-4d54-828d-5083fffc32ca"
+      }
+    },
+    "owner": "akashflyorago"
   }
 }

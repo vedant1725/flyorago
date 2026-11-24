@@ -7,10 +7,9 @@ const isLocalNetwork = typeof window !== 'undefined' && (
 );
 
 // In local/LAN development, point API requests to the current machine's port 8000
-export const API_BASE_URL = import.meta.env.VITE_API_URL || (
-  isLocalNetwork
-    ? `${window.location.protocol}//${window.location.hostname}:8000`
-    : 'https://api.flyorago.me'
+export const API_BASE_URL = (isLocalNetwork
+  ? `${window.location.protocol}//${window.location.hostname}:8000`
+  : (import.meta.env.VITE_API_URL || 'https://api.flyorago.me')
 );
 
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1086456796372-b5dijct15asf51gsb9tf4rhdfnnnj58c.apps.googleusercontent.com';

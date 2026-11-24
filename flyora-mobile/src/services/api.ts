@@ -1,6 +1,32 @@
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { Storage, STORAGE_KEYS } from './storage';
 
-export const DEFAULT_API_BASE_URL = 'https://api.flyorago.me';
+// Automatically detect host IP from Expo Constants (works with Expo Go, real devices & emulators)
+function resolveDefaultBackendUrl(): string {
+  if (Platform.OS === 'web') {
+    return 'http://127.0.0.1:8000';
+  }
+
+  // 1. Try Expo Constants hostUri (e.g. "192.168.0.117:8081")
+  const hostUri = Constants.expoConfig?.hostUri || (Constants as any)?.manifest2?.extra?.expoClient?.hostUri || (Constants as any)?.manifest?.debuggerHost;
+  if (hostUri) {
+    const hostIp = hostUri.split(':')[0];
+    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
+      return `http://${hostIp}:8000`;
+    }
+  }
+
+  // 2. Active Wi-Fi LAN IP of machine
+  return 'http://192.168.0.117:8000';
+}
+
+export const LOCAL_BACKEND_URL = resolveDefaultBackendUrl();
+
+export const PRODUCTION_API_URL = 'https://api.flyorago.me';
+
+// Default to live production backend for standalone builds, or local for development
+export const DEFAULT_API_BASE_URL = PRODUCTION_API_URL;
 
 let cachedBaseUrl: string = DEFAULT_API_BASE_URL;
 
@@ -10,7 +36,8 @@ export async function getApiBaseUrl(): Promise<string> {
     cachedBaseUrl = custom.trim().replace(/\/+$/, '');
     return cachedBaseUrl;
   }
-  return DEFAULT_API_BASE_URL;
+  cachedBaseUrl = PRODUCTION_API_URL;
+  return PRODUCTION_API_URL;
 }
 
 export async function setApiBaseUrl(url: string): Promise<void> {
@@ -27,86 +54,152 @@ export interface ApiResponse<T = any> {
   results?: T;
 }
 
+// In-flight request deduplication map to prevent repeated concurrent API calls
+const inflightRequests = new Map<string, Promise<ApiResponse<any>>>();
+// Short-lived memory cache (3 seconds) for GET calls (identical to web frontend api.ts)
+const getApiCache = new Map<string, { data: ApiResponse<any>; timestamp: number }>();
+const CACHE_TTL_MS = 3000;
+
+let isAuthExpiredHandled = false;
+
 export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const baseUrl = await getApiBaseUrl();
+  const method = (options.method || 'GET').toUpperCase();
   const token = await Storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const fullUrl = `${baseUrl}${cleanEndpoint}`;
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    ...(options.headers as Record<string, string> || {}),
-  };
+  // If endpoint requires auth (not public login/signup/otp) and token is missing, reject immediately
+  // without spamming the backend server
+  const isPublicAuthEndpoint =
+    endpoint.includes('/api/auth/login') ||
+    endpoint.includes('/api/auth/signup') ||
+    endpoint.includes('/api/auth/google') ||
+    endpoint.includes('/api/auth/request-otp') ||
+    endpoint.includes('/api/auth/verify-otp') ||
+    endpoint.includes('/api/auth/forgot-password') ||
+    endpoint.includes('/api/auth/reset-password');
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-    const response = await fetch(fullUrl, {
-      ...options,
-      headers,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (response.status === 401) {
-      await Storage.clearAuthSession();
-      return {
-        success: false,
-        message: 'Session expired. Please log in again.',
-      };
-    }
-
-    const contentType = response.headers.get('content-type') || '';
-    let parsedData: any = null;
-
-    if (contentType.includes('application/json')) {
-      parsedData = await response.json();
-    } else {
-      const text = await response.text();
-      parsedData = { data: text };
-    }
-
-    if (!response.ok) {
-      const errorMsg =
-        parsedData?.message ||
-        parsedData?.detail ||
-        parsedData?.error ||
-        `Server returned status ${response.status}`;
-      return {
-        success: false,
-        message: errorMsg,
-        errors: parsedData?.errors || parsedData,
-      };
-    }
-
-    return {
-      success: true,
-      message: parsedData?.message || 'Success',
-      data: parsedData?.data !== undefined ? parsedData.data : parsedData,
-      results: parsedData?.results,
-    };
-  } catch (err: any) {
-    if (err.name === 'AbortError') {
-      return {
-        success: false,
-        message: 'Connection timed out. Please verify your internet connection.',
-      };
-    }
+  if (!token && !isPublicAuthEndpoint) {
     return {
       success: false,
-      message: err.message || 'Unable to connect to Flyora servers.',
+      message: 'Not logged in. Please sign in.',
     };
   }
+
+  const cacheKey = `${method}:${endpoint}`;
+
+  // Cache & in-flight deduplication for GET requests
+  if (method === 'GET' && !options.body) {
+    const cached = getApiCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data;
+    }
+    if (inflightRequests.has(cacheKey)) {
+      return inflightRequests.get(cacheKey)!;
+    }
+  } else {
+    // Invalidate GET cache on write/mutation
+    getApiCache.clear();
+  }
+
+  const fetchPromise = (async () => {
+    const baseUrl = await getApiBaseUrl();
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const fullUrl = `${baseUrl}${cleanEndpoint}`;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(options.headers as Record<string, string> || {}),
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(fullUrl, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.status === 401) {
+        if (!isAuthExpiredHandled) {
+          isAuthExpiredHandled = true;
+          await Storage.clearAuthSession();
+          setTimeout(() => {
+            isAuthExpiredHandled = false;
+          }, 3000);
+        }
+        return {
+          success: false,
+          message: 'Session expired. Please log in again.',
+        };
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      let parsedData: any = null;
+
+      if (contentType.includes('application/json')) {
+        parsedData = await response.json();
+      } else {
+        const text = await response.text();
+        parsedData = { data: text };
+      }
+
+      if (!response.ok) {
+        const errorMsg =
+          parsedData?.message ||
+          parsedData?.detail ||
+          parsedData?.error ||
+          `Server returned status ${response.status}`;
+        return {
+          success: false,
+          message: errorMsg,
+          errors: parsedData?.errors || parsedData,
+        };
+      }
+
+      const result: ApiResponse<T> = {
+        success: true,
+        message: parsedData?.message || 'Success',
+        data: parsedData?.data !== undefined ? parsedData.data : parsedData,
+        results: parsedData?.results,
+      };
+
+      if (method === 'GET' && !options.body) {
+        getApiCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      }
+
+      return result;
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        return {
+          success: false,
+          message: 'Connection timed out.',
+        };
+      }
+      return {
+        success: false,
+        message: err.message || 'Unable to connect to Flyora servers.',
+      };
+    } finally {
+      inflightRequests.delete(cacheKey);
+    }
+  })();
+
+  if (method === 'GET' && !options.body) {
+    inflightRequests.set(cacheKey, fetchPromise);
+  }
+
+  return fetchPromise;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
