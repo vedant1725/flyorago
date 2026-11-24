@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FlyoraColors, BorderRadius, Shadows } from '../constants/theme';
@@ -22,18 +22,71 @@ import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { KycScreen } from '../screens/Kyc/KycScreen';
 import { ChatScreen } from '../screens/Chat/ChatScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
+import { NotificationsScreen } from '../screens/Notifications/NotificationsScreen';
+import { TrustScoreScreen } from '../screens/Trust/TrustScoreScreen';
+import { WelcomeModal } from '../components/WelcomeModal';
+import { Storage } from '../services/storage';
+import { GlobalNotificationSync } from '../services/notificationSync';
+import { getSafeHeaderPaddingTop, getSafeBottomPadding } from '../constants/responsive';
+
+const STORAGE_FIRST_LAUNCH_SHOWN_KEY = 'flyora_has_seen_welcome_modal';
 
 type MainTabKey = 'dashboard' | 'trips' | 'wallet' | 'shipments' | 'profile';
-type SubScreenKey = 'chat' | 'kyc' | null;
+type SubScreenKey = 'chat' | 'kyc' | 'notifications' | 'trust' | null;
 
 export default function AppEntry() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [showSplash, setShowSplash] = useState(true);
   const [authView, setAuthView] = useState<'login' | 'signup'>('login');
 
-  // Navigation state: 5 Main Bottom Tabs + Chat/KYC Subscreens
+  // Navigation state: 5 Main Bottom Tabs + Chat/KYC/Notifications Subscreens
   const [mainTab, setMainTab] = useState<MainTabKey>('dashboard');
   const [activeSubScreen, setActiveSubScreen] = useState<SubScreenKey>(null);
+  const [unreadNotifs, setUnreadNotifs] = useState<number>(2);
+  const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(false);
+
+  // Start Global Notification Synchronizer on Auth
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      GlobalNotificationSync.start(user);
+      const unsubscribe = GlobalNotificationSync.onUnreadCountChange((count) => {
+        setUnreadNotifs(count);
+      });
+
+      return () => {
+        unsubscribe();
+        GlobalNotificationSync.stop();
+      };
+    } else {
+      GlobalNotificationSync.stop();
+    }
+  }, [isAuthenticated, user]);
+
+  // Check if first-time launch / login popup or mandatory KYC should be prioritized
+  useEffect(() => {
+    if (isAuthenticated) {
+      const checkFirstLaunch = async () => {
+        try {
+          // If user just signed up or KYC is not submitted/pending, auto open KYC
+          if (user?.kycStatus === 'NOT_SUBMITTED') {
+            setActiveSubScreen('kyc');
+          }
+          const hasSeen = await Storage.getItem(STORAGE_FIRST_LAUNCH_SHOWN_KEY);
+          if (!hasSeen) {
+            // First time login - display world-class welcome popup!
+            setShowWelcomeModal(true);
+          }
+        } catch {}
+      };
+      checkFirstLaunch();
+    }
+  }, [isAuthenticated, user?.kycStatus]);
+
+  const handleCloseWelcomeModal = async () => {
+    setShowWelcomeModal(false);
+    await Storage.setItem(STORAGE_FIRST_LAUNCH_SHOWN_KEY, 'true');
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -68,10 +121,12 @@ export default function AppEntry() {
   // 4. Authenticated Navigation Handlers
   const handleOpenChat = () => setActiveSubScreen('chat');
   const handleOpenKyc = () => setActiveSubScreen('kyc');
+  const handleOpenNotifications = () => setActiveSubScreen('notifications');
+  const handleOpenTrust = () => setActiveSubScreen('trust');
   const handleCloseSubScreen = () => setActiveSubScreen(null);
 
   const renderActiveView = () => {
-    // If a subscreen (Chat / KYC) is active
+    // If a subscreen (Chat / KYC / Notifications / Trust) is active
     if (activeSubScreen) {
       switch (activeSubScreen) {
         case 'chat':
@@ -84,9 +139,36 @@ export default function AppEntry() {
         case 'kyc':
           return (
             <View style={{ flex: 1 }}>
-              <SubScreenHeader title="Identity Verification" onBack={handleCloseSubScreen} />
-              <KycScreen />
+              <KycScreen onBack={handleCloseSubScreen} onSuccess={handleCloseSubScreen} />
             </View>
+          );
+        case 'trust':
+          return (
+            <TrustScoreScreen
+              onBack={handleCloseSubScreen}
+              onNavigateTab={(tab) => {
+                handleCloseSubScreen();
+                if (tab === 'kyc') handleOpenKyc();
+                else if (tab === 'trips' || tab === 'wallet' || tab === 'profile') {
+                  setMainTab(tab as MainTabKey);
+                }
+              }}
+            />
+          );
+        case 'notifications':
+          return (
+            <NotificationsScreen
+              onBack={handleCloseSubScreen}
+              onNavigateTab={(tab) => {
+                handleCloseSubScreen();
+                if (tab === 'trips' || tab === 'shipments' || tab === 'wallet' || tab === 'profile') {
+                  setMainTab(tab as MainTabKey);
+                } else if (tab === 'kyc') {
+                  handleOpenKyc();
+                }
+              }}
+              onUnreadCountChange={(count) => setUnreadNotifs(count)}
+            />
           );
       }
     }
@@ -99,21 +181,26 @@ export default function AppEntry() {
             onNavigateTab={(tab) => {
               if (tab === 'chat') handleOpenChat();
               else if (tab === 'kyc') handleOpenKyc();
+              else if (tab === 'notifications') handleOpenNotifications();
+              else if (tab === 'trust') handleOpenTrust();
               else if (tab === 'trips' || tab === 'shipments' || tab === 'wallet' || tab === 'profile') {
                 setMainTab(tab as MainTabKey);
               }
             }}
             onOpenChat={handleOpenChat}
+            onOpenNotifications={handleOpenNotifications}
+            onOpenTrust={handleOpenTrust}
             onPostTrip={() => setMainTab('trips')}
             onPostShipment={() => setMainTab('shipments')}
+            unreadNotificationsCount={unreadNotifs}
           />
         );
       case 'trips':
-        return <TripsScreen onOpenChat={handleOpenChat} />;
+        return <TripsScreen onOpenChat={handleOpenChat} onNavigateToKyc={handleOpenKyc} />;
       case 'wallet':
-        return <WalletScreen onOpenChat={handleOpenChat} />;
+        return <WalletScreen onOpenChat={handleOpenChat} onNavigateToKyc={handleOpenKyc} />;
       case 'shipments':
-        return <ShipmentsScreen onOpenChat={handleOpenChat} />;
+        return <ShipmentsScreen onOpenChat={handleOpenChat} onNavigateToKyc={handleOpenKyc} />;
       case 'profile':
         return (
           <ProfileScreen
@@ -135,8 +222,14 @@ export default function AppEntry() {
     <View style={styles.appContainer}>
       <View style={styles.screenArea}>{renderActiveView()}</View>
 
+      {/* First-Time Launch & Login Welcome Popup (Matches Web Dashboard Exactly) */}
+      <WelcomeModal
+        visible={showWelcomeModal}
+        onClose={handleCloseWelcomeModal}
+      />
+
       {/* World-Class 5-Tab Navigation Bar with Elevated Center Wallet Button */}
-      <SafeAreaView style={styles.bottomNavWrapper}>
+      <View style={[styles.bottomNavWrapper, { paddingBottom: getSafeBottomPadding(insets.bottom, 10) }]}>
         <View style={styles.bottomNavContainer}>
           {/* 1. Left Tab 1: Home */}
           <TouchableOpacity
@@ -302,21 +395,24 @@ export default function AppEntry() {
             </Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
 
 // Subscreen Header for back navigation
-const SubScreenHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
-  <View style={styles.subHeader}>
-    <TouchableOpacity style={styles.subBackBtn} onPress={onBack} activeOpacity={0.7}>
-      <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-    </TouchableOpacity>
-    <Text style={styles.subHeaderTitle}>{title}</Text>
-    <View style={{ width: 36 }} />
-  </View>
-);
+const SubScreenHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.subHeader, { paddingTop: getSafeHeaderPaddingTop(insets.top) }]}>
+      <TouchableOpacity style={styles.subBackBtn} onPress={onBack} activeOpacity={0.7}>
+        <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+      </TouchableOpacity>
+      <Text style={styles.subHeaderTitle} numberOfLines={1}>{title}</Text>
+      <View style={{ width: 36 }} />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   appContainer: {
@@ -364,12 +460,13 @@ const styles = StyleSheet.create({
   bottomNavWrapper: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E6FAF6',
+    borderTopColor: '#E2E8F0',
+    paddingBottom: Platform.OS === 'ios' ? 24 : 10,
     ...Shadows.card,
   },
   bottomNavContainer: {
     flexDirection: 'row',
-    height: Platform.OS === 'ios' ? 62 : 66,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,

@@ -1,15 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from '../context/AuthContext';
+import { AlertProvider } from '../components/AppAlertModal';
+
+// Hide default native splash immediately so our in-app rich custom SplashView displays without blank delay
+SplashScreen.hideAsync().catch(() => {});
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-      </Stack>
-    </AuthProvider>
+    <AlertProvider>
+      <AuthProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+        </Stack>
+      </AuthProvider>
+    </AlertProvider>
   );
 }

@@ -20,14 +20,8 @@ const AdminLoginPage: React.FC = () => {
     setIsLoading(true);
 
     const inputEmail = email.trim().toLowerCase();
-    let loginEmail = inputEmail;
-    let loginPassword = password;
-
-    // Quick-fill alias support for default admin credentials
-    if ((inputEmail === 'admin' || inputEmail === 'admin@flyorago.com') && (password === 'admin' || password === 'admin123')) {
-      loginEmail = 'admin@flyorago.me';
-      loginPassword = 'FlyoragoAdmin2026!';
-    }
+    const loginEmail = inputEmail;
+    const loginPassword = password;
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
@@ -82,7 +76,7 @@ const AdminLoginPage: React.FC = () => {
           className="w-full h-full object-cover object-center"
         />
         {/* Soft daylight ambient wash */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-white/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-white/20" />
       </div>
 
       {/* ─── 2. Top-Left Logo ─── */}

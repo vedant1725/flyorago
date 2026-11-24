@@ -17,7 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   kycStatus: 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
   currentRole: 'sender' | 'traveler';
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; errorCode?: string | null; errors?: any }>;
   loginWithGoogle: (credential?: string) => Promise<{ success: boolean; message?: string }>;
   signup: (payload: SignupPayload) => Promise<{ success: boolean; message?: string }>;
   verifyOtp: (email: string, otp: string) => Promise<{ success: boolean; message?: string }>;
@@ -86,7 +86,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (!res.success) {
         setIsLoading(false);
-        return { success: false, message: res.message || 'Login failed.' };
+        const errorCode = res?.errors?.error_code || null;
+        return {
+          success: false,
+          message: res.message || 'Login failed.',
+          errorCode: errorCode,
+          errors: res.errors,
+        };
       }
 
       const resData = res.data;
@@ -177,19 +183,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signup = async (payload: SignupPayload) => {
     try {
+      const cleanPhone = payload.phone?.trim();
+      const bodyPayload: any = {
+        first_name: payload.firstName,
+        last_name: payload.lastName,
+        email: payload.email.trim().toLowerCase(),
+        password: payload.password,
+      };
+
+      if (cleanPhone && cleanPhone.length > 4) {
+        bodyPayload.phone_number = cleanPhone;
+      }
+
       const res = await apiFetch('/api/auth/signup/', {
         method: 'POST',
-        body: JSON.stringify({
-          first_name: payload.firstName,
-          last_name: payload.lastName,
-          email: payload.email.trim().toLowerCase(),
-          phone_number: payload.phone,
-          password: payload.password,
-        }),
+        body: JSON.stringify(bodyPayload),
       });
 
       if (!res.success) {
-        return { success: false, message: res.message || 'Sign up failed.' };
+        let msg = res.message || 'Registration failed.';
+        if (res.errors) {
+          const firstErrKey = Object.keys(res.errors)[0];
+          const firstErrVal = res.errors[firstErrKey];
+          if (Array.isArray(firstErrVal) && firstErrVal.length > 0) {
+            msg = firstErrVal[0];
+          } else if (typeof firstErrVal === 'string') {
+            msg = firstErrVal;
+          }
+        }
+        return { success: false, message: msg };
       }
 
       return { success: true, message: 'Account registered. Verification code sent.' };

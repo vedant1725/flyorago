@@ -12,6 +12,7 @@ import { useKycValidation } from '../hooks/useKycValidation';
 import { KycValidationModal } from '../components/ui/KycValidationModal';
 import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { HeaderProfileDropdown } from '../components/ui/HeaderProfileDropdown';
+import { WebRazorpayCheckoutModal } from '../components/WebRazorpayCheckoutModal';
 import './dashboard.css';
 
 const sidebarItems = [
@@ -50,6 +51,18 @@ const WalletPage: React.FC = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [selectedTxForDetail, setSelectedTxForDetail] = useState<any | null>(null);
+
+  // Razorpay Checkout Modal State (Web)
+  const [razorpayModalVisible, setRazorpayModalVisible] = useState(false);
+  const [activeRazorpayData, setActiveRazorpayData] = useState<{
+    amount: number;
+    purpose: 'add_funds' | 'withdraw';
+    orderId: string;
+  }>({
+    amount: 0,
+    purpose: 'add_funds',
+    orderId: '',
+  });
 
   // Search and Filters state
   const [searchQuery, setSearchQuery] = useState('');
@@ -187,56 +200,97 @@ const WalletPage: React.FC = () => {
     });
   }, [searchQuery, filterType, filterCategory, filterStatus, transactionsList]);
 
-  const handleAddFunds = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRazorpaySuccess = async (paymentDetails: { razorpay_payment_id: string; razorpay_order_id: string }) => {
     try {
-      const selectedPM = payoutMethods.find(p => p.id === selectedPaymentMethod);
-      const payload = {
-        amount: parseFloat(amount) || 10.00,
-        payment_method: selectedPM ? selectedPM.name : 'Visa Credit Card'
-      };
-
-      const res = await apiFetch('/api/wallet/deposit', {
+      const verifyRes = await apiFetch('/api/wallet/razorpay/verify', {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          razorpay_order_id: paymentDetails.razorpay_order_id,
+          razorpay_payment_id: paymentDetails.razorpay_payment_id,
+          razorpay_signature: 'test_signature_mock',
+          amount: activeRazorpayData.amount,
+          purpose: activeRazorpayData.purpose,
+        }),
       });
 
-      if (res.status === 'success') {
-        alert(`Successfully deposited ₹${amount} to your available balance.`);
-        setIsAddFundsOpen(false);
+      if (verifyRes.status === 'success' || verifyRes.success) {
+        if (activeRazorpayData.purpose === 'withdraw') {
+          alert(`🎉 Razorpay Payout of ₹${activeRazorpayData.amount} processed successfully!`);
+          setIsWithdrawOpen(false);
+        } else {
+          alert(`🎉 Payment of ₹${activeRazorpayData.amount} successfully verified via Razorpay! Funds added to your wallet.`);
+          setIsAddFundsOpen(false);
+        }
         setAmount('');
+        setRazorpayModalVisible(false);
         fetchWalletData();
+      } else {
+        alert(verifyRes.message || 'Payment verification failed');
       }
     } catch (err: any) {
-      alert(err.message || 'Deposit failed');
+      alert(err.message || 'Verification error');
+    }
+  };
+
+  const handleAddFunds = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      alert('Please enter a valid amount.');
+      return;
+    }
+
+    try {
+      // 1. Create Order via Backend Razorpay API
+      const orderRes = await apiFetch('/api/wallet/razorpay/create-order', {
+        method: 'POST',
+        body: JSON.stringify({ amount: numAmount, purpose: 'add_funds' }),
+      });
+
+      const orderData = orderRes.data || orderRes;
+      const orderId = orderData.order_id || `order_${Date.now()}`;
+
+      setActiveRazorpayData({
+        amount: numAmount,
+        purpose: 'add_funds',
+        orderId: orderId,
+      });
+      setRazorpayModalVisible(true);
+    } catch (err: any) {
+      alert(err.message || 'Deposit initiation failed');
     }
   };
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPaymentMethod) {
-      alert('Please add a payout method first.');
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      alert('Please enter a valid amount.');
       return;
     }
-    try {
-      const payload = {
-        amount: parseFloat(amount) || 10.00,
-        payout_method_id: parseInt(selectedPaymentMethod)
-      };
+    if (numAmount > walletStats.walletBalance) {
+      alert('Insufficient available balance.');
+      return;
+    }
 
-      const res = await apiFetch('/api/wallet/withdraw', {
+    try {
+      // 1. Create Payout Order via Razorpay
+      const orderRes = await apiFetch('/api/wallet/razorpay/create-order', {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ amount: numAmount, purpose: 'withdraw' }),
       });
 
-      if (res.status === 'success') {
-        alert(`Withdrawal request of ₹${amount} processed successfully.`);
-        setIsWithdrawOpen(false);
-        setAmount('');
-        fetchWalletData();
-      }
+      const orderData = orderRes.data || orderRes;
+      const orderId = orderData.order_id || `payout_${Date.now()}`;
+
+      setActiveRazorpayData({
+        amount: numAmount,
+        purpose: 'withdraw',
+        orderId: orderId,
+      });
+      setRazorpayModalVisible(true);
     } catch (err: any) {
-      alert(err.message || 'Withdrawal failed');
+      alert(err.message || 'Withdrawal initiation failed');
     }
   };
 
@@ -769,6 +823,16 @@ const WalletPage: React.FC = () => {
       )}
 
       <KycValidationModal isOpen={isKycModalOpen} onClose={closeKycModal} kycStatus={kycStatus} />
+
+      {/* Razorpay Checkout Modal for Web */}
+      <WebRazorpayCheckoutModal
+        isOpen={razorpayModalVisible}
+        onClose={() => setRazorpayModalVisible(false)}
+        amount={activeRazorpayData.amount}
+        purpose={activeRazorpayData.purpose}
+        orderId={activeRazorpayData.orderId}
+        onSuccess={handleRazorpaySuccess}
+      />
     </div>
   );
 };
