@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { SplashView } from '../components/SplashView';
 import { LoginScreen } from '../screens/Auth/LoginScreen';
 import { SignupScreen } from '../screens/Auth/SignupScreen';
+import { ForgotPasswordScreen } from '../screens/Auth/ForgotPasswordScreen';
 import { DashboardScreen } from '../screens/Dashboard/DashboardScreen';
 import { TripsScreen } from '../screens/Trips/TripsScreen';
 import { ShipmentsScreen } from '../screens/Shipments/ShipmentsScreen';
@@ -38,13 +39,31 @@ export default function AppEntry() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const insets = useSafeAreaInsets();
   const [showSplash, setShowSplash] = useState(true);
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+  const [authView, setAuthView] = useState<'login' | 'signup' | 'forgot_password'>('login');
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string>('');
+  const [unverifiedAutoOtp, setUnverifiedAutoOtp] = useState<boolean>(false);
 
   // Navigation state: 5 Main Bottom Tabs + Chat/KYC/Notifications Subscreens
   const [mainTab, setMainTab] = useState<MainTabKey>('dashboard');
   const [activeSubScreen, setActiveSubScreen] = useState<SubScreenKey>(null);
+  const [activeChatTarget, setActiveChatTarget] = useState<{ userId?: number; userName?: string } | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState<number>(2);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(false);
+
+  // Reset navigation states when user logs out or logs in
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setMainTab('dashboard');
+      setActiveSubScreen(null);
+      setActiveChatTarget(null);
+      setAuthView('login');
+    } else {
+      // Whenever user successfully authenticates/logs in, default to dashboard
+      setMainTab('dashboard');
+      setActiveSubScreen(null);
+      setActiveChatTarget(null);
+    }
+  }, [isAuthenticated]);
 
   // Start Global Notification Synchronizer on Auth
   useEffect(() => {
@@ -110,20 +129,52 @@ export default function AppEntry() {
     );
   }
 
-  // 3. Unauthenticated User Flow (Login / Signup with Google)
+  // 3. Unauthenticated User Flow (Login / Signup with Google / Forgot Password)
   if (!isAuthenticated) {
     if (authView === 'signup') {
-      return <SignupScreen onNavigateToLogin={() => setAuthView('login')} />;
+      return (
+        <SignupScreen
+          onNavigateToLogin={() => {
+            setUnverifiedEmail('');
+            setUnverifiedAutoOtp(false);
+            setAuthView('login');
+          }}
+          initialEmail={unverifiedEmail}
+          autoOpenOtp={unverifiedAutoOtp}
+        />
+      );
     }
-    return <LoginScreen onNavigateToSignup={() => setAuthView('signup')} />;
+    if (authView === 'forgot_password') {
+      return <ForgotPasswordScreen onNavigateToLogin={() => setAuthView('login')} />;
+    }
+    return (
+      <LoginScreen
+        onNavigateToSignup={(initialEmail?: string, autoOpenOtp?: boolean) => {
+          setUnverifiedEmail(initialEmail || '');
+          setUnverifiedAutoOtp(!!autoOpenOtp);
+          setAuthView('signup');
+        }}
+        onNavigateToForgotPassword={() => setAuthView('forgot_password')}
+      />
+    );
   }
 
   // 4. Authenticated Navigation Handlers
-  const handleOpenChat = () => setActiveSubScreen('chat');
+  const handleOpenChat = (target?: { userId?: number; userName?: string }) => {
+    if (target?.userId) {
+      setActiveChatTarget(target);
+    } else {
+      setActiveChatTarget(null);
+    }
+    setActiveSubScreen('chat');
+  };
   const handleOpenKyc = () => setActiveSubScreen('kyc');
   const handleOpenNotifications = () => setActiveSubScreen('notifications');
   const handleOpenTrust = () => setActiveSubScreen('trust');
-  const handleCloseSubScreen = () => setActiveSubScreen(null);
+  const handleCloseSubScreen = () => {
+    setActiveSubScreen(null);
+    setActiveChatTarget(null);
+  };
 
   const renderActiveView = () => {
     // If a subscreen (Chat / KYC / Notifications / Trust) is active
@@ -132,8 +183,11 @@ export default function AppEntry() {
         case 'chat':
           return (
             <View style={{ flex: 1 }}>
-              <SubScreenHeader title="Direct Coordination" onBack={handleCloseSubScreen} />
-              <ChatScreen />
+              <ChatScreen
+                onBack={handleCloseSubScreen}
+                targetUserId={activeChatTarget?.userId}
+                targetUserName={activeChatTarget?.userName}
+              />
             </View>
           );
         case 'kyc':
@@ -228,8 +282,9 @@ export default function AppEntry() {
         onClose={handleCloseWelcomeModal}
       />
 
-      {/* World-Class 5-Tab Navigation Bar with Elevated Center Wallet Button */}
-      <View style={[styles.bottomNavWrapper, { paddingBottom: getSafeBottomPadding(insets.bottom, 10) }]}>
+      {/* World-Class 5-Tab Navigation Bar with Elevated Center Wallet Button (Hidden on active SubScreen e.g. Chat, KYC, Notifications) */}
+      {!activeSubScreen && (
+        <View style={[styles.bottomNavWrapper, { paddingBottom: getSafeBottomPadding(insets.bottom, 10) }]}>
         <View style={styles.bottomNavContainer}>
           {/* 1. Left Tab 1: Home */}
           <TouchableOpacity
@@ -396,6 +451,7 @@ export default function AppEntry() {
           </TouchableOpacity>
         </View>
       </View>
+      )}
     </View>
   );
 }
