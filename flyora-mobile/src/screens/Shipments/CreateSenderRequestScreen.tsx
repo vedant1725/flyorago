@@ -12,6 +12,8 @@ import {
   Image,
   Modal,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -99,12 +101,13 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
         setPackageImages(prev => [...prev, base64Uri].slice(0, 5));
       }
     } catch (e: any) {
-      Alert.alert('Camera Error', e.message || 'Could not take photo.');
+      Alert.alert('Camera Error', e.message || 'Could not capture photo.');
     }
   };
 
-  const removeImage = (index: number) => {
-    setPackageImages(prev => prev.filter((_, i) => i !== index));
+  // Remove Photo from thumbnail list
+  const removePhoto = (idx: number) => {
+    setPackageImages(prev => prev.filter((_, i) => i !== idx));
   };
 
   // Submit Handler
@@ -118,16 +121,17 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
       return;
     }
     if (!formDeliveryDate.trim()) {
-      Alert.alert('Missing Date', 'Please select a delivery date.');
+      Alert.alert('Missing Date', 'Please choose a required delivery date.');
       return;
     }
 
     setSubmitting(true);
     try {
-      const weightNum = parseFloat(formWeight) || 1.0;
-      const rateEst = Math.max(10, Math.round(weightNum * 12));
-      const payload = {
-        flight_number: `REQ-${Date.now().toString().slice(-4)}`,
+      const weightNum = parseFloat(formWeight) || 5;
+      const estimatedReward = Math.max(weightNum * 12, 10);
+
+      const tripPayload = {
+        flight_number: `REQ-${Math.floor(1000 + Math.random() * 9000)}`,
         airline: 'SENDER_REQUEST',
         aircraft: formCategory,
         from_location: formPickup.trim(),
@@ -138,50 +142,45 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
         departure_time: '12:00:00',
         arrival_date: formDeliveryDate.trim(),
         arrival_time: '18:00:00',
-        duration: 'N/A',
-        terminal_from: (formReceiverName || 'Receiver').slice(0, 50),
-        terminal_to: (formReceiverPhone || '').slice(0, 30),
+        available_weight: weightNum,
+        capacity_weight: weightNum,
+        price_per_kg: estimatedReward,
+        status: 'Active',
         notes: JSON.stringify({
           receiver_name: formReceiverName,
           receiver_phone: formReceiverPhone,
           receiver_address: formReceiverAddress || formDropoff.trim(),
         }),
         seats: '1',
-        capacity_weight: weightNum,
-        available_weight: weightNum,
-        price_per_kg: rateEst,
-        accepted_parcel_types: packageImages,
       };
 
-      const res = await apiFetch('/api/trips/', { method: 'POST', body: JSON.stringify(payload) });
+      const res = await apiFetch('/api/trips/', {
+        method: 'POST',
+        body: JSON.stringify(tripPayload),
+      });
 
-      if (!res.success && !res.data) {
-        throw new Error(res.message || 'Failed to create sender request on server.');
+      if (res.success || res.data) {
+        const tripId = res.data?.id;
+
+        if (tripId && packageImages.length > 0) {
+          try {
+            await apiFetch(`/api/trips/${tripId}/upload_photos/`, {
+              method: 'POST',
+              body: JSON.stringify({ images: packageImages }),
+            });
+          } catch {}
+        }
+
+        Alert.alert(
+          'Request Created',
+          'Your parcel request has been posted across India. Travelers traveling this route will reach out to you!',
+          [{ text: 'OK', onPress: onRequestCreated }]
+        );
+      } else {
+        throw new Error(res.message || 'Could not create sender request');
       }
-
-      // Create linked booking
-      try {
-        await apiFetch('/api/bookings/', {
-          method: 'POST',
-          body: JSON.stringify({
-            sender_trip: res.data?.id,
-            package_name: `${formCategory || 'General'} Parcel`,
-            package_category: formCategory || 'General',
-            package_image: packageImages.length > 0 ? JSON.stringify(packageImages) : '📦',
-            weight: weightNum,
-            reward: rateEst,
-            receiver_name: formReceiverName || 'Receiver',
-            receiver_phone: formReceiverPhone || '',
-            receiver_address: formReceiverAddress || formDropoff.trim(),
-          }),
-        });
-      } catch (e) {}
-
-      Alert.alert('Success', 'Parcel delivery request published successfully!', [
-        { text: 'OK', onPress: onRequestCreated },
-      ]);
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to publish request. Please try again.');
+      Alert.alert('Submission Error', e.message || 'Failed to submit parcel request.');
     } finally {
       setSubmitting(false);
     }
@@ -192,35 +191,84 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Top Header - Exact Same Theme as Traveler CreateTripScreen */}
-      <View style={[styles.header, { paddingTop: getSafeHeaderPaddingTop(insets.top) }]}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.headerTitle}>Post a Package Request</Text>
-          <Text style={styles.headerSubtitle}>
-            Match with verified travelers flying to your destination
-          </Text>
-        </View>
+      {/* 1. Header with Airplane Art & Floating Back Button */}
+      <View style={styles.headerContainer}>
+        <LinearGradient
+          colors={['#033D37', '#065F56', '#089A8D']}
+          locations={[0, 0.45, 1]}
+          style={[styles.headerGradient, { paddingTop: getSafeHeaderPaddingTop(insets.top) }]}
+        >
+          {/* Background Plane & Route Art */}
+          <View style={styles.headerPlaneArtWrap} pointerEvents="none">
+            <ExpoImage
+              source={require('../../../assets/images/home-header-plane.png')}
+              style={styles.headerPlaneArt}
+              contentFit="contain"
+              priority="high"
+              cachePolicy="memory-disk"
+            />
+          </View>
+
+          {/* Top Bar: Back button & Escrow protection badge */}
+          <View style={styles.topRow}>
+            <TouchableOpacity style={styles.backButtonGlass} onPress={onBack} activeOpacity={0.8}>
+              <Ionicons name="arrow-back" size={scale(20)} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <View style={styles.headerPillBadge}>
+              <Ionicons name="shield-checkmark" size={scale(13)} color="#2DD4BF" />
+              <Text style={styles.headerPillText}>100% Escrow Safe</Text>
+            </View>
+          </View>
+
+          {/* Title Area */}
+          <View style={styles.titleArea}>
+            <Text style={styles.screenHeading}>Send a Package</Text>
+            <Text style={styles.screenTagline}>
+              Connect with verified travelers flying or traveling your destination route
+            </Text>
+          </View>
+
+          {/* Route Overview Indicator */}
+          <View style={styles.routePreviewCard}>
+            <View style={styles.routePoint}>
+              <View style={[styles.routeIconDot, { backgroundColor: '#2DD4BF' }]} />
+              <Text style={styles.routeCityLabel} numberOfLines={1}>
+                {formPickup.split(',')[0] || 'Pickup City'}
+              </Text>
+            </View>
+
+            <View style={styles.routePlaneDivider}>
+              <View style={styles.routeDottedLine} />
+              <View style={styles.routePlaneIconCircle}>
+                <Ionicons name="cube" size={scale(13)} color="#089A8D" />
+              </View>
+              <View style={styles.routeDottedLine} />
+            </View>
+
+            <View style={[styles.routePoint, { alignItems: 'flex-end' }]}>
+              <View style={[styles.routeIconDot, { backgroundColor: '#F59E0B' }]} />
+              <Text style={styles.routeCityLabel} numberOfLines={1}>
+                {formDropoff.split(',')[0] || 'Delivery City'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
       </View>
 
+      {/* 2. Form Body (Floating Glass-like Surface) */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Card 1: Route & Date (All India Search) */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderIcon}>
-              <Ionicons name="location" size={16} color="#089A8D" />
-            </View>
-            <View>
-              <Text style={styles.cardTitle}>Route Details (All India Search)</Text>
-              <Text style={styles.cardSubtitle}>
-                Type any Indian city, area, town, or transit airport
-              </Text>
+        {/* Section 1: Route & Target Delivery Date */}
+        <View style={styles.metaCard}>
+          <View style={styles.sectionTitleRow}>
+            <View style={styles.accentBar} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionHeading}>Route & Required Delivery</Text>
+              <Text style={styles.sectionSub}>Pick cities and expected delivery target date</Text>
             </View>
           </View>
 
@@ -243,154 +291,143 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
           />
 
           {/* Delivery Date with Calendar Picker */}
-          <Text style={styles.fieldLabel}>DELIVERY BY DATE *</Text>
+          <Text style={styles.fieldLabel}>DELIVER BY DATE *</Text>
           <TouchableOpacity
-            style={styles.inputBox}
+            style={styles.metaInputBox}
             onPress={() => setShowDatePicker(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="calendar-outline" size={17} color="#089A8D" style={styles.inputIcon} />
-            <Text style={[styles.input, { paddingTop: Platform.OS === 'ios' ? 12 : 9, color: formDeliveryDate ? '#0F172A' : '#94A3B8' }]}>
+            <Ionicons name="calendar-outline" size={scale(17)} color="#089A8D" style={styles.fieldIcon} />
+            <Text style={[styles.metaInputText, { color: formDeliveryDate ? '#0F172A' : '#94A3B8' }]}>
               {formDeliveryDate || 'Select Date'}
             </Text>
-            <Ionicons name="chevron-down" size={15} color="#94A3B8" />
+            <Ionicons name="chevron-down" size={scale(14)} color="#94A3B8" />
           </TouchableOpacity>
         </View>
 
-        {/* Card 2: Package Specifications & Category */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderIcon}>
-              <Ionicons name="cube-outline" size={16} color="#089A8D" />
-            </View>
-            <View>
-              <Text style={styles.cardTitle}>Package Specifications</Text>
-              <Text style={styles.cardSubtitle}>
-                Provide accurate weight, category and contents description
-              </Text>
+        {/* Section 2: Package Specifications & Category */}
+        <View style={styles.metaCard}>
+          <View style={styles.sectionTitleRow}>
+            <View style={styles.accentBar} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionHeading}>Package Details</Text>
+              <Text style={styles.sectionSub}>Specify category, weight, and contents</Text>
             </View>
           </View>
 
-          {/* Category Selector Buttons (Travel Mode styled) */}
+          {/* Category Selector Pills */}
           <Text style={styles.fieldLabel}>PACKAGE CATEGORY</Text>
-          <View style={styles.modeRow}>
-            {(['General', 'Electronics', 'Documents', 'Apparel', 'Medicine'] as const).map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                style={[styles.modeButton, formCategory === cat && styles.modeButtonActive]}
-                onPress={() => setFormCategory(cat)}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={
-                    cat === 'General'
-                      ? 'cube'
-                      : cat === 'Electronics'
-                      ? 'laptop'
-                      : cat === 'Documents'
-                      ? 'document-text'
-                      : cat === 'Apparel'
-                      ? 'shirt'
-                      : 'medkit'
-                  }
-                  size={14}
-                  color={formCategory === cat ? '#FFFFFF' : '#64748B'}
-                />
-                <Text
-                  style={[
-                    styles.modeButtonText,
-                    formCategory === cat && styles.modeButtonTextActive,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Weight */}
-          <Text style={styles.fieldLabel}>PACKAGE WEIGHT (KG) *</Text>
-          <View style={styles.inputBox}>
-            <Ionicons name="scale-outline" size={17} color="#089A8D" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              value={formWeight}
-              onChangeText={setFormWeight}
-              keyboardType="numeric"
-              placeholder="e.g. 5"
-              placeholderTextColor="#94A3B8"
-            />
-            <Text style={styles.inputSuffix}>KG</Text>
-          </View>
-
-          {/* Description */}
-          <Text style={[styles.fieldLabel, { marginTop: 14 }]}>DESCRIPTION</Text>
-          <View style={[styles.inputBox, { height: 75, alignItems: 'flex-start', paddingTop: 10 }]}>
-            <Ionicons name="pencil-outline" size={17} color="#089A8D" style={[styles.inputIcon, { marginTop: 2 }]} />
-            <TextInput
-              style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
-              value={formDescription}
-              onChangeText={setFormDescription}
-              placeholder="Brief description of package contents..."
-              placeholderTextColor="#94A3B8"
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
-          {/* Package Photos Upload */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
-            <Text style={styles.fieldLabel}>UPLOAD PACKAGE PHOTOS</Text>
-            <Text style={{ fontSize: 10, color: '#089A8D', fontWeight: '700' }}>
-              {packageImages.length > 0 ? `${packageImages.length}/5 uploaded` : 'Optional'}
-            </Text>
-          </View>
-          <View style={styles.photoUploadRow}>
-            {packageImages.map((uri, idx) => (
-              <View key={idx} style={styles.photoThumbWrap}>
-                <Image source={{ uri }} style={styles.photoThumb} />
+          <View style={styles.categoryPillRow}>
+            {(['General', 'Electronics', 'Documents', 'Apparel', 'Medicine'] as const).map((cat) => {
+              const isActive = formCategory === cat;
+              return (
                 <TouchableOpacity
-                  style={styles.photoRemoveBtn}
-                  onPress={() => removeImage(idx)}
-                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  key={cat}
+                  style={[styles.categoryPill, isActive && styles.categoryPillActive]}
+                  onPress={() => setFormCategory(cat)}
+                  activeOpacity={0.8}
                 >
-                  <Ionicons name="close" size={12} color="#FFFFFF" />
+                  <Ionicons
+                    name={
+                      cat === 'General'
+                        ? 'cube'
+                        : cat === 'Electronics'
+                        ? 'laptop'
+                        : cat === 'Documents'
+                        ? 'document-text'
+                        : cat === 'Apparel'
+                        ? 'shirt'
+                        : 'medkit'
+                    }
+                    size={scale(13.5)}
+                    color={isActive ? '#FFFFFF' : '#089A8D'}
+                  />
+                  <Text style={[styles.categoryPillText, isActive && styles.categoryPillTextActive]}>
+                    {cat}
+                  </Text>
                 </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
+          </View>
 
-            {packageImages.length < 5 && (
-              <TouchableOpacity
-                style={styles.photoAddBtn}
-                onPress={() => setShowPhotoPickerModal(true)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="camera" size={24} color="#089A8D" />
-                <Text style={styles.photoAddText}>Add Photo</Text>
-              </TouchableOpacity>
-            )}
+          {/* Package Weight & Description */}
+          <View style={{ marginTop: scale(10) }}>
+            <Text style={styles.fieldLabel}>ESTIMATED WEIGHT (KG) *</Text>
+            <View style={styles.metaInputBox}>
+              <Ionicons name="scale-outline" size={scale(17)} color="#089A8D" style={styles.fieldIcon} />
+              <TextInput
+                style={styles.metaTextInput}
+                value={formWeight}
+                onChangeText={setFormWeight}
+                keyboardType="numeric"
+                placeholder="5"
+                placeholderTextColor="#94A3B8"
+              />
+              <Text style={styles.inputSuffix}>KG</Text>
+            </View>
+          </View>
+
+          <View style={{ marginTop: scale(12) }}>
+            <Text style={styles.fieldLabel}>ITEM DESCRIPTION & PACKAGING</Text>
+            <View style={[styles.metaInputBox, { height: scale(64), alignItems: 'flex-start', paddingTop: scale(8) }]}>
+              <Ionicons name="reader-outline" size={scale(17)} color="#089A8D" style={[styles.fieldIcon, { marginTop: scale(2) }]} />
+              <TextInput
+                style={[styles.metaTextInput, { height: '100%', textAlignVertical: 'top' }]}
+                value={formDescription}
+                onChangeText={setFormDescription}
+                placeholder="e.g. Legal documents in waterproof sealed folder"
+                placeholderTextColor="#94A3B8"
+                multiline
+              />
+            </View>
+          </View>
+
+          {/* Package Photo Upload */}
+          <View style={{ marginTop: scale(14) }}>
+            <Text style={styles.fieldLabel}>PARCEL PHOTOS (UP TO 5)</Text>
+            <View style={styles.photoUploadRow}>
+              {packageImages.map((uri, idx) => (
+                <View key={`img-${idx}`} style={styles.photoThumbWrap}>
+                  <Image source={{ uri }} style={styles.photoThumb} />
+                  <TouchableOpacity
+                    style={styles.photoRemoveBtn}
+                    onPress={() => removePhoto(idx)}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <Ionicons name="close" size={scale(11)} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              {packageImages.length < 5 && (
+                <TouchableOpacity
+                  style={styles.photoAddBtn}
+                  onPress={() => setShowPhotoPickerModal(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="camera-outline" size={scale(20)} color="#089A8D" />
+                  <Text style={styles.photoAddText}>Add Photo</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
 
-        {/* Card 3: Designated Receiver Information */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderIcon}>
-              <Ionicons name="person-outline" size={16} color="#089A8D" />
-            </View>
-            <View>
-              <Text style={styles.cardTitle}>Receiver Information</Text>
-              <Text style={styles.cardSubtitle}>
-                Who will receive and verify this parcel at the destination
-              </Text>
+        {/* Section 3: Receiver Information */}
+        <View style={styles.metaCard}>
+          <View style={styles.sectionTitleRow}>
+            <View style={styles.accentBar} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionHeading}>Receiver Information</Text>
+              <Text style={styles.sectionSub}>Person who verifies and receives at destination</Text>
             </View>
           </View>
 
           <Text style={styles.fieldLabel}>RECEIVER NAME</Text>
-          <View style={styles.inputBox}>
-            <Ionicons name="person-outline" size={17} color="#089A8D" style={styles.inputIcon} />
+          <View style={styles.metaInputBox}>
+            <Ionicons name="person-outline" size={scale(17)} color="#089A8D" style={styles.fieldIcon} />
             <TextInput
-              style={styles.input}
+              style={styles.metaTextInput}
               value={formReceiverName}
               onChangeText={setFormReceiverName}
               placeholder="e.g. Rahul Sharma"
@@ -398,106 +435,137 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
             />
           </View>
 
-          <Text style={[styles.fieldLabel, { marginTop: 14 }]}>RECEIVER PHONE</Text>
-          <View style={styles.inputBox}>
-            <Ionicons name="call-outline" size={17} color="#089A8D" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              value={formReceiverPhone}
-              onChangeText={setFormReceiverPhone}
-              keyboardType="phone-pad"
-              placeholder="e.g. +91 98765 43210"
-              placeholderTextColor="#94A3B8"
-            />
+          <View style={{ marginTop: scale(12) }}>
+            <Text style={styles.fieldLabel}>RECEIVER PHONE</Text>
+            <View style={styles.metaInputBox}>
+              <Ionicons name="call-outline" size={scale(17)} color="#089A8D" style={styles.fieldIcon} />
+              <TextInput
+                style={styles.metaTextInput}
+                value={formReceiverPhone}
+                onChangeText={setFormReceiverPhone}
+                keyboardType="phone-pad"
+                placeholder="e.g. +91 98765 43210"
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
           </View>
 
-          <Text style={[styles.fieldLabel, { marginTop: 14 }]}>DELIVERY ADDRESS</Text>
-          <View style={styles.inputBox}>
-            <Ionicons name="home-outline" size={17} color="#089A8D" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              value={formReceiverAddress}
-              onChangeText={setFormReceiverAddress}
-              placeholder="e.g. Apartment, Street, Landmark"
-              placeholderTextColor="#94A3B8"
-            />
+          <View style={{ marginTop: scale(12) }}>
+            <Text style={styles.fieldLabel}>DELIVERY ADDRESS / LANDMARK</Text>
+            <View style={styles.metaInputBox}>
+              <Ionicons name="home-outline" size={scale(17)} color="#089A8D" style={styles.fieldIcon} />
+              <TextInput
+                style={styles.metaTextInput}
+                value={formReceiverAddress}
+                onChangeText={setFormReceiverAddress}
+                placeholder="e.g. Apartment, Street, Landmark"
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
           </View>
         </View>
 
-        {/* Card 4: Safety & Publish Action */}
-        <View style={styles.card}>
+        {/* Section 4: Safety & Publish Action */}
+        <View style={styles.metaCard}>
           <View style={styles.trustBanner}>
-            <Ionicons name="shield-checkmark" size={24} color="#089A8D" />
-            <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={styles.trustShieldBox}>
+              <Ionicons name="shield-checkmark" size={scale(20)} color="#089A8D" />
+            </View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.trustTitle}>Flyora 100% Escrow Protection</Text>
               <Text style={styles.trustSubtitle}>
-                Payment stays locked in Escrow until the receiver verifies OTP & QR code.
+                Payment stays protected in Escrow until the receiver verifies OTP & QR code.
               </Text>
             </View>
           </View>
 
-          <TouchableOpacity
-            style={[styles.publishButton, submitting && { opacity: 0.6 }]}
-            onPress={handleSubmit}
-            disabled={submitting}
-            activeOpacity={0.85}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <>
-                <Ionicons name="cloud-upload-outline" size={18} color="#FFFFFF" />
-                <Text style={styles.publishButtonText}>Publish Parcel Request</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.cancelButton} onPress={onBack} activeOpacity={0.7}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.publishButton}
+              onPress={handleSubmit}
+              disabled={submitting}
+              activeOpacity={0.88}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="paper-plane" size={scale(17)} color="#FFFFFF" />
+                  <Text style={styles.publishButtonText}>Publish Request</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
-      {/* Interactive Calendar Date Picker Modal */}
+      {/* Date Picker Modal */}
       <DatePickerModal
         visible={showDatePicker}
         onClose={() => setShowDatePicker(false)}
         selectedDate={formDeliveryDate}
         onSelectDate={(d) => setFormDeliveryDate(d)}
-        title="Select Delivery Date"
+        title="Select Target Delivery Date"
       />
 
-      {/* Choice Modal for Camera or Gallery */}
-      <Modal visible={showPhotoPickerModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
+      {/* Photo Picker Modal */}
+      <Modal
+        visible={showPhotoPickerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPhotoPickerModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPhotoPickerModal(false)}
+        >
           <View style={styles.choiceModalContainer}>
             <View style={styles.choiceHeader}>
-              <Text style={styles.choiceTitle}>Upload Package Photo</Text>
-              <TouchableOpacity onPress={() => setShowPhotoPickerModal(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={20} color="#64748B" />
+              <Text style={styles.choiceTitle}>Add Parcel Photo</Text>
+              <TouchableOpacity onPress={() => setShowPhotoPickerModal(false)}>
+                <Ionicons name="close" size={scale(20)} color="#64748B" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.choiceSubtitle}>Choose how you want to add photos of your parcel:</Text>
+            <Text style={styles.choiceSub}>
+              Clear photos increase traveler acceptance by over 300%.
+            </Text>
 
-            <View style={styles.choiceActionsRow}>
-              <TouchableOpacity style={styles.choiceCard} onPress={captureFromCamera} activeOpacity={0.8}>
-                <View style={[styles.choiceIconWrap, { backgroundColor: '#F0FDFA' }]}>
-                  <Ionicons name="camera" size={26} color="#089A8D" />
-                </View>
-                <Text style={styles.choiceCardTitle}>Take Photo</Text>
-                <Text style={styles.choiceCardSub}>Use camera</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.choiceOption}
+              onPress={captureFromCamera}
+              activeOpacity={0.8}
+            >
+              <View style={styles.choiceIconWrap}>
+                <Ionicons name="camera" size={scale(20)} color="#089A8D" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.choiceOptionTitle}>Take Photo</Text>
+                <Text style={styles.choiceOptionSub}>Open camera and snap parcel</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={scale(16)} color="#94A3B8" />
+            </TouchableOpacity>
 
-              <TouchableOpacity style={styles.choiceCard} onPress={pickFromGallery} activeOpacity={0.8}>
-                <View style={[styles.choiceIconWrap, { backgroundColor: '#EFF6FF' }]}>
-                  <Ionicons name="images" size={26} color="#0284C7" />
-                </View>
-                <Text style={styles.choiceCardTitle}>Gallery</Text>
-                <Text style={styles.choiceCardSub}>Pick from photos</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity style={styles.choiceCancelBtn} onPress={() => setShowPhotoPickerModal(false)}>
-              <Text style={styles.choiceCancelText}>Cancel</Text>
+            <TouchableOpacity
+              style={styles.choiceOption}
+              onPress={pickFromGallery}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.choiceIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="images" size={scale(20)} color="#3B82F6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.choiceOptionTitle}>Choose from Gallery</Text>
+                <Text style={styles.choiceOptionSub}>Select from device photos</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={scale(16)} color="#94A3B8" />
             </TouchableOpacity>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -506,138 +574,234 @@ export const CreateSenderRequestScreen: React.FC<CreateSenderRequestScreenProps>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FCFB',
+    backgroundColor: '#F6F9F8',
   },
-  header: {
+  headerContainer: {
+    overflow: 'hidden',
+    borderBottomLeftRadius: scale(28),
+    borderBottomRightRadius: scale(28),
+    ...Shadows.card,
+  },
+  headerGradient: {
+    paddingHorizontal: scale(18),
+    paddingBottom: scale(22),
+    position: 'relative',
+  },
+  headerPlaneArtWrap: {
+    position: 'absolute',
+    right: scale(-20),
+    top: scale(30),
+    width: scale(190),
+    height: scale(170),
+    opacity: 0.22,
+  },
+  headerPlaneArt: {
+    width: '100%',
+    height: '100%',
+  },
+  topRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#033D37',
-    paddingTop: Platform.OS === 'ios' ? 52 : 40,
-    paddingHorizontal: scale(16),
-    paddingBottom: scale(14),
+    marginBottom: scale(14),
   },
-  backButton: {
-    width: scale(38),
-    height: scale(38),
-    borderRadius: scale(19),
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  backButtonGlass: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: fontScale(18),
+  headerPillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(6),
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: scale(12),
+    paddingVertical: scale(6),
+    borderRadius: scale(20),
+  },
+  headerPillText: {
+    fontSize: fontScale(11.5),
+    fontWeight: '700',
+    color: '#E6FAF6',
+  },
+  titleArea: {
+    marginBottom: scale(16),
+  },
+  screenHeading: {
+    fontSize: fontScale(24),
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  screenTagline: {
+    fontSize: fontScale(12),
+    fontWeight: '500',
+    color: '#A7F3D0',
+    marginTop: scale(4),
+    lineHeight: fontScale(17),
+  },
+  routePreviewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: scale(18),
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(12),
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  routePoint: {
+    flex: 1,
+  },
+  routeIconDot: {
+    width: scale(8),
+    height: scale(8),
+    borderRadius: scale(4),
+    marginBottom: scale(4),
+  },
+  routeCityLabel: {
+    fontSize: fontScale(13),
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
-  headerSubtitle: {
-    fontSize: fontScale(11),
-    fontWeight: '500',
-    color: '#99F6E4',
-    marginTop: 2,
+  routePlaneDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: scale(10),
+  },
+  routeDottedLine: {
+    width: scale(20),
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  routePlaneIconCircle: {
+    width: scale(26),
+    height: scale(26),
+    borderRadius: scale(13),
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: scale(6),
   },
   scrollContent: {
-    padding: scale(16),
+    paddingHorizontal: scale(16),
+    paddingTop: scale(18),
     paddingBottom: scale(40),
   },
-  card: {
+  metaCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: scale(20),
+    borderRadius: scale(22),
     padding: scale(18),
+    marginBottom: scale(16),
     borderWidth: 1,
-    borderColor: '#E6FAF6',
-    ...Shadows.card,
-    marginBottom: scale(20),
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  cardHeader: {
+  sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: scale(10),
     marginBottom: scale(16),
-    paddingBottom: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
-  cardHeaderIcon: {
-    width: scale(32),
-    height: scale(32),
-    borderRadius: scale(10),
-    backgroundColor: '#E6FAF6',
-    justifyContent: 'center',
-    alignItems: 'center',
+  accentBar: {
+    width: scale(4),
+    height: scale(24),
+    borderRadius: scale(2),
+    backgroundColor: '#089A8D',
   },
-  cardTitle: {
-    fontSize: fontScale(14),
+  sectionHeading: {
+    fontSize: fontScale(15),
     fontWeight: '800',
     color: '#0F172A',
   },
-  cardSubtitle: {
+  sectionSub: {
     fontSize: fontScale(11),
-    fontWeight: '500',
     color: '#64748B',
     marginTop: 1,
   },
   fieldLabel: {
-    fontSize: fontScale(11),
+    fontSize: fontScale(10.5),
     fontWeight: '800',
-    color: '#334155',
-    letterSpacing: 0.5,
-    marginBottom: scale(8),
+    color: '#475569',
+    letterSpacing: 0.6,
+    marginBottom: scale(7),
   },
-  inputBox: {
+  metaInputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1.2,
     borderColor: '#E2E8F0',
     borderRadius: scale(14),
     paddingHorizontal: scale(12),
-    height: scale(50),
+    height: scale(48),
   },
-  inputIcon: {
+  fieldIcon: {
     marginRight: scale(8),
   },
-  inputSuffix: {
-    fontSize: fontScale(12),
-    fontWeight: '700',
-    color: '#94A3B8',
-    marginLeft: scale(6),
-  },
-  input: {
+  metaInputText: {
     flex: 1,
-    fontSize: fontScale(14),
+    fontSize: fontScale(13),
+    fontWeight: '600',
+  },
+  metaTextInput: {
+    flex: 1,
+    fontSize: fontScale(13.5),
     fontWeight: '600',
     color: '#0F172A',
   },
-  modeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: scale(6),
-    marginBottom: scale(16),
-  },
-  modeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: scale(5),
-    paddingHorizontal: scale(12),
-    height: scale(38),
-    borderRadius: scale(12),
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  modeButtonActive: {
-    backgroundColor: '#089A8D',
-    borderColor: '#089A8D',
-  },
-  modeButtonText: {
+  inputSuffix: {
     fontSize: fontScale(11.5),
     fontWeight: '700',
-    color: '#64748B',
+    color: '#94A3B8',
+    marginLeft: scale(4),
   },
-  modeButtonTextActive: {
+  categoryPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scale(8),
+    marginBottom: scale(12),
+  },
+  categoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(5),
+    paddingHorizontal: scale(12),
+    paddingVertical: scale(8),
+    borderRadius: scale(14),
+    backgroundColor: '#F0FDFA',
+    borderWidth: 1.2,
+    borderColor: '#CCFBF1',
+  },
+  categoryPillActive: {
+    backgroundColor: '#089A8D',
+    borderColor: '#089A8D',
+    shadowColor: '#089A8D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  categoryPillText: {
+    fontSize: fontScale(11.5),
+    fontWeight: '700',
+    color: '#0F766E',
+  },
+  categoryPillTextActive: {
     color: '#FFFFFF',
+    fontWeight: '800',
   },
   photoUploadRow: {
     flexDirection: 'row',
@@ -647,8 +811,8 @@ const styles = StyleSheet.create({
   },
   photoThumbWrap: {
     position: 'relative',
-    width: scale(68),
-    height: scale(68),
+    width: scale(64),
+    height: scale(64),
     borderRadius: scale(14),
     overflow: 'hidden',
     borderWidth: 1.2,
@@ -662,7 +826,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 3,
     right: 3,
-    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+    backgroundColor: 'rgba(239, 68, 68, 0.88)',
     borderRadius: 10,
     width: scale(18),
     height: scale(18),
@@ -670,10 +834,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   photoAddBtn: {
-    width: scale(68),
-    height: scale(68),
+    width: scale(64),
+    height: scale(64),
     borderRadius: scale(14),
-    borderWidth: 2,
+    borderWidth: 1.6,
     borderColor: '#089A8D',
     borderStyle: 'dashed',
     backgroundColor: '#F0FDFA',
@@ -689,53 +853,89 @@ const styles = StyleSheet.create({
   trustBanner: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: scale(12),
     backgroundColor: '#F0FDFA',
-    borderRadius: scale(14),
-    padding: scale(12),
+    borderRadius: scale(16),
+    padding: scale(14),
     borderWidth: 1,
     borderColor: '#CCFBF1',
     marginBottom: scale(16),
   },
+  trustShieldBox: {
+    width: scale(38),
+    height: scale(38),
+    borderRadius: scale(12),
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
   trustTitle: {
     fontSize: fontScale(12),
     fontWeight: '800',
-    color: '#089A8D',
+    color: '#0F766E',
   },
   trustSubtitle: {
     fontSize: fontScale(10.5),
     color: '#475569',
     marginTop: 2,
-    lineHeight: 14,
+    lineHeight: 15,
   },
-  publishButton: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#089A8D',
+    gap: scale(12),
+  },
+  cancelButton: {
+    flex: 1,
     height: scale(52),
-    borderRadius: scale(16),
+    borderRadius: scale(18),
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2,
+    borderColor: '#CBD5E1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: fontScale(14),
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  publishButton: {
+    flex: 2,
+    height: scale(52),
+    borderRadius: scale(18),
+    backgroundColor: '#089A8D',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: scale(8),
-    ...Shadows.tealGlow,
+    shadowColor: '#089A8D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
   },
   publishButtonText: {
     fontSize: fontScale(15),
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: -0.2,
+    letterSpacing: 0.2,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: scale(20),
   },
   choiceModalContainer: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: scale(340),
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: scale(24),
+    padding: scale(20),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
@@ -746,59 +946,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: scale(6),
   },
   choiceTitle: {
-    fontSize: 16,
+    fontSize: fontScale(16),
     fontWeight: '800',
     color: '#0F172A',
   },
-  choiceSubtitle: {
-    fontSize: 12,
+  choiceSub: {
+    fontSize: fontScale(12),
     color: '#64748B',
-    marginBottom: 16,
+    marginBottom: scale(16),
+    lineHeight: fontScale(17),
   },
-  choiceActionsRow: {
+  choiceOption: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  choiceCard: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 16,
     alignItems: 'center',
-    borderWidth: 1.5,
+    padding: scale(12),
+    backgroundColor: '#F8FAFC',
+    borderRadius: scale(16),
+    marginBottom: scale(10),
+    borderWidth: 1,
     borderColor: '#E2E8F0',
+    gap: scale(12),
   },
   choiceIconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(12),
+    backgroundColor: '#E6FAF6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  choiceCardTitle: {
-    fontSize: 13,
-    fontWeight: '800',
+  choiceOptionTitle: {
+    fontSize: fontScale(13.5),
+    fontWeight: '700',
     color: '#0F172A',
   },
-  choiceCardSub: {
-    fontSize: 10,
+  choiceOptionSub: {
+    fontSize: fontScale(11),
     color: '#64748B',
-    marginTop: 2,
-  },
-  choiceCancelBtn: {
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-  },
-  choiceCancelText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#475569',
+    marginTop: 1,
   },
 });
