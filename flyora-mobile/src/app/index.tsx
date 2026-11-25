@@ -47,7 +47,8 @@ export default function AppEntry() {
   const [mainTab, setMainTab] = useState<MainTabKey>('dashboard');
   const [activeSubScreen, setActiveSubScreen] = useState<SubScreenKey>(null);
   const [activeChatTarget, setActiveChatTarget] = useState<{ userId?: number; userName?: string } | null>(null);
-  const [unreadNotifs, setUnreadNotifs] = useState<number>(2);
+  const [unreadNotifs, setUnreadNotifs] = useState<number>(0);
+  const [unreadMessages, setUnreadMessages] = useState<number>(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(false);
 
   // Reset navigation states when user logs out or logs in
@@ -69,12 +70,16 @@ export default function AppEntry() {
   useEffect(() => {
     if (isAuthenticated && user) {
       GlobalNotificationSync.start(user);
-      const unsubscribe = GlobalNotificationSync.onUnreadCountChange((count) => {
+      const unsubscribeNotifs = GlobalNotificationSync.onUnreadCountChange((count) => {
         setUnreadNotifs(count);
+      });
+      const unsubscribeChat = GlobalNotificationSync.onUnreadChatCountChange((count) => {
+        setUnreadMessages(count);
       });
 
       return () => {
-        unsubscribe();
+        unsubscribeNotifs();
+        unsubscribeChat();
         GlobalNotificationSync.stop();
       };
     } else {
@@ -174,6 +179,9 @@ export default function AppEntry() {
   const handleCloseSubScreen = () => {
     setActiveSubScreen(null);
     setActiveChatTarget(null);
+    // Refresh unread notifications and unread messages whenever user comes back to dashboard
+    GlobalNotificationSync.syncFromBackend(true);
+    GlobalNotificationSync.syncUnreadChatCount();
   };
 
   const renderActiveView = () => {
@@ -247,6 +255,7 @@ export default function AppEntry() {
             onPostTrip={() => setMainTab('trips')}
             onPostShipment={() => setMainTab('shipments')}
             unreadNotificationsCount={unreadNotifs}
+            unreadMessagesCount={unreadMessages}
           />
         );
       case 'trips':

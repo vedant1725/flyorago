@@ -29,6 +29,7 @@ interface DashboardScreenProps {
   onPostTrip?: () => void;
   onPostShipment?: () => void;
   unreadNotificationsCount?: number;
+  unreadMessagesCount?: number;
 }
 
 interface DashboardCache {
@@ -51,6 +52,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onPostTrip,
   onPostShipment,
   unreadNotificationsCount = 2,
+  unreadMessagesCount = 0,
 }) => {
   const { user, kycStatus } = useAuth();
   const insets = useSafeAreaInsets();
@@ -285,9 +287,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   activeOpacity={0.8}
                 >
                   <Ionicons name="chatbubble-ellipses" size={20} color="#FFFFFF" />
-                  <View style={styles.messengerBadge}>
-                    <Text style={styles.messengerBadgeText}>1</Text>
-                  </View>
+                  {unreadMessagesCount > 0 && (
+                    <View style={styles.messengerBadge}>
+                      <Text style={styles.messengerBadgeText}>
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

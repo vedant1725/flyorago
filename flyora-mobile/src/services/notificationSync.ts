@@ -11,6 +11,7 @@ class NotificationSyncManager {
   private userId: string | number | null = null;
   private isRunning: boolean = false;
   private listeners: Set<(count: number) => void> = new Set();
+  private chatListeners: Set<(count: number) => void> = new Set();
   private eventListeners: Set<(event: any) => void> = new Set();
   private processedIds: Set<string> = new Set();
 
@@ -35,6 +36,7 @@ class NotificationSyncManager {
 
     // 1. Initial immediate sync from Backend API
     await this.syncFromBackend(false);
+    await this.syncUnreadChatCount();
 
     // 2. Connect live WebSocket (Exact match with Web SocketContext)
     this.connectWebSocket();
@@ -45,6 +47,7 @@ class NotificationSyncManager {
       const token = await Storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
       if (token) {
         this.syncFromBackend(true);
+        this.syncUnreadChatCount();
       }
     }, 30000);
   }
@@ -70,6 +73,24 @@ class NotificationSyncManager {
   onUnreadCountChange(cb: (count: number) => void) {
     this.listeners.add(cb);
     return () => this.listeners.delete(cb);
+  }
+
+  /**
+   * Register listener for unread chat messages badge
+   */
+  onUnreadChatCountChange(cb: (count: number) => void) {
+    this.chatListeners.add(cb);
+    return () => this.chatListeners.delete(cb);
+  }
+
+  notifyChatListeners(count: number) {
+    this.chatListeners.forEach((cb) => {
+      try {
+        cb(count);
+      } catch (err) {
+        console.warn('[NotificationSyncManager] chat listener error:', err);
+      }
+    });
   }
 
   /**
@@ -131,8 +152,9 @@ class NotificationSyncManager {
             data,
           });
 
-          // Sync database notifications list
+          // Sync database notifications list and chats
           await this.syncFromBackend(true);
+          await this.syncUnreadChatCount();
         } catch (err) {
           console.warn('[Flyora Mobile WS] message parse err:', err);
         }
@@ -196,6 +218,26 @@ class NotificationSyncManager {
       }
     } catch (err) {
       if (!isSilent) console.warn('[NotificationSyncManager] sync error:', err);
+    }
+  }
+
+  /**
+   * Sync Unread Chat Messages Count from Chat API
+   */
+  async syncUnreadChatCount() {
+    if (!this.isRunning) return;
+
+    try {
+      const res = await apiFetch('/api/chat/conversations');
+      if (res?.success && Array.isArray(res?.data)) {
+        let totalUnread = 0;
+        for (const conv of res.data) {
+          totalUnread += Number(conv?.unread_count || 0);
+        }
+        this.notifyChatListeners(totalUnread);
+      }
+    } catch (err) {
+      // Silently handle
     }
   }
 }
