@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getSafeHeaderPaddingTop } from '../../constants/responsive';
+import { getSafeHeaderPaddingTop, scale, fontScale } from '../../constants/responsive';
 import { FlyoraColors, BorderRadius, Shadows } from '../../constants/theme';
 import { apiFetch } from '../../services/api';
 import { Storage } from '../../services/storage';
@@ -370,50 +370,6 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
               <Text style={styles.markAllText}>Read All</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Quick System Shutter / Status Bar Push Banner */}
-          <View style={styles.shuttleBanner}>
-            <View style={styles.shuttleInfo}>
-              <View style={styles.shuttleIconWrap}>
-                <Ionicons
-                  name={shuttlePermission ? 'notifications-circle' : 'notifications-off-circle'}
-                  size={24}
-                  color={shuttlePermission ? '#2DD4BF' : '#FBBF24'}
-                />
-              </View>
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.shuttleTitle}>
-                  {shuttlePermission ? 'Phone Shutter Push Active' : 'Enable Mobile Shutter Push'}
-                </Text>
-                <Text style={styles.shuttleDesc}>
-                  {shuttlePermission
-                    ? 'Alerts appear in your phone status bar & lock screen.'
-                    : 'Get alerts in your top notification tray.'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.shuttleActionRow}>
-              {!shuttlePermission ? (
-                <TouchableOpacity
-                  style={styles.enableBtn}
-                  onPress={handleRequestPermission}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.enableBtnText}>Enable Shutter</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={styles.testBtn}
-                  onPress={triggerTestShuttle}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="paper-plane" size={14} color="#033D37" />
-                  <Text style={styles.testBtnText}>Test Phone Shutter</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
         </LinearGradient>
       </View>
 
@@ -544,9 +500,8 @@ const styles = StyleSheet.create({
     ...Shadows.cardHover,
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 54 : 44,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: scale(20),
+    paddingBottom: scale(20),
   },
   topRow: {
     flexDirection: 'row',
@@ -776,8 +731,8 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 60,
-    paddingHorizontal: 30,
+    paddingTop: scale(40),
+    paddingHorizontal: scale(30),
   },
   emptyIconCircle: {
     width: 80,

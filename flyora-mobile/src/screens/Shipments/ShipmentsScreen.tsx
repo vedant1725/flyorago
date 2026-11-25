@@ -36,7 +36,7 @@ import { getSafeHeaderPaddingTop, scale, fontScale } from '../../constants/respo
 const { width } = Dimensions.get('window');
 
 interface ShipmentsScreenProps {
-  onOpenChat?: () => void;
+  onOpenChat?: (target?: { userId?: number; userName?: string }) => void;
   onOpenNotifications?: () => void;
   onNavigateToKyc?: () => void;
 }

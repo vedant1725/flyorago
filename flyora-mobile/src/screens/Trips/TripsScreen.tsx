@@ -37,7 +37,7 @@ let cachedTravelerData: {
 } | null = null;
 
 interface TripsScreenProps {
-  onOpenChat?: () => void;
+  onOpenChat?: (target?: { userId?: number; userName?: string }) => void;
   onOpenProfile?: () => void;
   onOpenTripDetails?: (tripId: number | string) => void;
   onNavigateToKyc?: () => void;

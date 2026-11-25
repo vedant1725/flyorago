@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { promptGoogleAuth } from '../../services/googleAuth';
 import { getSafeHeaderPaddingTop } from '../../constants/responsive';
 
 const { width } = Dimensions.get('window');
@@ -34,7 +35,7 @@ type LoginErrorType =
   | null;
 
 interface LoginScreenProps {
-  onNavigateToSignup: () => void;
+  onNavigateToSignup: (initialEmail?: string, autoOpenOtp?: boolean) => void;
   onNavigateToForgotPassword?: () => void;
 }
 
@@ -133,6 +134,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     if (!res.success) {
       setLoading(false);
+
+      // Check if user account is not verified yet
+      if (res.isVerified === false) {
+        onNavigateToSignup(res.email || email.trim().toLowerCase(), true);
+        return;
+      }
+
       const code = (res.errorCode || res?.errors?.error_code || '').toUpperCase();
       const msg = res.message || 'Login failed.';
 
@@ -183,11 +191,35 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     clearError();
-    const res = await loginWithGoogle();
-    setGoogleLoading(false);
-    if (!res.success) {
+    try {
+      const authResult = await promptGoogleAuth();
+      if (!authResult.success) {
+        setGoogleLoading(false);
+        if (authResult.message && !authResult.message.includes('cancelled')) {
+          setErrorType('SERVER_ERROR');
+          setErrorMessage(authResult.message);
+          showBannerAnimation();
+        }
+        return;
+      }
+
+      const res = await loginWithGoogle(authResult.credential, {
+        access_token: authResult.access_token,
+        email: authResult.email,
+        name: authResult.name,
+        picture: authResult.picture,
+      });
+
+      setGoogleLoading(false);
+      if (!res.success) {
+        setErrorType('SERVER_ERROR');
+        setErrorMessage(res.message || 'Google sign-in was cancelled or failed.');
+        showBannerAnimation();
+      }
+    } catch (err: any) {
+      setGoogleLoading(false);
       setErrorType('SERVER_ERROR');
-      setErrorMessage(res.message || 'Google sign-in was cancelled or failed.');
+      setErrorMessage(err.message || 'Google sign-in failed.');
       showBannerAnimation();
     }
   };
@@ -515,7 +547,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             {/* Navigation Footer */}
             <View style={styles.footerRow}>
               <Text style={styles.footerPrompt}>Don't have an account? </Text>
-              <TouchableOpacity onPress={onNavigateToSignup}>
+              <TouchableOpacity onPress={() => onNavigateToSignup()}>
                 <Text style={styles.footerLink}>Create Account</Text>
               </TouchableOpacity>
             </View>

@@ -28,6 +28,7 @@ import { GlobalNotificationSync } from '../../services/notificationSync';
 import { AppAlert as Alert } from '../../components/AppAlertModal';
 import { QrViewModal } from '../../components/QrViewModal';
 import { DeliverySuccessModal } from '../../components/DeliverySuccessModal';
+import { NativeQRCode } from '../../components/NativeQRCode';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +36,7 @@ interface SenderDetailsScreenProps {
   requestId: string | number;
   initialRequest?: any;
   onBack: () => void;
-  onOpenChat?: () => void;
+  onOpenChat?: (target?: { userId?: number; userName?: string }) => void;
 }
 
 export const SenderDetailsScreen: React.FC<SenderDetailsScreenProps> = ({
@@ -324,6 +325,7 @@ export const SenderDetailsScreen: React.FC<SenderDetailsScreenProps> = ({
           weight: safeWeight,
           reward: safeReward,
           deliveryOtp: rawOtp,
+          deliveryQrCode: linkedBooking?.delivery_qr_code || linkedBooking?.deliveryQrCode || null,
           route: {
             from: senderTrip?.from_location || linkedBooking?.from_location || (linkedBooking?.route?.from) || 'Origin',
             to: senderTrip?.to_location || linkedBooking?.to_location || (linkedBooking?.route?.to) || 'Destination',
@@ -809,12 +811,21 @@ export const SenderDetailsScreen: React.FC<SenderDetailsScreenProps> = ({
                 onPress={() => setShowQrModal(true)}
                 activeOpacity={0.85}
               >
-                <Image
-                  source={{
-                    uri: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=FLYORA-OTP-${booking.deliveryOtp}`,
-                  }}
-                  style={styles.qrImage}
-                />
+                {booking.deliveryQrCode ? (
+                  <ExpoImage
+                    source={{ uri: booking.deliveryQrCode }}
+                    style={{ width: 90, height: 90, borderRadius: 8 }}
+                    contentFit="contain"
+                  />
+                ) : (
+                  <NativeQRCode
+                    value={`FLYORA-DELIVERY:${booking.linkedBookingId || booking.rawId || booking.id || 1}:${booking.deliveryOtp}`}
+                    size={90}
+                    color="#0F172A"
+                    backgroundColor="#FFFFFF"
+                    quietZoneModules={1}
+                  />
+                )}
                 <View style={styles.viewQrBadge}>
                   <Ionicons name="expand-outline" size={11} color="#089A8D" />
                   <Text style={styles.viewQrText}>View QR</Text>
@@ -1023,7 +1034,15 @@ export const SenderDetailsScreen: React.FC<SenderDetailsScreenProps> = ({
               )}
 
               {onOpenChat && (
-                <TouchableOpacity style={styles.chatTravelerBtn} onPress={onOpenChat}>
+                <TouchableOpacity
+                  style={styles.chatTravelerBtn}
+                  onPress={() =>
+                    onOpenChat({
+                      userId: booking.traveler?.id,
+                      userName: booking.traveler?.name,
+                    })
+                  }
+                >
                   <Ionicons name="chatbubble-ellipses" size={15} color="#FFFFFF" />
                   <Text style={styles.chatTravelerBtnText}>Chat with Traveler</Text>
                 </TouchableOpacity>
@@ -1211,8 +1230,9 @@ export const SenderDetailsScreen: React.FC<SenderDetailsScreenProps> = ({
         visible={showQrModal}
         onClose={() => setShowQrModal(false)}
         otpCode={booking.deliveryOtp || '849201'}
+        qrCodeUrl={booking.deliveryQrCode || null}
         packageName={booking.packageName || 'Parcel'}
-        requestId={booking.id}
+        requestId={booking.linkedBookingId || booking.rawId || booking.id}
         receiverName={booking.recipient?.name || booking.recipientName || 'Recipient'}
       />
 

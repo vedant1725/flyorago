@@ -17,8 +17,8 @@ interface AuthContextType {
   isLoading: boolean;
   kycStatus: 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
   currentRole: 'sender' | 'traveler';
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; errorCode?: string | null; errors?: any }>;
-  loginWithGoogle: (credential?: string) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; errorCode?: string | null; errors?: any; isVerified?: boolean; email?: string }>;
+  loginWithGoogle: (credential?: string, directPayload?: { access_token?: string; email?: string; name?: string; picture?: string }) => Promise<{ success: boolean; message?: string }>;
   signup: (payload: SignupPayload) => Promise<{ success: boolean; message?: string }>;
   verifyOtp: (email: string, otp: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
@@ -96,6 +96,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       const resData = res.data;
+      const isVerified = resData?.is_verified ?? resData?.user?.is_verified ?? true;
+
+      // If user has not completed OTP email verification yet, DO NOT persist session
+      // Return isVerified: false so the UI can redirect directly to the OTP verification screen
+      if (isVerified === false) {
+        setIsLoading(false);
+        return {
+          success: false,
+          isVerified: false,
+          email: cleanEmail,
+          message: 'Please verify your email address to activate your account.',
+        };
+      }
+
       const accessToken = resData?.tokens?.access || resData?.accessToken || 'demo_token';
       const refreshToken = resData?.tokens?.refresh || '';
       const userId = String(resData?.userId || resData?.user?.id || 'usr-1');
@@ -133,32 +147,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginWithGoogle = async (credential?: string) => {
+  const loginWithGoogle = async (credential?: string, directPayload?: { access_token?: string; email?: string; name?: string; picture?: string }) => {
     setIsLoading(true);
     try {
       let resData: any = null;
+      let requestBody: any = null;
+
       if (credential) {
+        requestBody = { credential };
+      } else if (directPayload) {
+        requestBody = directPayload;
+      }
+
+      if (requestBody) {
         const res = await apiFetch('/api/auth/google/', {
           method: 'POST',
-          body: JSON.stringify({ credential }),
+          body: JSON.stringify(requestBody),
         });
         if (res.success && res.data) {
           resData = res.data;
+        } else if (!res.success) {
+          setIsLoading(false);
+          return { success: false, message: res.message || 'Google authentication failed on server.' };
         }
       }
 
+      if (!resData) {
+        setIsLoading(false);
+        return { success: false, message: 'Could not obtain user profile from Google.' };
+      }
+
       const accessToken = resData?.tokens?.access || resData?.accessToken || `google_token_${Date.now()}`;
+      const refreshToken = resData?.tokens?.refresh || resData?.refreshToken;
       const userId = String(resData?.userId || resData?.user?.id || 'usr-google');
-      const fullName = resData?.fullName || resData?.user?.fullName || 'Google Member';
+      const fullName = resData?.fullName || resData?.user?.name || resData?.user?.fullName || 'Google Member';
       const email = resData?.email || resData?.user?.email || 'member@gmail.com';
-      const role: 'sender' | 'traveler' = (resData?.role || 'sender') as any;
+      const role: 'sender' | 'traveler' = (resData?.role || resData?.user?.role || 'sender') as any;
+      const kycStatus = (resData?.kycStatus || 'APPROVED').toUpperCase() as any;
 
       await Storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+      if (refreshToken) {
+        await Storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+      }
       await Storage.setItem(STORAGE_KEYS.USER_ID, userId);
       await Storage.setItem(STORAGE_KEYS.USER_NAME, fullName);
       await Storage.setItem(STORAGE_KEYS.USER_EMAIL, email);
       await Storage.setItem(STORAGE_KEYS.USER_ROLE, role);
-      await Storage.setItem(STORAGE_KEYS.KYC_STATUS, 'APPROVED');
+      await Storage.setItem(STORAGE_KEYS.KYC_STATUS, kycStatus);
 
       setToken(accessToken);
       setUser({
@@ -166,13 +201,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         fullName,
         email,
         role,
-        kycStatus: 'APPROVED',
+        kycStatus,
         trustScore: 4.96,
         completedDeliveries: 16,
         completedTrips: 9,
       });
       setCurrentRole(role);
-      setKycStatus('APPROVED');
+      setKycStatus(kycStatus);
       setIsLoading(false);
       return { success: true };
     } catch (err: any) {

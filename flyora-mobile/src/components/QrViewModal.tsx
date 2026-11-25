@@ -5,16 +5,17 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  Image,
   Dimensions,
   Animated,
   Share,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Shadows, BorderRadius } from '../constants/theme';
 import { AppAlert as Alert } from './AppAlertModal';
+import { NativeQRCode } from './NativeQRCode';
 
 const { width } = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ interface QrViewModalProps {
   visible: boolean;
   onClose: () => void;
   otpCode: string | number;
+  qrCodeUrl?: string | null;
   packageName?: string;
   requestId?: string | number;
   senderName?: string;
@@ -32,6 +34,7 @@ export const QrViewModal: React.FC<QrViewModalProps> = ({
   visible,
   onClose,
   otpCode,
+  qrCodeUrl,
   packageName = 'Parcel Delivery',
   requestId,
   senderName,
@@ -40,7 +43,9 @@ export const QrViewModal: React.FC<QrViewModalProps> = ({
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=FLYORA-OTP-${otpCode}`;
+  const rawBookingId = String(requestId || '').replace(/\D/g, '') || '1';
+  const qrValue = `FLYORA-DELIVERY:${rawBookingId}:${otpCode}`;
+  const resolvedQrImage = qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrValue)}`;
 
   useEffect(() => {
     if (visible) {
@@ -65,12 +70,12 @@ export const QrViewModal: React.FC<QrViewModalProps> = ({
   // Share QR code and delivery verification credentials
   const handleShare = async () => {
     try {
-      const shareMessage = `📦 FlyoraGo Handover Verification QR\n\nParcel: ${packageName}\nRequest ID: #${requestId || 'N/A'}\nReceiver: ${receiverName || 'Recipient'}\n\n🔑 6-Digit Delivery OTP: ${otpCode}\n\nScan QR Code directly or verify online:\n${qrImageUrl}\n\n⚠️ Share this ONLY upon physical receipt of the parcel.`;
+      const shareMessage = `📦 FlyoraGo Handover Verification QR\n\nParcel: ${packageName}\nRequest ID: #${requestId || 'N/A'}\nReceiver: ${receiverName || 'Recipient'}\n\n🔑 6-Digit Delivery OTP: ${otpCode}\n\nScan QR Code directly or verify online:\n${resolvedQrImage}\n\n⚠️ Share this ONLY upon physical receipt of the parcel.`;
 
       await Share.share({
         message: shareMessage,
         title: `Flyora Handover OTP & QR: ${otpCode}`,
-        url: qrImageUrl, // Supported on iOS
+        url: resolvedQrImage, // Supported on iOS
       });
     } catch (error: any) {
       Alert.alert('Share Failed', error?.message || 'Could not open share sheet.');
@@ -126,17 +131,27 @@ export const QrViewModal: React.FC<QrViewModalProps> = ({
             {/* High-Resolution QR Card */}
             <View style={styles.qrCard}>
               <View style={styles.qrFrame}>
-                <Image
-                  source={{ uri: qrImageUrl }}
-                  style={styles.qrImage}
-                  resizeMode="contain"
-                />
+                {qrCodeUrl ? (
+                  <Image
+                    source={{ uri: qrCodeUrl }}
+                    style={{ width: 200, height: 200 }}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <NativeQRCode
+                    value={qrValue}
+                    size={200}
+                    color="#0F172A"
+                    backgroundColor="#FFFFFF"
+                    quietZoneModules={2}
+                  />
+                )}
               </View>
 
               {/* Scannable Notice */}
               <View style={styles.qrMetaRow}>
                 <Ionicons name="scan-circle-outline" size={18} color="#089A8D" />
-                <Text style={styles.qrMetaText}>High Resolution • Scannable by Traveler Camera</Text>
+                <Text style={styles.qrMetaText}>Official Backend Verified • Scannable by Traveler Camera</Text>
               </View>
             </View>
 

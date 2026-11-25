@@ -18,14 +18,14 @@ function resolveDefaultBackendUrl(): string {
   }
 
   // 2. Active Wi-Fi LAN IP of machine
-  return 'http://192.168.0.117:8000';
+  return 'http://192.168.0.100:8000';
 }
 
 export const LOCAL_BACKEND_URL = resolveDefaultBackendUrl();
 
 export const PRODUCTION_API_URL = 'https://api.flyorago.me';
 
-// Default to live production backend for standalone builds, or local for development
+// Production default: Connected to live backend https://api.flyorago.me
 export const DEFAULT_API_BASE_URL = PRODUCTION_API_URL;
 
 let cachedBaseUrl: string = DEFAULT_API_BASE_URL;
@@ -36,8 +36,8 @@ export async function getApiBaseUrl(): Promise<string> {
     cachedBaseUrl = custom.trim().replace(/\/+$/, '');
     return cachedBaseUrl;
   }
-  cachedBaseUrl = PRODUCTION_API_URL;
-  return PRODUCTION_API_URL;
+  cachedBaseUrl = DEFAULT_API_BASE_URL;
+  return DEFAULT_API_BASE_URL;
 }
 
 export async function setApiBaseUrl(url: string): Promise<void> {
