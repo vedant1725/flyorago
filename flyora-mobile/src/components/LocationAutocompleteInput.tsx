@@ -174,17 +174,33 @@ export const LocationAutocompleteInput: React.FC<LocationAutocompleteProps> = ({
         )}
 
         {inputValue.length > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {isOpen && (
+              <TouchableOpacity
+                onPress={() => setIsOpen(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.closeBadgeBtn}
+              >
+                <Ionicons name="chevron-up" size={17} color="#089A8D" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={() => {
+                setInputValue('');
+                onChange('');
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={17} color="#94A3B8" />
+            </TouchableOpacity>
+          </View>
+        ) : (
           <TouchableOpacity
-            onPress={() => {
-              setInputValue('');
-              onChange('');
-            }}
+            onPress={() => setIsOpen(!isOpen)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close-circle" size={17} color="#94A3B8" />
+            <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={17} color={isOpen ? '#089A8D' : '#94A3B8'} />
           </TouchableOpacity>
-        ) : (
-          <Ionicons name="chevron-down" size={16} color="#94A3B8" />
         )}
       </View>
 
@@ -192,10 +208,20 @@ export const LocationAutocompleteInput: React.FC<LocationAutocompleteProps> = ({
       {isOpen && (
         <View style={styles.dropdownContainer}>
           <View style={styles.dropdownHeader}>
-            <Ionicons name="location" size={12} color="#089A8D" />
-            <Text style={styles.dropdownHeaderText}>
-              {loadingLive ? 'SEARCHING ALL INDIA LOCATIONS...' : 'ALL INDIA LIVE LOCATIONS & PINCODES'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+              <Ionicons name="location" size={12} color="#089A8D" />
+              <Text style={styles.dropdownHeaderText} numberOfLines={1}>
+                {loadingLive ? 'SEARCHING ALL INDIA LOCATIONS...' : 'ALL INDIA LIVE LOCATIONS & PINCODES'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setIsOpen(false)}
+              style={styles.dropdownCloseBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.dropdownCloseText}>Close</Text>
+              <Ionicons name="close" size={14} color="#64748B" />
+            </TouchableOpacity>
           </View>
           <ScrollView
             style={styles.dropdownScroll}
@@ -313,6 +339,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#64748B',
     letterSpacing: 0.8,
+  },
+  dropdownCloseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  dropdownCloseText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  closeBadgeBtn: {
+    padding: 3,
+    backgroundColor: '#E6FAF6',
+    borderRadius: 8,
   },
   dropdownScroll: {
     maxHeight: 200,
