@@ -111,7 +111,12 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
         <LinearGradient
           colors={['#033D37', '#065F56', '#089A8D']}
           locations={[0, 0.45, 1]}
-          style={[styles.headerGradient, { paddingTop: getSafeHeaderPaddingTop(insets.top) }]}
+          style={[
+            styles.headerGradient,
+            {
+              paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 24 : 12) + scale(6),
+            },
+          ]}
         >
           {/* Background Plane & Route Art */}
           <View style={styles.headerPlaneArtWrap} pointerEvents="none">
@@ -394,17 +399,17 @@ const styles = StyleSheet.create({
     ...Shadows.card,
   },
   headerGradient: {
-    paddingHorizontal: scale(18),
-    paddingBottom: scale(22),
+    paddingHorizontal: scale(16),
+    paddingBottom: scale(16),
     position: 'relative',
   },
   headerPlaneArtWrap: {
     position: 'absolute',
     right: scale(-20),
-    top: scale(30),
-    width: scale(190),
-    height: scale(170),
-    opacity: 0.22,
+    top: scale(20),
+    width: scale(180),
+    height: scale(150),
+    opacity: 0.2,
   },
   headerPlaneArt: {
     width: '100%',
@@ -414,7 +419,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: scale(14),
+    marginBottom: scale(10),
   },
   backButtonGlass: {
     width: scale(40),
