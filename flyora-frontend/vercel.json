@@ -1,4 +1,6 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -8,9 +10,34 @@
       "source": "/media/:path*",
       "destination": "https://api.flyorago.me/media/:path*"
     },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/login", "destination": "/_app.html" },
+    { "source": "/forgot-password", "destination": "/_app.html" },
+    { "source": "/signup", "destination": "/_app.html" },
+    { "source": "/kyc", "destination": "/_app.html" },
+    { "source": "/admin", "destination": "/_app.html" },
+    { "source": "/admin/:path*", "destination": "/_app.html" },
+    { "source": "/dashboard", "destination": "/_app.html" },
+    { "source": "/trips", "destination": "/_app.html" },
+    { "source": "/bookings", "destination": "/_app.html" },
+    { "source": "/shipments", "destination": "/_app.html" },
+    { "source": "/sender", "destination": "/_app.html" },
+    { "source": "/sender/:path*", "destination": "/_app.html" },
+    { "source": "/traveler", "destination": "/_app.html" },
+    { "source": "/traveler/:path*", "destination": "/_app.html" },
+    { "source": "/wallet", "destination": "/_app.html" },
+    { "source": "/wallet/:path*", "destination": "/_app.html" },
+    { "source": "/earnings", "destination": "/_app.html" },
+    { "source": "/messages", "destination": "/_app.html" },
+    { "source": "/support", "destination": "/_app.html" },
+    { "source": "/profile", "destination": "/_app.html" },
+    { "source": "/settings", "destination": "/_app.html" },
+    { "source": "/analytics", "destination": "/_app.html" },
+    { "source": "/reports", "destination": "/_app.html" },
+    { "source": "/booking/:path*", "destination": "/_app.html" },
+    { "source": "/trip/:path*", "destination": "/_app.html" },
+    { "source": "/shipment/:path*", "destination": "/_app.html" },
+    { "source": "/notifications", "destination": "/_app.html" },
+    { "source": "/trust", "destination": "/_app.html" },
+    { "source": "/ai", "destination": "/_app.html" }
   ]
 }

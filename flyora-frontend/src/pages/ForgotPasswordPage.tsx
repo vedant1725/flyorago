@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import Button from '../components/ui/Button';
+import { SeoHead } from '../components/seo/SeoHead';
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -147,6 +148,12 @@ export const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+      <SeoHead
+        title="Reset Password | Flyorago"
+        description="Reset your Flyorago account password securely."
+        path="/forgot-password"
+        noindex
+      />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Brand Logo Header */}
         <div className="flex justify-center items-center gap-2 mb-4">

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
 import { 
   HelpCircle, Plane, Package, 
   ShieldAlert, Handshake, Mail, 
@@ -107,8 +110,24 @@ const ContactUsPage: React.FC = () => {
     }
   };
 
+  const title = 'Contact Flyorago Support — 24/7 Sender & Traveler Assistance';
+  const description =
+    'Contact Flyorago for sender support, traveler assistance, KYC verification questions, trust and safety reporting, or logistics partnerships.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/contact"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/contact' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Contact Us', path: '/contact' },
+          ]),
+        ]}
+      />
       <Header />
       
       <main className="flex-1">
@@ -116,7 +135,7 @@ const ContactUsPage: React.FC = () => {
         {/* ─── Hero Section ──────────────────────────────────────────────── */}
         <section 
           className="relative pt-32 pb-16 lg:pt-40 lg:pb-24 overflow-hidden bg-flyora-navy bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/srv_hero_bg.png)' }}
+          style={{ backgroundImage: 'url(/images/srv_hero_bg.webp)' }}
         >
           <div className="absolute inset-0 bg-flyora-navy/80 backdrop-blur-sm" />
           
@@ -352,9 +371,9 @@ const ContactUsPage: React.FC = () => {
                  Join thousands of verified travelers and senders building the future of smarter international delivery with Flyorago.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
-                 <button className="px-8 py-4 bg-white text-flyora-teal font-bold rounded-2xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+                 <Link to="/signup" className="px-8 py-4 bg-white text-flyora-teal font-bold rounded-2xl hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
                     Get Started Now
-                 </button>
+                 </Link>
               </div>
            </div>
         </section>

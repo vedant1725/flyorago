@@ -1,6 +1,13 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { SeoHead } from '../components/seo/SeoHead';
+import {
+  getBreadcrumbSchema,
+  getServiceSchema,
+  getWebPageSchema,
+} from '../data/seoConfig';
 import { 
   Plane, Package, Lock, ShieldCheck, 
   MapPin, Star, ArrowRight 
@@ -11,37 +18,43 @@ const coreServices = [
     title: 'Traveler Earnings',
     description: 'Earn additional income by utilizing extra baggage capacity on trips you are already taking.',
     icon: <Plane size={24} className="text-blue-500" />,
-    image: '/images/srv_card_travelers_custom.png',
+    image: '/images/srv_card_travelers_custom.webp',
+    to: '/travelers-earn-money',
   },
   {
     title: 'International Package Delivery',
     description: 'Ship personal or business packages globally through verified travelers at competitive rates.',
     icon: <Package size={24} className="text-flyora-teal" />,
-    image: '/images/srv_card_senders_custom.png',
+    image: '/images/srv_card_senders_custom.webp',
+    to: '/international-package-delivery',
   },
   {
     title: 'Secure Escrow Protection',
     description: 'Payments remain protected until successful delivery is confirmed.',
     icon: <Lock size={24} className="text-emerald-500" />,
-    image: '/images/srv_card_escrow_custom.png',
+    image: '/images/srv_card_escrow_custom.webp',
+    to: '/escrow',
   },
   {
     title: 'Identity Verification',
     description: 'KYC verification and community trust systems help create a safer marketplace.',
     icon: <ShieldCheck size={24} className="text-purple-500" />,
-    image: '/images/srv_card_kyc_custom.png',
+    image: '/images/srv_card_kyc_custom.webp',
+    to: '/safety',
   },
   {
     title: 'Smart Route Matching',
     description: 'Automatically connect packages with travelers heading to the same destination.',
     icon: <MapPin size={24} className="text-orange-500" />,
-    image: '/images/srv_card_matching_custom.png',
+    image: '/images/srv_card_matching_custom.webp',
+    to: '/send-package-internationally',
   },
   {
     title: 'Ratings & Reputation',
     description: 'Every completed shipment strengthens trust through transparent reviews.',
     icon: <Star size={24} className="text-amber-400" />,
-    image: '/images/srv_card_reputation_custom.png',
+    image: '/images/srv_card_reputation_custom.webp',
+    to: '/how-it-works',
   }
 ];
 
@@ -50,8 +63,31 @@ const ServicesPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Peer-to-Peer International Delivery & Luggage Sharing Services | Flyorago';
+  const description =
+    'Explore Flyorago services: international package delivery via verified travelers, traveler luggage monetization, escrow protection, KYC verification, and smart route matching.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/services"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/services' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Services', path: '/services' },
+          ]),
+          getServiceSchema({
+            name: 'Flyorago Peer-to-Peer Travel Delivery Services',
+            description,
+            path: '/services',
+            serviceType: 'Peer-to-Peer International Package Delivery & Luggage Sharing',
+            areaServed: ['India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'United Arab Emirates'],
+          }),
+        ]}
+      />
       <Header />
       
       <main className="flex-1">
@@ -59,7 +95,7 @@ const ServicesPage: React.FC = () => {
         {/* ─── Hero Section ──────────────────────────────────────────────── */}
         <section 
           className="relative pt-32 pb-16 lg:pt-36 lg:pb-24 overflow-hidden bg-flyora-navy bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/srv_hero_bg.png)' }}
+          style={{ backgroundImage: 'url(/images/srv_hero_bg.webp)' }}
         >
           <div className="absolute inset-0 bg-flyora-navy/60 backdrop-blur-[2px]" />
           
@@ -91,7 +127,7 @@ const ServicesPage: React.FC = () => {
                 <div key={index} className="group rounded-[2rem] bg-flyora-gray-50 border border-flyora-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 flex flex-col">
                   {/* Image Header */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden flex-shrink-0 bg-flyora-gray-50">
-                    <img src={service.image} alt={service.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    <img src={service.image} alt={service.title} width={900} height={600} loading="lazy" decoding="async" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 ease-out" />
                     <div className="absolute inset-0 bg-gradient-to-t from-flyora-navy/60 via-transparent to-transparent opacity-80" />
                     <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between">
                       <div className="w-12 h-12 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shadow-sm">
@@ -106,10 +142,10 @@ const ServicesPage: React.FC = () => {
                     <p className="text-lg text-flyora-gray-600 leading-relaxed mb-6 flex-1">
                       {service.description}
                     </p>
-                    <button className="flex items-center gap-2 text-flyora-teal font-bold group/btn mt-auto">
+                    <Link to={service.to} className="inline-flex items-center gap-2 text-flyora-teal font-bold group/btn mt-auto hover:text-flyora-navy transition-colors">
                       Learn More 
                       <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}

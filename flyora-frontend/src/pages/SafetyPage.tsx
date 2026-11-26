@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { ShieldCheck, UserCheck, Lock, CheckCircle2, AlertTriangle, Eye, ShieldAlert, Award } from 'lucide-react';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
+import { ShieldCheck, UserCheck, Lock, Eye, ShieldAlert, ArrowRight } from 'lucide-react';
 
 const safetyPillars = [
   {
@@ -31,8 +34,24 @@ const SafetyPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Safety & Security Standards — KYC, Inspection & Escrow | Flyorago';
+  const description =
+    'Discover Flyorago safety pillars: mandatory government ID & selfie KYC, open-package physical inspection, escrow protection, and zero-tolerance prohibited item rules.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/safety"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/safety' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Safety & Security', path: '/safety' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">
@@ -61,10 +80,25 @@ const SafetyPage: React.FC = () => {
                   <div className="w-16 h-16 rounded-2xl bg-flyora-gray-50 flex items-center justify-center mb-6 border border-flyora-gray-100">
                     {p.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-flyora-navy mb-3">{p.title}</h3>
-                  <p className="text-xs text-flyora-gray-600 leading-relaxed font-medium">{p.desc}</p>
+                  <h2 className="text-xl font-bold text-flyora-navy mb-3">{p.title}</h2>
+                  <p className="text-sm text-flyora-gray-600 leading-relaxed font-medium">{p.desc}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-12 bg-white p-8 rounded-3xl border border-flyora-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div>
+                <h2 className="text-xl font-black text-flyora-navy mb-2">Explore Detailed Compliance &amp; Escrow Guides</h2>
+                <p className="text-sm text-flyora-gray-600">Review prohibited items, escrow release rules, and sender/traveler checklists before booking.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/escrow" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-flyora-teal text-white text-sm font-bold hover:bg-flyora-teal-dark transition-colors">
+                  Escrow Protection <ArrowRight size={15} />
+                </Link>
+                <Link to="/blog/prohibited-and-restricted-items-international-travel-delivery" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-flyora-gray-200 text-flyora-navy text-sm font-bold hover:border-flyora-teal transition-colors">
+                  Prohibited Items Guide
+                </Link>
+              </div>
             </div>
           </div>
         </section>

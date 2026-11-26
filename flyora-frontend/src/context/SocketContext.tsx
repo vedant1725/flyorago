@@ -19,7 +19,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { addToast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
-  const [activeUserId, setActiveUserId] = useState<string | null>(() => localStorage.getItem('flyora_user_id'));
+  const [activeUserId, setActiveUserId] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? window.localStorage.getItem('flyora_user_id') : null
+  );
   const wsRef = useRef<WebSocket | null>(null);
 
   // Auto-request notification permission on first user gesture if permission is 'default'

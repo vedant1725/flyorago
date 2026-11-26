@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { API_BASE_URL } from '../config';
+import { SeoHead } from '../components/seo/SeoHead';
 
 // ─── Error Types ──────────────────────────────────────────────────────────────
 type ErrorType = 'EMAIL_NOT_FOUND' | 'WRONG_PASSWORD' | 'ACCOUNT_BLOCKED' | 'ACCOUNT_LOCKED_TEMPORARY' | 'SERVER_ERROR' | 'NETWORK_ERROR' | null;
@@ -463,6 +464,12 @@ const LoginPage: React.FC = () => {
 
   return (
     <>
+      <SeoHead
+        title="Log In | Flyorago"
+        description="Sign in to your Flyorago account to manage shipments, trips, and escrow bookings."
+        path="/login"
+        noindex
+      />
       {/* Account Blocked Premium Modal */}
       {showBlockedModal && (
         <AccountBlockedModal onClose={() => setShowBlockedModal(false)} />
@@ -472,8 +479,11 @@ const LoginPage: React.FC = () => {
         {/* ── Left side ── */}
         <div className="hidden lg:flex lg:w-[60%] relative bg-black overflow-hidden p-12 lg:p-16">
           <img
-            src="/images/login%20page.png"
-            alt="Login background"
+            src="/images/login-page.webp"
+            alt="Flyorago international traveler login"
+            width={1280}
+            height={853}
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out hover:scale-105"
           />
           <div className="absolute inset-0 bg-black/10" />
@@ -501,7 +511,7 @@ const LoginPage: React.FC = () => {
 
           {/* Mobile Image Header */}
           <div className="lg:hidden w-full relative overflow-hidden" style={{ height: '28vh', minHeight: '180px' }}>
-            <img src="/images/login%20page.png" alt="Login" className="absolute inset-0 w-full h-full object-cover" />
+            <img src="/images/login-page.webp" alt="Flyorago login" width={1280} height={853} decoding="async" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-x-0 top-0 flex justify-between items-center px-5 pt-6 z-10">
               <Link to="/" className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
                 <ArrowLeft size={18} className="text-flyora-navy" />

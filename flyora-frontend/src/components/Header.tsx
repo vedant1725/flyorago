@@ -7,11 +7,14 @@ import { NAV_LINKS } from '../constants/routes';
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const rawUserId = localStorage.getItem('flyora_user_id');
-  const isLoggedIn = Boolean(rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null');
+  useEffect(() => {
+    const rawUserId = window.localStorage.getItem('flyora_user_id');
+    setIsLoggedIn(Boolean(rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null'));
+  }, [currentPath]);
 
   useEffect(() => {
     const handleScroll = () => {

@@ -101,8 +101,12 @@ const CTASection: React.FC = () => {
             <div className="w-full lg:w-[42%] relative shrink-0">
               <div className="relative rounded-2xl overflow-hidden border border-slate-200/80 bg-white shadow-md group">
                 <img
-                  src="/images/Built for Safe Global Shipping.png"
+                  src="/images/built-for-safe-global-shipping.webp"
                   alt="Built for Safe Global Shipping"
+                  width={960}
+                  height={640}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-[320px] sm:h-[380px] object-contain object-center group-hover:scale-105 transition-transform duration-700 p-2"
                 />
 

@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { Newspaper, Download, ExternalLink, ArrowRight, Award, Globe, Shield } from 'lucide-react';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
+import { Newspaper, Download, ExternalLink } from 'lucide-react';
 
 const pressReleases = [
   {
@@ -36,8 +38,24 @@ const PressPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Flyorago Press & Newsroom — Announcements & Media Resources';
+  const description =
+    'Official Flyorago newsroom, product announcements, milestones, and press contact information for journalists and publications.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/press"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/press' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Press', path: '/press' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">

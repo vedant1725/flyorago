@@ -8,6 +8,8 @@ import {
   Sparkles, ArrowRight, Shield, Zap, Lock, Compass, Award
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getOrganizationSchema, getWebPageSchema } from '../data/seoConfig';
 
 // ─── useInView Hook ───────────────────────────────────────────────────────────
 function useInView(threshold = 0.12): [React.RefObject<HTMLDivElement>, boolean] {
@@ -96,8 +98,25 @@ const AboutUsPage: React.FC = () => {
 
   const [hoveredValue, setHoveredValue] = useState<number | null>(null);
 
+  const title = 'About Flyorago — Community-Powered International Package Delivery';
+  const description =
+    'Learn how Flyorago connects verified international travelers with spare luggage space and package senders worldwide using KYC, escrow protection, and real-time tracking.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/about"
+        schemas={[
+          getOrganizationSchema(),
+          getWebPageSchema({ title, description, path: '/about' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'About Us', path: '/about' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">
@@ -142,8 +161,12 @@ const AboutUsPage: React.FC = () => {
               >
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 group">
                   <img
-                    src="/images/about_team_custom.png"
+                    src="/images/about_team_custom.webp"
                     alt="Flyorago Team Discussing"
+                    width={1100}
+                    height={733}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-auto max-h-[460px] object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
@@ -340,7 +363,7 @@ const AboutUsPage: React.FC = () => {
           ref={whyRef}
           className="py-24 lg:py-32 bg-slate-950 text-white relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[url('/images/srv_hero_bg.png')] bg-cover opacity-10 mix-blend-overlay pointer-events-none" />
+          <div className="absolute inset-0 bg-[url('/images/srv_hero_bg.webp')] bg-cover opacity-10 mix-blend-overlay pointer-events-none" />
 
           {/* Ambient Glows */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-teal-500/10 rounded-full blur-[130px] pointer-events-none" />

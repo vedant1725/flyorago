@@ -255,8 +255,12 @@ const FAQSection: React.FC = () => {
               {/* FAQ Custom Image */}
               <div className="relative p-3 bg-gradient-to-b from-teal-50/50 via-white to-indigo-50/30">
                 <img
-                  src="/images/FAQ SECTION.png"
+                  src="/images/faq-section.webp"
                   alt="Flyorago Global Support Team"
+                  width={960}
+                  height={640}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto max-h-[460px] object-contain object-center group-hover:scale-105 transition-transform duration-700 rounded-2xl"
                 />
               </div>

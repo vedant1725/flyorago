@@ -55,7 +55,8 @@ export const FlyoraAIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [conversations, setConversations] = useState<AIConversation[]>(() => {
     try {
-      const saved = localStorage.getItem('flyora_ai_conversations');
+      if (typeof window === 'undefined') return [];
+      const saved = window.localStorage.getItem('flyora_ai_conversations');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -63,7 +64,8 @@ export const FlyoraAIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [activeConversationId, setActiveConversationId] = useState<string>(() => {
-    return localStorage.getItem('flyora_ai_active_conv_id') || 'default-chat';
+    if (typeof window === 'undefined') return 'default-chat';
+    return window.localStorage.getItem('flyora_ai_active_conv_id') || 'default-chat';
   });
 
   const [messages, setMessages] = useState<AIMessage[]>(() => {

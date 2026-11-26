@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { Lock, ShieldCheck, CheckCircle2, RefreshCw, KeyRound, ArrowRight, ShieldAlert } from 'lucide-react';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
+import { Lock, ArrowRight } from 'lucide-react';
 
 const steps = [
   { step: '01', title: 'Sender Funds Escrow', desc: 'When a booking is accepted, the sender payment is deposited into Flyorago Vault. The traveler is notified that funds are guaranteed.' },
@@ -15,8 +18,24 @@ const EscrowPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Escrow Protection Guarantee — Secure P2P Delivery Payments | Flyorago';
+  const description =
+    'Learn how Flyorago Escrow protects senders and travelers: funds stay locked until the recipient confirms package delivery with a 6-digit OTP.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/escrow"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/escrow' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Escrow Protection', path: '/escrow' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">
@@ -52,6 +71,11 @@ const EscrowPage: React.FC = () => {
                   <p className="text-xs text-flyora-gray-600 leading-relaxed font-medium">{s.desc}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-12 text-center">
+              <Link to="/signup" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-flyora-teal text-white font-bold text-sm hover:bg-flyora-teal-dark transition-colors">
+                Start With Escrow Protection <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         </section>

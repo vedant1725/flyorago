@@ -8,6 +8,8 @@ import {
   Zap, CheckCircle2, Lock, Navigation, Shield
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
 
 // ─── useInView Hook ───────────────────────────────────────────────────────────
 function useInView(threshold = 0.12): [React.RefObject<HTMLDivElement>, boolean] {
@@ -218,8 +220,24 @@ const HowItWorksPage: React.FC = () => {
 
   const [hoveredWhy, setHoveredWhy] = useState<number | null>(null);
 
+  const title = 'How Flyorago Works — Peer-to-Peer Travel Package Delivery Process';
+  const description =
+    'See how Flyorago works for travelers and senders in 3 steps: list a trip or package, match via KYC-verified profiles, fund escrow, inspect unsealed items, and confirm via 6-digit OTP.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/how-it-works"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/how-it-works' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'How It Works', path: '/how-it-works' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">
@@ -227,7 +245,7 @@ const HowItWorksPage: React.FC = () => {
         {/* ─── Hero Section ──────────────────────────────────────────────── */}
         <section
           className="relative pt-32 pb-20 lg:pt-36 lg:pb-28 overflow-hidden bg-slate-900 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/hiw_hero_bg.png)' }}
+          style={{ backgroundImage: 'url(/images/hiw_hero_bg.webp)' }}
         >
           <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-xs" />
 

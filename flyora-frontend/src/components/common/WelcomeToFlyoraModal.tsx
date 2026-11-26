@@ -39,8 +39,12 @@ export const WelcomeToFlyoraModal: React.FC<WelcomeToFlyoraModalProps> = ({
         {/* ─── Hero Image Section (Team Photo from About Us) ─── */}
         <div className="relative w-full overflow-hidden shrink-0 bg-slate-900 aspect-[16/10] sm:aspect-[16/9]">
           <img
-            src="/images/about_team_custom.png"
+            src="/images/about_team_custom.webp"
             alt="FlyoraGo Founders & Team"
+            width={1100}
+            height={733}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover object-[center_12%]"
           />
           {/* Clean, subtle bottom vignette only - keeps the founders' photos crisp, bright and fully visible */}
