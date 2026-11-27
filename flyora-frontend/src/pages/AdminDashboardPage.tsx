@@ -1740,6 +1740,20 @@ const DisputeModal: React.FC<{
   );
 };
 
+interface EmailLogItem {
+  id: number;
+  recipient: string;
+  template: string;
+  subject: string;
+  event: string;
+  provider: string;
+  status: string;
+  messageId?: string;
+  createdAt?: string;
+  sentAt?: string;
+  error?: string;
+}
+
 // ─── Settings / Admin Credentials Tab ───────────────────────────────────────
 const SettingsTab: React.FC<{
   toast: (variant: any, message: string) => void;
@@ -1755,6 +1769,27 @@ const SettingsTab: React.FC<{
   const [platformFee, setPlatformFee] = useState<string>('10.00');
   const [loadingFee, setLoadingFee] = useState(false);
   const [savingFee, setSavingFee] = useState(false);
+
+  // Database Migrations Management
+  const [runningMigration, setRunningMigration] = useState(false);
+  const [migrationOutput, setMigrationOutput] = useState<string | null>(null);
+
+  const handleRunMigrations = async () => {
+    setRunningMigration(true);
+    setMigrationOutput(null);
+    try {
+      const res = await api('/api/admin/run-migrations/', { method: 'POST' });
+      const msg = res?.message || 'Database migrations executed successfully!';
+      setMigrationOutput(msg);
+      toast('success', `✅ ${msg}`);
+    } catch (err: any) {
+      const errMsg = err?.message || 'Migration execution failed';
+      setMigrationOutput(`Error: ${errMsg}`);
+      toast('error', errMsg);
+    } finally {
+      setRunningMigration(false);
+    }
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -2052,6 +2087,48 @@ const SettingsTab: React.FC<{
           </div>
         </form>
 
+        {/* Database Migrations & Maintenance Controls */}
+        <div className="space-y-5 pt-6 border-t border-slate-100">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <RefreshCcw size={16} className="text-indigo-600" /> Database Schema & Backend Sync
+            </h3>
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+              Live AWS Database
+            </span>
+          </div>
+
+          <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-xs font-black text-slate-900 flex items-center gap-2">
+                Apply Pending Django Migrations
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium max-w-xl">
+                Executes <code>python manage.py migrate</code> safely via backend API. Automatically syncs all new tables, relationships, and model alterations in PostgreSQL without restarting the server.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRunMigrations}
+              disabled={runningMigration}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 shrink-0"
+            >
+              <RefreshCw size={14} className={runningMigration ? 'animate-spin' : ''} />
+              {runningMigration ? 'Running Migrations...' : 'Execute Migrations'}
+            </button>
+          </div>
+
+          {migrationOutput && (
+            <div className={`p-4 rounded-xl text-xs font-mono border ${
+              migrationOutput.startsWith('Error') 
+                ? 'bg-rose-50 text-rose-800 border-rose-200' 
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            }`}>
+              {migrationOutput}
+            </div>
+          )}
+        </div>
+
       </div>
 
     </div>
@@ -2162,7 +2239,7 @@ const ContactMessageModal: React.FC<{
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  type Tab = 'overview' | 'users' | 'trips' | 'bookings' | 'shipments' | 'kyc' | 'disputes' | 'trust' | 'transactions' | 'ai_knowledge' | 'contact_messages' | 'settings';
+  type Tab = 'overview' | 'users' | 'trips' | 'bookings' | 'shipments' | 'kyc' | 'disputes' | 'trust' | 'transactions' | 'ai_knowledge' | 'contact_messages' | 'email_activity' | 'settings';
   const [tab, setTab] = useState<Tab>('overview');
   const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
@@ -2180,6 +2257,10 @@ const AdminDashboardPage: React.FC = () => {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [selectedContactMsg, setSelectedContactMsg] = useState<ContactMessage | null>(null);
   const [msgStatusFilter, setMsgStatusFilter] = useState<'ALL' | 'New' | 'Read' | 'Replied' | 'Resolved'>('ALL');
+  const [emailLogs, setEmailLogs] = useState<EmailLogItem[]>([]);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailFilter, setEmailFilter] = useState<string>('ALL');
+  const [emailSearch, setEmailSearch] = useState<string>('');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirm, setConfirm] = useState<(ConfirmOptions & { onCancel: () => void }) | null>(null);
   const [statusModal, setStatusModal] = useState<{ title: string; current: string; options: string[]; onSelect: (s: string) => void } | null>(null);
@@ -2269,6 +2350,12 @@ const AdminDashboardPage: React.FC = () => {
       api('/api/ai/admin/faqs/')
         .then(res => setAiFaqs(res.data || []))
         .catch(err => console.warn('AI faqs fetch warning:', err));
+    } else if (tab === 'email_activity') {
+      setEmailLoading(true);
+      api('/api/admin/email-activity/')
+        .then(res => setEmailLogs(res.data || []))
+        .catch(err => console.warn('Email activity fetch warning:', err))
+        .finally(() => setEmailLoading(false));
     }
   }, [tab]);
 
@@ -2665,6 +2752,7 @@ const AdminDashboardPage: React.FC = () => {
     { label: 'Trust & Risk', icon: ShieldCheck, tab: 'trust' },
     { label: 'Contact Messages', icon: MessageSquare, tab: 'contact_messages', badge: contactMessages.filter(m => m.status === 'New').length },
     { label: 'AI Knowledge & FAQ', icon: Zap, tab: 'ai_knowledge' },
+    { label: 'Email Activity Logs', icon: Mail, tab: 'email_activity' },
     { label: 'Platform Settings', icon: Settings, tab: 'settings' },
   ];
 
@@ -5743,6 +5831,173 @@ const AdminDashboardPage: React.FC = () => {
 
           {/* ── Settings / Admin Credentials Tab ── */}
           {tab === 'settings' && <SettingsTab toast={toast} />}
+
+          {/* ── Email Activity Logs Tab (Top-MNC System Audit) ── */}
+          {tab === 'email_activity' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Header & Metric Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Dispatch Logs</div>
+                    <div className="text-3xl font-black text-slate-900 mt-1">{emailLogs.length}</div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Automated transactional emails</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-black">
+                    <Mail size={22} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Delivered / Sent</div>
+                    <div className="text-3xl font-black text-emerald-600 mt-1">
+                      {emailLogs.filter(e => e.status?.toLowerCase() === 'sent' || e.status?.toLowerCase() === 'delivered').length}
+                    </div>
+                    <p className="text-[10px] text-emerald-500 mt-0.5">Successful SMTP transmissions</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
+                    <CheckCircle2 size={22} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Failed Dispatches</div>
+                    <div className="text-3xl font-black text-rose-600 mt-1">
+                      {emailLogs.filter(e => e.status?.toLowerCase() === 'failed' || e.status?.toLowerCase() === 'error').length}
+                    </div>
+                    <p className="text-[10px] text-rose-400 mt-0.5">Issues requiring retry</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-black">
+                    <AlertTriangle size={22} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Email Provider</div>
+                    <div className="text-2xl font-black text-slate-900 mt-1">AWS SES / SMTP</div>
+                    <p className="text-[10px] text-indigo-500 mt-0.5">High-deliverability relay</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+                    <Globe size={22} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Toolbar */}
+              <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                  {(['ALL', 'sent', 'failed'] as const).map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setEmailFilter(f)}
+                      className={`px-3.5 py-2 rounded-2xl font-extrabold text-xs whitespace-nowrap transition-all ${
+                        emailFilter === f ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {f === 'ALL' ? 'All Activity' : f === 'sent' ? 'Sent / Delivered' : 'Failed'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative min-w-[240px]">
+                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search recipient, subject, event..."
+                      value={emailSearch}
+                      onChange={e => setEmailSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEmailLoading(true);
+                      api('/api/admin/email-activity/')
+                        .then(res => setEmailLogs(res.data || []))
+                        .catch(err => console.warn(err))
+                        .finally(() => setEmailLoading(false));
+                    }}
+                    className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                    title="Refresh logs"
+                  >
+                    <RefreshCw size={15} className={emailLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Email Table */}
+              <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                        <th className="px-6 py-4">Recipient</th>
+                        <th className="px-6 py-4">Event & Template</th>
+                        <th className="px-6 py-4">Subject</th>
+                        <th className="px-6 py-4">Dispatch Time</th>
+                        <th className="px-6 py-4">Provider</th>
+                        <th className="px-6 py-4 text-right">Delivery Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {emailLogs
+                        .filter(e => {
+                          const matchFilter = emailFilter === 'ALL' || (emailFilter === 'sent' ? (e.status?.toLowerCase() === 'sent' || e.status?.toLowerCase() === 'delivered') : (e.status?.toLowerCase() === 'failed' || e.status?.toLowerCase() === 'error'));
+                          const s = emailSearch.toLowerCase();
+                          const matchSearch = !s || e.recipient?.toLowerCase().includes(s) || e.subject?.toLowerCase().includes(s) || e.event?.toLowerCase().includes(s) || e.template?.toLowerCase().includes(s);
+                          return matchFilter && matchSearch;
+                        })
+                        .map(log => (
+                          <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="font-extrabold text-slate-900 text-xs">{log.recipient}</div>
+                              {log.messageId && <div className="text-[10px] font-mono text-slate-400 truncate max-w-[160px]">{log.messageId}</div>}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-extrabold text-[10px] uppercase">
+                                {log.event || log.template || 'System Notification'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-slate-800 max-w-[240px] truncate" title={log.subject}>
+                              {log.subject}
+                            </td>
+                            <td className="px-6 py-4 text-xs text-slate-500 font-medium whitespace-nowrap">
+                              {log.createdAt ? new Date(log.createdAt).toLocaleString() : '—'}
+                            </td>
+                            <td className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                              {log.provider || 'SMTP'}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                                log.status?.toLowerCase() === 'sent' || log.status?.toLowerCase() === 'delivered'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  log.status?.toLowerCase() === 'sent' || log.status?.toLowerCase() === 'delivered' ? 'bg-emerald-500' : 'bg-rose-500'
+                                }`} />
+                                {log.status || 'SENT'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      {emailLogs.length === 0 && !emailLoading && (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
+                            No email activity logged yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── Transactions & Platform Fee Revenue Ledger Tab (Top-MNC Grade) ── */}
           {tab === 'transactions' && (
