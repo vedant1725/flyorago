@@ -8,7 +8,7 @@ function resolveDefaultBackendUrl(): string {
     return 'http://127.0.0.1:8000';
   }
 
-  // 1. Try Expo Constants hostUri (e.g. "192.168.0.117:8081")
+  // 1. Try Expo Constants hostUri (e.g. "192.168.0.121:8081")
   const hostUri = Constants.expoConfig?.hostUri || (Constants as any)?.manifest2?.extra?.expoClient?.hostUri || (Constants as any)?.manifest?.debuggerHost;
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
@@ -17,16 +17,16 @@ function resolveDefaultBackendUrl(): string {
     }
   }
 
-  // 2. Active Wi-Fi LAN IP of machine
-  return 'http://192.168.0.100:8000';
+  // 2. Active Wi-Fi LAN IP of machine running Django backend
+  return 'http://192.168.0.121:8000';
 }
 
 export const LOCAL_BACKEND_URL = resolveDefaultBackendUrl();
 
 export const PRODUCTION_API_URL = 'https://api.flyorago.me';
 
-// Production default: Connected to live backend https://api.flyorago.me
-export const DEFAULT_API_BASE_URL = PRODUCTION_API_URL;
+// Local default: Connected to local Django backend (192.168.0.121:8000)
+export const DEFAULT_API_BASE_URL = LOCAL_BACKEND_URL;
 
 let cachedBaseUrl: string = DEFAULT_API_BASE_URL;
 
