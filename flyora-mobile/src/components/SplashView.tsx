@@ -21,22 +21,23 @@ interface SplashViewProps {
 }
 
 export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
-  // 1. Airplane Flight Animation: smoothly swoops in from bottom-left up across to upper-right
+  // 1. Airplane Flight Animation: smoothly swoops in from bottom-left up across to upper area
   const planeProgress = useRef(new Animated.Value(0)).current;
   const planeFloating = useRef(new Animated.Value(0)).current;
 
-  // 2. Logo Entrance & Reveal Animations
-  const logoScale = useRef(new Animated.Value(0.78)).current;
+  // 2. Official Logo Animation (splash-icon.png): Spring scale & glowing reveal
+  const logoScale = useRef(new Animated.Value(0.75)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoTranslateY = useRef(new Animated.Value(24)).current;
+  const logoTranslateY = useRef(new Animated.Value(30)).current;
+  const logoGlowPulse = useRef(new Animated.Value(1)).current;
 
-  // 3. Brand Wordmark & Tagline Staggered Reveal
-  const wordmarkOpacity = useRef(new Animated.Value(0)).current;
-  const wordmarkTranslateY = useRef(new Animated.Value(18)).current;
-
-  // 4. Subtle Jet Airflow / Sonic Ring Glow Effect
+  // 3. Sonic Jet Airflow Ring Glow Effect
   const ringScale = useRef(new Animated.Value(0.6)).current;
   const ringOpacity = useRef(new Animated.Value(0)).current;
+
+  // 4. Tagline Pill Reveal Animation
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  const taglineTranslateY = useRef(new Animated.Value(14)).current;
 
   // 5. YouTube / Top MNC Style Fluid Progress Loader
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -49,7 +50,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
     Animated.timing(planeProgress, {
       toValue: 1,
       duration: 1600,
-      easing: Easing.bezier(0.16, 1, 0.3, 1), // custom fluid out-cubic / deceleration
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
       useNativeDriver: true,
     }).start(() => {
       // Gentle continuous aerodynamic hovering/floating after arrival
@@ -94,9 +95,9 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       }),
     ]).start();
 
-    // Logo Symbol springs up as the airplane reaches cruising altitude
+    // Official Logo (splash-icon) springs up as the airplane reaches cruising altitude
     Animated.sequence([
-      Animated.delay(400),
+      Animated.delay(350),
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
@@ -116,20 +117,38 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+    ]).start(() => {
+      // Gentle breathing glow pulse for the logo
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(logoGlowPulse, {
+            toValue: 1.05,
+            duration: 1600,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(logoGlowPulse, {
+            toValue: 1,
+            duration: 1600,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
 
-    // Brand Wordmark & Tagline glide in right after logo symbol
+    // Tagline badge glides in right after logo
     Animated.sequence([
-      Animated.delay(700),
+      Animated.delay(650),
       Animated.parallel([
-        Animated.timing(wordmarkOpacity, {
+        Animated.timing(taglineOpacity, {
           toValue: 1,
-          duration: 600,
+          duration: 550,
           useNativeDriver: true,
         }),
-        Animated.timing(wordmarkTranslateY, {
+        Animated.timing(taglineTranslateY, {
           toValue: 0,
-          duration: 600,
+          duration: 550,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
@@ -161,8 +180,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Compute Airplane trajectory:
-  // Starts below and to the left (-140px, +160px) and flies up to hero top position (0px, 0px)
+  // Compute Airplane trajectory
   const planeTranslateX = planeProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [-SCREEN_WIDTH * 0.7, 0],
@@ -171,7 +189,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
   const planeTranslateY = Animated.add(
     planeProgress.interpolate({
       inputRange: [0, 1],
-      outputRange: [SCREEN_HEIGHT * 0.28, 0],
+      outputRange: [SCREEN_HEIGHT * 0.26, 0],
     }),
     planeFloating.interpolate({
       inputRange: [-1, 1],
@@ -284,50 +302,42 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         />
       </Animated.View>
 
-      {/* CENTER BRAND SECTION: Original HD Official Flyorago Logo & Identity */}
+      {/* CENTER BRAND SECTION: Only the official splash-icon.png with backlight glow */}
       <View style={styles.centerBrandArea}>
-        {/* Official 3D Pin & Box Symbol */}
         <Animated.View
           style={[
-            styles.symbolContainer,
+            styles.logoContainer,
             {
               opacity: logoOpacity,
               transform: [
-                { scale: logoScale },
+                { scale: Animated.multiply(logoScale, logoGlowPulse) },
                 { translateY: logoTranslateY },
               ],
             },
           ]}
         >
-          {/* Subtle Backlight Glow under Symbol */}
-          <View style={styles.symbolBackdropGlow} />
+          {/* Circular Ambient Glow Backdrop under Logo */}
+          <View style={styles.logoBackdropGlow} />
 
+          {/* Official splash-icon.png */}
           <ExpoImage
-            source={require('../../assets/images/flyorago-symbol-hd.png')}
-            style={styles.hdSymbolImage}
+            source={require('../../assets/images/splash-icon.png')}
+            style={styles.officialSplashIcon}
             contentFit="contain"
             priority="high"
           />
         </Animated.View>
 
-        {/* Official HD Wordmark & Tagline: "Flyorago - Ship. Travel. Connect." */}
+        {/* MNC Style Slogan Badge */}
         <Animated.View
           style={[
-            styles.wordmarkContainer,
+            styles.sloganContainer,
             {
-              opacity: wordmarkOpacity,
-              transform: [{ translateY: wordmarkTranslateY }],
+              opacity: taglineOpacity,
+              transform: [{ translateY: taglineTranslateY }],
             },
           ]}
         >
-          <ExpoImage
-            source={require('../../assets/images/flyorago-wordmark-hd.png')}
-            style={styles.hdWordmarkImage}
-            contentFit="contain"
-            priority="high"
-          />
-
-          {/* MNC Style Slogan Badge */}
           <View style={styles.sloganBadge}>
             <View style={styles.sloganDot} />
             <Ionicons name="sparkles" size={13} color="#0D9488" />
@@ -388,7 +398,7 @@ const styles = StyleSheet.create({
   },
   glowOrbCenter: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.32,
+    top: SCREEN_HEIGHT * 0.35,
     left: SCREEN_WIDTH * 0.1,
     width: SCREEN_WIDTH * 0.8,
     height: SCREEN_WIDTH * 0.8,
@@ -452,46 +462,40 @@ const styles = StyleSheet.create({
   },
   centerBrandArea: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.41,
+    top: SCREEN_HEIGHT * 0.44,
     left: 0,
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 4,
   },
-  symbolContainer: {
+  logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginBottom: 12,
+    width: 200,
+    height: 200,
   },
-  symbolBackdropGlow: {
+  logoBackdropGlow: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
     backgroundColor: 'rgba(45, 212, 191, 0.25)',
     shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
-    shadowRadius: 20,
+    shadowRadius: 24,
     elevation: 8,
   },
-  hdSymbolImage: {
-    width: 126,
-    height: 120,
+  officialSplashIcon: {
+    width: 190,
+    height: 190,
   },
-  wordmarkContainer: {
+  sloganContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    paddingHorizontal: 24,
-  },
-  hdWordmarkImage: {
-    width: SCREEN_WIDTH * 0.72,
-    height: (SCREEN_WIDTH * 0.72) * (681 / 1275),
-    maxWidth: 290,
-    maxHeight: 155,
+    marginTop: 8,
   },
   sloganBadge: {
     flexDirection: 'row',
@@ -500,10 +504,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.94)',
     borderWidth: 1.2,
     borderColor: '#99F6E4',
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 7,
     borderRadius: 22,
-    marginTop: 10,
     shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.14,
