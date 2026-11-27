@@ -3216,19 +3216,19 @@ const AdminDashboardPage: React.FC = () => {
         <div className="w-[260px] h-full flex flex-col justify-between shrink-0">
           <div className="flex flex-col min-h-0">
             {/* Logo */}
-            <div className="admin-sidebar-logo px-4 py-3.5 flex items-center justify-between">
-              <Link to="/admin" className="flex items-center gap-2 group flex-1 min-w-0">
-                <div className="flex items-center justify-center w-full py-0.5 px-1.5 transition-transform duration-300 group-hover:scale-[1.02]">
+            <div className="admin-sidebar-logo px-3.5 py-3 flex items-center justify-between">
+              <Link to="/admin" className="flex items-center group flex-1 min-w-0">
+                <div className="flex items-center justify-center w-full transition-transform duration-300 group-hover:scale-[1.01]">
                   <img
                     src="/images/flyorago_admin_logo.png"
                     alt="Flyorago Logo"
-                    className="w-full h-auto max-h-[46px] object-contain drop-shadow-sm"
+                    className="w-full h-auto max-h-[58px] object-contain"
                   />
                 </div>
               </Link>
               <button
                 onClick={() => setSideOpen(false)}
-                className="lg:hidden p-1.5 ml-1.5 rounded-lg transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                className="lg:hidden p-1.5 ml-1 rounded-lg transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                 title="Close Sidebar"
               >
                 <X size={17} />
