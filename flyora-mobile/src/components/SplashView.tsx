@@ -21,54 +21,122 @@ interface SplashViewProps {
 }
 
 export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
-  // Logo Entrance Animation
-  const logoScale = useRef(new Animated.Value(0.85)).current;
+  // 1. Airplane Flight Animation: smoothly swoops in from bottom-left up across to upper-right
+  const planeProgress = useRef(new Animated.Value(0)).current;
+  const planeFloating = useRef(new Animated.Value(0)).current;
+
+  // 2. Logo Entrance & Reveal Animations
+  const logoScale = useRef(new Animated.Value(0.78)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoTranslateY = useRef(new Animated.Value(24)).current;
 
-  // Pulse Glow Animation
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  // 3. Brand Wordmark & Tagline Staggered Reveal
+  const wordmarkOpacity = useRef(new Animated.Value(0)).current;
+  const wordmarkTranslateY = useRef(new Animated.Value(18)).current;
 
-  // YouTube / Top MNC Style Progress Animation
+  // 4. Subtle Jet Airflow / Sonic Ring Glow Effect
+  const ringScale = useRef(new Animated.Value(0.6)).current;
+  const ringOpacity = useRef(new Animated.Value(0)).current;
+
+  // 5. YouTube / Top MNC Style Fluid Progress Loader
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Hide native OS splash immediately so our beautiful custom SplashView takes over seamlessly
-    SplashScreen.hideAsync().catch(() => { });
+    // Hide native OS splash screen immediately so our custom animated SplashView takes over seamlessly
+    SplashScreen.hideAsync().catch(() => {});
 
-    // 1. Logo smooth spring scale & fade in
-    Animated.parallel([
-      Animated.timing(logoOpacity, {
-        toValue: 1,
-        duration: 700,
-        useNativeDriver: true,
-      }),
-      Animated.spring(logoScale, {
-        toValue: 1,
-        friction: 6,
-        tension: 40,
+    // Flight sequence: Starts banking in with acceleration and settles into smooth glide
+    Animated.timing(planeProgress, {
+      toValue: 1,
+      duration: 1600,
+      easing: Easing.bezier(0.16, 1, 0.3, 1), // custom fluid out-cubic / deceleration
+      useNativeDriver: true,
+    }).start(() => {
+      // Gentle continuous aerodynamic hovering/floating after arrival
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(planeFloating, {
+            toValue: 1,
+            duration: 1800,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(planeFloating, {
+            toValue: -1,
+            duration: 1800,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
+
+    // Sonic energy aura expansion accompanying airplane
+    Animated.sequence([
+      Animated.delay(200),
+      Animated.parallel([
+        Animated.timing(ringOpacity, {
+          toValue: 0.85,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(ringScale, {
+          toValue: 1.5,
+          duration: 1300,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(ringOpacity, {
+        toValue: 0,
+        duration: 400,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // 2. Continuous soft breathing pulse for airplane watermark
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 1400,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
+    // Logo Symbol springs up as the airplane reaches cruising altitude
+    Animated.sequence([
+      Animated.delay(400),
+      Animated.parallel([
+        Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 1400,
-          easing: Easing.inOut(Easing.ease),
+          duration: 650,
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+        Animated.spring(logoScale, {
+          toValue: 1,
+          friction: 6,
+          tension: 48,
+          useNativeDriver: true,
+        }),
+        Animated.timing(logoTranslateY, {
+          toValue: 0,
+          duration: 650,
+          easing: Easing.out(Easing.back(1.5)),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
 
-    // 3. YouTube-style continuous loop progress bar
+    // Brand Wordmark & Tagline glide in right after logo symbol
+    Animated.sequence([
+      Animated.delay(700),
+      Animated.parallel([
+        Animated.timing(wordmarkOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wordmarkTranslateY, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // YouTube-style continuous loop progress bar
     Animated.loop(
       Animated.sequence([
         Animated.timing(progressAnim, {
@@ -85,17 +153,56 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       ])
     ).start();
 
-    // 4. Advance callback
+    // Seamless handoff to app after full animation showcases
     const timer = setTimeout(() => {
       if (onFinish) onFinish();
-    }, 2400);
+    }, 2800);
 
     return () => clearTimeout(timer);
   }, []);
 
+  // Compute Airplane trajectory:
+  // Starts below and to the left (-140px, +160px) and flies up to hero top position (0px, 0px)
+  const planeTranslateX = planeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-SCREEN_WIDTH * 0.7, 0],
+  });
+
+  const planeTranslateY = Animated.add(
+    planeProgress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [SCREEN_HEIGHT * 0.28, 0],
+    }),
+    planeFloating.interpolate({
+      inputRange: [-1, 1],
+      outputRange: [-8, 8],
+    })
+  );
+
+  const planeScale = planeProgress.interpolate({
+    inputRange: [0, 0.6, 1],
+    outputRange: [0.65, 1.05, 1],
+  });
+
+  const planeRotate = Animated.add(
+    planeProgress.interpolate({
+      inputRange: [0, 0.7, 1],
+      outputRange: ['-18deg', '-3deg', '-6deg'],
+    }),
+    planeFloating.interpolate({
+      inputRange: [-1, 1],
+      outputRange: ['-2deg', '2deg'],
+    })
+  );
+
+  const planeOpacity = planeProgress.interpolate({
+    inputRange: [0, 0.2, 1],
+    outputRange: [0, 1, 1],
+  });
+
   // Compute YouTube-style sliding loader translate
-  const TRACK_WIDTH = 140;
-  const SLIDER_WIDTH = 60;
+  const TRACK_WIDTH = 150;
+  const SLIDER_WIDTH = 64;
   const translateX = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [-SLIDER_WIDTH, TRACK_WIDTH],
@@ -103,70 +210,133 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
 
   return (
     <View style={styles.container}>
-      {/* Dark Status bar matching the crisp Aqua-White theme */}
       <StatusBar style="dark" />
 
-      {/* Aqua Water Fluid Gradient: Identical to Login Page */}
+      {/* Atmospheric Aqua Gradient Background: Premium Cloud & Sky feel */}
       <LinearGradient
-        colors={['#99F6E4', '#CCFBF1', '#E6FAF6', '#F3FAF8', '#FFFFFF', '#FFFFFF']}
-        locations={[0, 0.18, 0.38, 0.6, 0.85, 1]}
+        colors={['#CCFBF1', '#E6FAF6', '#F0FDFA', '#F8FAFC', '#FFFFFF']}
+        locations={[0, 0.22, 0.5, 0.78, 1]}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Decorative Aqua Water Glow Spheres */}
-      <View style={styles.glowOrbTop} pointerEvents="none" />
-      <View style={styles.glowOrbBottom} pointerEvents="none" />
+      {/* Decorative Luminous Sky Glow Orbs */}
+      <View style={styles.glowOrbTopLeft} pointerEvents="none" />
+      <View style={styles.glowOrbCenter} pointerEvents="none" />
+      <View style={styles.glowOrbBottomRight} pointerEvents="none" />
 
-      {/* Atmospheric Airplane Watermark from Home Header with smooth breathing */}
+      {/* Glowing Sonic Ring Effect Behind Airplane */}
       <Animated.View
         style={[
-          styles.planeArtWrap,
+          styles.sonicRing,
           {
-            transform: [{ scale: pulseAnim }],
+            opacity: ringOpacity,
+            transform: [{ scale: ringScale }],
+          },
+        ]}
+        pointerEvents="none"
+      />
+
+      {/* Flight Air Trails / Aerodynamic Motion Streamlines */}
+      <Animated.View
+        style={[
+          styles.flightTrailsWrap,
+          {
+            opacity: planeOpacity,
+          },
+        ]}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={['transparent', 'rgba(45, 212, 191, 0.25)', 'transparent']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.flightTrailLine1}
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(13, 148, 136, 0.2)', 'transparent']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.flightTrailLine2}
+        />
+      </Animated.View>
+
+      {/* HERO SECTION: Flying 3D HD Commercial Airplane */}
+      <Animated.View
+        style={[
+          styles.airplaneHeroContainer,
+          {
+            opacity: planeOpacity,
+            transform: [
+              { translateX: planeTranslateX },
+              { translateY: planeTranslateY },
+              { scale: planeScale },
+              { rotate: planeRotate as any },
+            ],
           },
         ]}
         pointerEvents="none"
       >
         <ExpoImage
-          source={require('../../assets/images/home-header-plane.png')}
-          style={styles.planeArt}
+          source={require('../../assets/images/splash-flight-airplane.png')}
+          style={styles.airplaneImage}
           contentFit="contain"
           priority="high"
         />
       </Animated.View>
 
-      {/* Center Brand Identity with Original Official Logo */}
-      <View style={styles.centerContent}>
+      {/* CENTER BRAND SECTION: Original HD Official Flyorago Logo & Identity */}
+      <View style={styles.centerBrandArea}>
+        {/* Official 3D Pin & Box Symbol */}
         <Animated.View
           style={[
-            styles.logoContainer,
+            styles.symbolContainer,
             {
               opacity: logoOpacity,
-              transform: [{ scale: logoScale }],
+              transform: [
+                { scale: logoScale },
+                { translateY: logoTranslateY },
+              ],
+            },
+          ]}
+        >
+          {/* Subtle Backlight Glow under Symbol */}
+          <View style={styles.symbolBackdropGlow} />
+
+          <ExpoImage
+            source={require('../../assets/images/flyorago-symbol-hd.png')}
+            style={styles.hdSymbolImage}
+            contentFit="contain"
+            priority="high"
+          />
+        </Animated.View>
+
+        {/* Official HD Wordmark & Tagline: "Flyorago - Ship. Travel. Connect." */}
+        <Animated.View
+          style={[
+            styles.wordmarkContainer,
+            {
+              opacity: wordmarkOpacity,
+              transform: [{ translateY: wordmarkTranslateY }],
             },
           ]}
         >
           <ExpoImage
-            source={require('../../assets/images/flyorago-original-symbol.png')}
-            style={styles.originalLogo}
+            source={require('../../assets/images/flyorago-wordmark-hd.png')}
+            style={styles.hdWordmarkImage}
             contentFit="contain"
             priority="high"
           />
-          <Text style={styles.brandTitleText}>
-            FLYORA<Text style={styles.brandTitleAccent}>GO</Text>
-          </Text>
-        </Animated.View>
 
-        {/* Elegant Tagline Pill */}
-        <Animated.View style={[styles.badgeWrap, { opacity: logoOpacity }]}>
-          <View style={styles.badgePill}>
+          {/* MNC Style Slogan Badge */}
+          <View style={styles.sloganBadge}>
+            <View style={styles.sloganDot} />
             <Ionicons name="sparkles" size={13} color="#0D9488" />
-            <Text style={styles.badgeText}>Your Journey Carries More</Text>
+            <Text style={styles.sloganText}>Your Journey Carries More</Text>
           </View>
         </Animated.View>
       </View>
 
-      {/* Bottom Area: YouTube & Top MNC Style Smooth Fluid Progress Loader */}
+      {/* BOTTOM SECTION: YouTube & Google MNC Style Animated Micro Loader */}
       <View style={styles.bottomArea} pointerEvents="none">
         <View style={styles.loaderTrack}>
           <Animated.View
@@ -187,7 +357,10 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
           </Animated.View>
         </View>
 
-        <Text style={styles.loaderCaption}>SECURE LOGISTICS NETWORK</Text>
+        <View style={styles.footerRow}>
+          <Ionicons name="shield-checkmark" size={12} color="#0D9488" />
+          <Text style={styles.loaderCaption}>SECURE LOGISTICS NETWORK</Text>
+        </View>
       </View>
     </View>
   );
@@ -203,101 +376,163 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  glowOrbTop: {
+  glowOrbTopLeft: {
     position: 'absolute',
-    top: -60,
-    left: -60,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(45, 212, 191, 0.22)',
+    top: -80,
+    left: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(45, 212, 191, 0.28)',
     zIndex: 0,
   },
-  glowOrbBottom: {
+  glowOrbCenter: {
     position: 'absolute',
-    bottom: -80,
-    right: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: 'rgba(13, 148, 136, 0.12)',
+    top: SCREEN_HEIGHT * 0.32,
+    left: SCREEN_WIDTH * 0.1,
+    width: SCREEN_WIDTH * 0.8,
+    height: SCREEN_WIDTH * 0.8,
+    borderRadius: (SCREEN_WIDTH * 0.8) / 2,
+    backgroundColor: 'rgba(204, 251, 241, 0.35)',
     zIndex: 0,
   },
-  planeArtWrap: {
+  glowOrbBottomRight: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.18,
-    width: SCREEN_WIDTH * 0.85,
-    height: SCREEN_WIDTH * 0.85,
-    opacity: 0.18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    bottom: -90,
+    right: -90,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+    zIndex: 0,
+  },
+  sonicRing: {
+    position: 'absolute',
+    top: SCREEN_HEIGHT * 0.16,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 2,
+    borderColor: 'rgba(45, 212, 191, 0.45)',
+    backgroundColor: 'rgba(45, 212, 191, 0.08)',
     zIndex: 1,
   },
-  planeArt: {
+  flightTrailsWrap: {
+    position: 'absolute',
+    top: SCREEN_HEIGHT * 0.22,
+    width: SCREEN_WIDTH * 0.95,
+    height: 60,
+    zIndex: 1,
+    transform: [{ rotate: '-12deg' }],
+  },
+  flightTrailLine1: {
     width: '100%',
-    height: '100%',
-  },
-  centerContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: 2.5,
+    borderRadius: 2,
     marginBottom: 8,
   },
-  originalLogo: {
-    width: 140,
-    height: 140,
-    marginBottom: 10,
+  flightTrailLine2: {
+    width: '80%',
+    height: 1.8,
+    borderRadius: 2,
+    marginLeft: 30,
   },
-  brandTitleText: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#0A1628',
-    letterSpacing: 1.5,
-  },
-  brandTitleAccent: {
-    color: '#0D9488',
-  },
-  badgeWrap: {
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  badgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderWidth: 1.2,
-    borderColor: '#99F6E4',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0F766E',
-    letterSpacing: 0.5,
-  },
-  bottomArea: {
+  airplaneHeroContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 52 : 38,
-    left: 0,
-    right: 0,
+    top: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.11 : SCREEN_HEIGHT * 0.09,
+    width: SCREEN_WIDTH * 0.94,
+    height: SCREEN_WIDTH * 0.58,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
   },
-  loaderTrack: {
+  airplaneImage: {
+    width: '100%',
+    height: '100%',
+  },
+  centerBrandArea: {
+    position: 'absolute',
+    top: SCREEN_HEIGHT * 0.41,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 4,
+  },
+  symbolContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 12,
+  },
+  symbolBackdropGlow: {
+    position: 'absolute',
     width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(45, 212, 191, 0.25)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  hdSymbolImage: {
+    width: 126,
+    height: 120,
+  },
+  wordmarkContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingHorizontal: 24,
+  },
+  hdWordmarkImage: {
+    width: SCREEN_WIDTH * 0.72,
+    height: (SCREEN_WIDTH * 0.72) * (681 / 1275),
+    maxWidth: 290,
+    maxHeight: 155,
+  },
+  sloganBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderWidth: 1.2,
+    borderColor: '#99F6E4',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 22,
+    marginTop: 10,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  sloganDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  sloganText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#0F766E',
+    letterSpacing: 0.6,
+  },
+  bottomArea: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 52 : 36,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+  },
+  loaderTrack: {
+    width: 150,
     height: 4.5,
     backgroundColor: 'rgba(13, 148, 136, 0.16)',
     borderRadius: 4,
@@ -314,11 +549,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   loaderCaption: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: '800',
     color: '#0D9488',
-    letterSpacing: 1.2,
-    opacity: 0.85,
+    letterSpacing: 1.4,
+    opacity: 0.9,
   },
 });
