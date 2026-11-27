@@ -2716,359 +2716,311 @@ const AdminDashboardPage: React.FC = () => {
         .duration-200{animation-duration:.2s}
         .duration-300{animation-duration:.3s}
 
-        /* ── SCROLLBARS ── */
-        ::-webkit-scrollbar{width:4px;height:4px}
-        ::-webkit-scrollbar-track{background:#f1f5f9}
-        ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:6px}
-        ::-webkit-scrollbar-thumb:hover{background:#0D9488}
+        /* ── ADMIN MNC MODERN LIGHT THEME (Google / Meta Style) ── */
+        :root {
+          --admin-bg: #F8FAFC;
+          --admin-surface: #FFFFFF;
+          --admin-surface-2: #F1F5F9;
+          --admin-border: rgba(226, 232, 240, 0.8);
+          --admin-border-active: #0D9488;
+          --admin-navy: #0F172A;
+          --admin-teal: #0D9488;
+          --admin-teal-light: #14B8A6;
+          --admin-blue: #2563EB;
+          --admin-text-primary: #0F172A;
+          --admin-text-secondary: #475569;
+          --admin-text-muted: #94A3B8;
+        }
 
-        /* ── SIDEBAR (FlyoraGo Teal Brand) ── */
+        /* ── KEYFRAMES ── */
+        @keyframes fade-in{from{opacity:0}to{opacity:1}}
+        @keyframes zoom-in-95{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+        @keyframes slide-in-from-bottom-3{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes slide-in-from-top-4{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes slide-in-from-left{from{transform:translateX(-10px);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes admin-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+        @keyframes admin-glow-pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+        @keyframes admin-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+        @keyframes admin-counter-up{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes admin-card-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes admin-pulse-ring{0%{transform:scale(0.95);opacity:0.8}100%{transform:scale(1.35);opacity:0}}
+        @keyframes admin-progress-fill{from{width:0}to{width:var(--prog-w,100%)}}
+
+        .animate-in{animation-duration:.25s;animation-fill-mode:both;animation-timing-function:cubic-bezier(0.16,1,0.3,1)}
+        .fade-in{animation-name:fade-in}
+        .zoom-in-95{animation-name:zoom-in-95}
+        .slide-in-from-bottom-3{animation-name:slide-in-from-bottom-3}
+        .slide-in-from-top-4{animation-name:slide-in-from-top-4}
+        .duration-200{animation-duration:.2s}
+        .duration-300{animation-duration:.3s}
+
+        /* ── SCROLLBARS ── */
+        ::-webkit-scrollbar{width:5px;height:5px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:999px}
+        ::-webkit-scrollbar-thumb:hover{background:#94A3B8}
+
+        /* ── SIDEBAR (Modern Fluid Brand) ── */
         .admin-sidebar {
-          background: linear-gradient(180deg, #0F766E 0%, #0D9488 50%, #09544E 100%);
+          background: linear-gradient(180deg, #094F49 0%, #0D6B63 45%, #0B534D 100%);
           border-right: none;
-          box-shadow: 6px 0 30px rgba(13,148,136,0.25);
+          box-shadow: 4px 0 32px rgba(15, 23, 42, 0.08);
           position: relative;
         }
-        .admin-sidebar::after {
-          content: '';
-          position: absolute;
-          top: 0; right: 0; bottom: 0;
-          width: 1px;
-          background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2) 30%, rgba(255,255,255,0.1) 70%, transparent);
-        }
         .admin-sidebar-logo {
-          background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-          border-bottom: 1px solid rgba(13,148,136,0.18);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+          background: #FFFFFF;
+          border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
           position: relative;
         }
         .admin-nav-item {
-          border-radius: 12px;
-          transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+          border-radius: 14px;
+          transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
           position: relative;
-          overflow: hidden;
+          font-weight: 600;
         }
         .admin-nav-item:hover {
-          background: rgba(255,255,255,0.14);
-          transform: translateX(3px);
+          background: rgba(255,255,255,0.12);
+          transform: translateX(2px);
         }
         .admin-nav-item.active {
           background: #FFFFFF;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0,0,0,0.06);
         }
         .admin-nav-item.active::before {
           content: '';
           position: absolute;
-          left: 0; top: 15%; bottom: 15%;
-          width: 4px;
-          background: #10B981;
+          left: 0; top: 20%; bottom: 20%;
+          width: 3.5px;
+          background: #0D9488;
           border-radius: 0 4px 4px 0;
         }
-        .admin-nav-section-label {
-          font-size: 9px;
-          font-weight: 800;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.55);
-          padding: 0 12px 8px;
-        }
 
-        /* ── HEADER ── */
+        /* ── HEADER (Google / Meta Glass Topbar) ── */
         .admin-header {
-          background: rgba(255,255,255,0.92);
+          background: rgba(255, 255, 255, 0.88);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
-          border-bottom: 1px solid #E2E8F7;
-          box-shadow: 0 1px 0 rgba(10,22,40,0.04), 0 4px 20px rgba(10,22,40,0.06);
+          border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .admin-search-box {
-          background: #F0F4FF;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 12px;
+          background: #F1F5F9;
+          border: 1px solid transparent;
+          border-radius: 14px;
           transition: all 0.2s ease;
-          color: #0A1628;
+          color: #0F172A;
+          font-weight: 500;
+        }
+        .admin-search-box:hover {
+          background: #E2E8F0;
         }
         .admin-search-box:focus {
-          background: #fff;
+          background: #FFFFFF;
           border-color: #0D9488;
-          box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
           outline: none;
         }
-        .admin-search-box::placeholder{color:#94A3B8}
+        .admin-search-box::placeholder{color:#64748B}
 
-        /* ── MAIN CONTENT ── */
+        /* ── MAIN CONTENT CANVAS ── */
         .admin-main {
-          background: #F0F4FF;
+          background: #F8FAFC;
         }
         .admin-section-bg {
           background:
-            radial-gradient(ellipse at 0% 0%, rgba(13,148,136,0.06) 0%, transparent 50%),
-            radial-gradient(ellipse at 100% 100%, rgba(27,79,216,0.06) 0%, transparent 50%),
-            #F0F4FF;
+            radial-gradient(circle at 10% 10%, rgba(13,148,136,0.04) 0%, transparent 40%),
+            radial-gradient(circle at 90% 20%, rgba(37,99,235,0.04) 0%, transparent 45%),
+            radial-gradient(circle at 50% 90%, rgba(16,185,129,0.03) 0%, transparent 50%),
+            #F8FAFC;
         }
 
-        /* ── STAT CARDS ── */
+        /* ── TOP MNC GLASS PANELS & CARDS ── */
+        .glass-panel {
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.02);
+        }
+        
         .admin-stat-card {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 18px;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 20px;
           cursor: pointer;
           position: relative;
           overflow: hidden;
-          transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-          animation: admin-card-enter 0.4s cubic-bezier(0.16,1,0.3,1) both;
-        }
-        .admin-stat-card::before {
-          content: '';
-          position: absolute;
-          top: 0; left: -60%;
-          width: 40%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
-          animation: admin-shine 3s ease-in-out infinite;
-          pointer-events: none;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.02);
+          transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .admin-stat-card:hover {
-          border-color: #0D9488;
-          transform: translateY(-5px) scale(1.01);
-          box-shadow: 0 20px 50px rgba(10,22,40,0.12), 0 0 0 1px rgba(13,148,136,0.2);
-        }
-        .admin-stat-card:hover .admin-stat-icon {
-          transform: scale(1.12) rotate(8deg);
+          transform: translateY(-3px);
+          box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+          border-color: rgba(203, 213, 225, 0.9);
         }
         .admin-stat-icon {
-          transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+          transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
           border-radius: 14px;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
+          width: 42px;
+          height: 42px;
           flex-shrink: 0;
         }
-        .admin-stat-number {
-          animation: admin-counter-up 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
-          color: #0A1628;
-          font-weight: 900;
-          font-size: 1.75rem;
-          line-height: 1;
-          letter-spacing: -0.04em;
+        .admin-stat-card:hover .admin-stat-icon {
+          transform: scale(1.08);
         }
 
-        /* ── CHART CARD ── */
+        /* ── CHART CARDS ── */
         .admin-chart-card {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 20px;
-          box-shadow: 0 4px 24px rgba(10,22,40,0.06);
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 24px;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 8px 20px -6px rgba(15, 23, 42, 0.03);
+          transition: all 0.2s ease;
         }
 
-        /* ── DATA TABLES ── */
+        /* ── DATA TABLES (Crisp borderless MNC style) ── */
         .admin-table-card {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 20px;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 22px;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
-          box-shadow: 0 4px 24px rgba(10,22,40,0.06);
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.02);
           width: 100%;
           max-width: 100%;
         }
         .admin-table-head {
-          background: linear-gradient(135deg, #F8FAFF 0%, #F0F4FF 100%);
-          border-bottom: 1.5px solid #E2E8F7;
+          background: #F8FAFC;
+          border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
         .admin-table-head th {
-          color: #64748B;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
+          color: #475569;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
-          padding: 12px 14px;
+          padding: 14px 16px;
           white-space: nowrap;
         }
         .admin-table-row {
           border-bottom: 1px solid #F1F5F9;
-          transition: all 0.18s ease;
+          transition: background 0.15s ease;
         }
         .admin-table-row:last-child{border-bottom:none}
         .admin-table-row:hover {
-          background: linear-gradient(135deg, rgba(13,148,136,0.04) 0%, rgba(27,79,216,0.03) 100%);
+          background: #F8FAFC;
         }
         .admin-table-row td {
-          padding: 12px 14px;
-          color: #475569;
+          padding: 13px 16px;
+          color: #334155;
           font-size: 13px;
           vertical-align: middle;
         }
-        .admin-table-row td:first-child{color:#0A1628;font-weight:700}
+        .admin-table-row td:first-child{color:#0F172A;font-weight:700}
 
-        /* ── BUTTONS ── */
+        /* ── MNC BUTTONS ── */
         .admin-btn-primary {
-          background: linear-gradient(135deg, #0D9488 0%, #1B4FD8 100%);
+          background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
           color: white;
           border: none;
           border-radius: 12px;
-          font-weight: 700;
+          font-weight: 600;
           font-size: 12px;
           padding: 8px 18px;
-          transition: all 0.25s ease;
-          box-shadow: 0 4px 14px rgba(13,148,136,0.3);
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(13,148,136,0.25);
           cursor: pointer;
-          position: relative;
-          overflow: hidden;
-        }
-        .admin-btn-primary::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(rgba(255,255,255,0.15), transparent);
-          pointer-events: none;
         }
         .admin-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 28px rgba(13,148,136,0.4);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(13,148,136,0.35);
           filter: brightness(1.05);
         }
         .admin-btn-ghost {
-          background: #F0F4FF;
-          border: 1.5px solid #E2E8F7;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.9);
           color: #475569;
-          border-radius: 10px;
+          border-radius: 12px;
           font-weight: 600;
           font-size: 12px;
-          padding: 7px 14px;
-          transition: all 0.2s ease;
+          padding: 8px 16px;
+          transition: all 0.18s ease;
           cursor: pointer;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .admin-btn-ghost:hover {
-          background: #fff;
-          border-color: #0D9488;
-          color: #0A1628;
-          box-shadow: 0 2px 8px rgba(13,148,136,0.12);
+          background: #F8FAFC;
+          border-color: #CBD5E1;
+          color: #0F172A;
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
         }
         .admin-btn-danger {
           background: #FEF2F2;
-          border: 1.5px solid #FECACA;
+          border: 1px solid #FECACA;
           color: #DC2626;
-          border-radius: 10px;
+          border-radius: 12px;
           padding: 7px 14px;
           font-size: 12px;
           font-weight: 600;
-          transition: all 0.2s ease;
+          transition: all 0.18s ease;
           cursor: pointer;
         }
         .admin-btn-danger:hover {
           background: #FEE2E2;
           border-color: #F87171;
-          box-shadow: 0 2px 8px rgba(220,38,38,0.15);
         }
 
         /* ── BADGES ── */
-        .admin-badge-active{background:#D1FAE5;color:#065F46;border:1.5px solid #A7F3D0;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px;letter-spacing:.04em}
-        .admin-badge-pending{background:#FEF3C7;color:#92400E;border:1.5px solid #FDE68A;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-error{background:#FEE2E2;color:#991B1B;border:1.5px solid #FECACA;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-info{background:#DBEAFE;color:#1E40AF;border:1.5px solid #BFDBFE;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-neutral{background:#F1F5F9;color:#475569;border:1.5px solid #E2E8F0;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-teal{background:#CCFBF1;color:#0F766E;border:1.5px solid #99F6E4;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-violet{background:#EDE9FE;color:#5B21B6;border:1.5px solid #DDD6FE;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-
-        /* ── SECTION HEADERS ── */
-        .admin-section-title {
-          font-size: 1.2rem;
-          font-weight: 900;
-          color: #0A1628;
-          letter-spacing: -0.03em;
-          line-height: 1.2;
-        }
-        .admin-section-sub{font-size:13px;color:#64748B;font-weight:500;margin-top:3px}
+        .admin-badge-active{background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-pending{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-error{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-info{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-neutral{background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-teal{background:#F0FDFA;color:#0F766E;border:1px solid #99F6E4;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-violet{background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
 
         /* ── FILTER CHIPS ── */
         .admin-chip {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          color: #64748B;
-          border-radius: 10px;
-          font-size: 11px;
-          font-weight: 700;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.9);
+          color: #475569;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
           padding: 6px 14px;
           cursor: pointer;
           transition: all 0.18s ease;
           white-space: nowrap;
         }
-        .admin-chip:hover{background:#F0F4FF;border-color:#0D9488;color:#0A1628}
+        .admin-chip:hover{background:#F8FAFC;border-color:#CBD5E1;color:#0F172A}
         .admin-chip.active {
-          background: linear-gradient(135deg, #0D9488 0%, #1B4FD8 100%);
-          border-color: transparent;
-          color: #fff;
-          box-shadow: 0 4px 14px rgba(13,148,136,0.25);
+          background: #0D9488;
+          border-color: #0D9488;
+          color: #FFFFFF;
+          box-shadow: 0 2px 8px rgba(13,148,136,0.25);
         }
-
-        /* ── ACTIVITY ITEMS ── */
-        .admin-activity-item {
-          display:flex;align-items:flex-start;gap:12px;
-          padding:10px 0;
-          border-bottom:1px solid #F1F5F9;
-          transition:all .18s ease;
-        }
-        .admin-activity-item:last-child{border-bottom:none}
-        .admin-activity-item:hover{padding-left:6px}
-
-        /* ── OVERVIEW CARD ── */
-        .admin-overview-card {
-          background:#fff;
-          border:1.5px solid #E2E8F7;
-          border-radius:20px;
-          overflow:hidden;
-          box-shadow: 0 4px 24px rgba(10,22,40,0.06);
-        }
-
-        /* ── GRADIENT ICON BACKGROUNDS (stat cards) ── */
-        .grad-indigo{background:linear-gradient(135deg,#EEF2FF,#E0E7FF)}
-        .grad-sky{background:linear-gradient(135deg,#E0F2FE,#BAE6FD)}
-        .grad-emerald{background:linear-gradient(135deg,#D1FAE5,#A7F3D0)}
-        .grad-amber{background:linear-gradient(135deg,#FEF3C7,#FDE68A)}
-        .grad-rose{background:linear-gradient(135deg,#FEE2E2,#FECACA)}
-
-        /* ── DROPDOWN ── */
-        .dropdown{position:relative}
-        .dropdown-menu {
-          position:absolute;right:0;top:calc(100% + 8px);
-          background:#fff;
-          border:1.5px solid #E2E8F7;
-          border-radius:14px;
-          box-shadow:0 20px 60px rgba(10,22,40,0.12);
-          z-index:200;min-width:160px;padding:6px;overflow:hidden
-        }
-        .dropdown-item {
-          display:flex;align-items:center;gap:8px;width:100%;
-          padding:8px 12px;border-radius:10px;
-          font-size:13px;font-weight:600;
-          cursor:pointer;transition:background .15s;
-          color:#475569;
-        }
-        .dropdown-item:hover{background:#F0F4FF;color:#0A1628}
-        .dropdown-item.danger{color:#DC2626}
-        .dropdown-item.danger:hover{background:#FEF2F2}
 
         /* ── MOBILE BACKDROP ── */
         .admin-mobile-backdrop {
-          background:rgba(10,22,40,0.5);
-          backdrop-filter:blur(8px);
-          -webkit-backdrop-filter:blur(8px);
+          background: rgba(15, 23, 42, 0.4);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
 
         /* ── INPUT LIGHT ── */
         .admin-input {
-          background: #F8FAFF !important;
-          border: 1.5px solid #E2E8F7 !important;
-          color: #0A1628 !important;
+          background: #FFFFFF !important;
+          border: 1px solid rgba(226, 232, 240, 0.9) !important;
+          color: #0F172A !important;
           border-radius: 12px !important;
           transition: all 0.2s ease !important;
         }
         .admin-input:focus {
-          background: #fff !important;
+          background: #FFFFFF !important;
           border-color: #0D9488 !important;
-          box-shadow: 0 0 0 3px rgba(13,148,136,0.1) !important;
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.12) !important;
           outline: none !important;
         }
         .admin-input::placeholder{color:#94A3B8 !important}
@@ -3082,90 +3034,42 @@ const AdminDashboardPage: React.FC = () => {
         .admin-shimmer::after {
           content:'';
           position:absolute;top:0;left:0;right:0;bottom:0;
-          background:linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent);
+          background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);
           animation:admin-shimmer 1.5s infinite;
         }
 
         /* ── SECTION FADE IN ── */
         .admin-tab-content {
-          animation: slide-in-from-bottom-3 0.35s cubic-bezier(0.16,1,0.3,1) both;
-        }
-
-        /* ── DIVIDER ── */
-        .admin-divider{border-color:#E2E8F7}
-
-        /* ── METRIC CARD ── */
-        .admin-metric-card {
-          background:#fff;
-          border:1.5px solid #E2E8F7;
-          border-radius:18px;
-          padding:20px;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          transition:all 0.25s ease;
-          box-shadow: 0 2px 12px rgba(10,22,40,0.05);
-        }
-        .admin-metric-card:hover {
-          border-color:#0D9488;
-          transform:translateY(-2px);
-          box-shadow:0 12px 40px rgba(13,148,136,0.1);
+          animation: slide-in-from-bottom-3 0.25s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         /* ── HOVER LIFT ── */
-        .admin-hover-lift {
-          transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        .hover-float {
+          transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .admin-hover-lift:hover {
+        .hover-float:hover {
           transform: translateY(-3px);
-          box-shadow: 0 10px 30px rgba(10,22,40,0.1);
-        }
-
-        /* ── DYNAMIC SYSTEM STYLES ── */
-        .glass-panel {
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(226, 232, 247, 0.7);
-        }
-        
-        .text-gradient-primary {
-          background: linear-gradient(135deg, #0A1628 30%, #0F766E 100%);
-          -webkit-bg-clip: text;
-          -webkit-text-fill-color: transparent;
         }
 
         .glow-teal:hover {
-          box-shadow: 0 12px 30px -10px rgba(13, 148, 136, 0.25), 0 0 0 1px rgba(13, 148, 136, 0.2) !important;
+          box-shadow: 0 10px 24px -4px rgba(13, 148, 136, 0.15) !important;
           border-color: rgba(13, 148, 136, 0.4) !important;
         }
-        
         .glow-blue:hover {
-          box-shadow: 0 12px 30px -10px rgba(27, 79, 216, 0.25), 0 0 0 1px rgba(27, 79, 216, 0.2) !important;
-          border-color: rgba(27, 79, 216, 0.4) !important;
+          box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.15) !important;
+          border-color: rgba(37, 99, 235, 0.4) !important;
         }
-        
         .glow-indigo:hover {
-          box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+          box-shadow: 0 10px 24px -4px rgba(99, 102, 241, 0.15) !important;
           border-color: rgba(99, 102, 241, 0.4) !important;
         }
-        
         .glow-amber:hover {
-          box-shadow: 0 12px 30px -10px rgba(245, 158, 11, 0.25), 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+          box-shadow: 0 10px 24px -4px rgba(245, 158, 11, 0.15) !important;
           border-color: rgba(245, 158, 11, 0.4) !important;
         }
-        
         .glow-rose:hover {
-          box-shadow: 0 12px 30px -10px rgba(244, 63, 94, 0.25), 0 0 0 1px rgba(244, 63, 94, 0.2) !important;
-          border-color: rgba(244, 63, 94, 0.4) !important;
-        }
-        
-        /* ── FLOATING ANIMATION ── */
-        .hover-float {
-          transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .hover-float:hover {
-          transform: translateY(-5px) scale(1.015);
+          box-shadow: 0 10px 24px -4px rgba(239, 68, 68, 0.15) !important;
+          border-color: rgba(239, 68, 68, 0.4) !important;
         }
 
         /* ── DIAGNOSTIC BAR ── */
@@ -3437,51 +3341,49 @@ const AdminDashboardPage: React.FC = () => {
               </div>
 
               {/* ── Stat Cards ── */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 {statCards.map((c, i) => (
                   <div
                     key={i}
-                    className={`glass-panel hover-float ${c.glow} p-5 rounded-[22px] cursor-pointer flex flex-col justify-between h-[148px] relative overflow-hidden shadow-xs transition-all duration-300 animate-in fade-in`}
-                    style={{ animationDelay: `${i * 60}ms`, border: '1px solid rgba(226, 232, 247, 0.8)' }}
+                    className="admin-stat-card p-5 cursor-pointer flex flex-col justify-between h-[156px] relative select-none"
                     onClick={() => { if (i === 4) setTab('kyc'); else if (i === 0) setTab('users'); else if (i === 1) setTab('trips'); else if (i === 2) setTab('bookings'); else setTab('shipments'); }}
                   >
-                    {/* Background Soft Glow */}
-                    <div className="absolute top-0 right-0 w-24 h-24 rounded-full filter blur-2xl opacity-10 pointer-events-none" style={{ background: c.color }} />
-
                     {/* Top row */}
-                    <div className="flex items-center justify-between mb-1.5 z-10">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{c.label}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{c.label}</span>
                       <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300"
-                        style={{ background: `${c.color}12`, border: `1px solid ${c.color}20` }}
+                        className="admin-stat-icon"
+                        style={{ background: `${c.color}10`, color: c.color }}
                       >
-                        <c.icon size={15} style={{ color: c.color }} />
+                        <c.icon size={18} />
                       </div>
                     </div>
 
-                    {/* Middle row: Number and Sparkline */}
-                    <div className="flex items-end justify-between gap-2 z-10">
-                      <div>
-                        <div className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-                          {loading ? (
-                            <span className="inline-block w-16 h-7 rounded-lg admin-shimmer" />
-                          ) : (
-                            c.val.toLocaleString()
-                          )}
-                        </div>
+                    {/* Value + Sparkline */}
+                    <div className="flex items-baseline justify-between gap-2 my-auto">
+                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">
+                        {loading ? (
+                          <span className="inline-block w-16 h-8 rounded-lg admin-shimmer" />
+                        ) : (
+                          c.val.toLocaleString()
+                        )}
                       </div>
-                      <div className="pb-1">
+                      <div className="opacity-90">
                         <Sparkline data={c.spark} color={c.color} />
                       </div>
                     </div>
 
-                    {/* Bottom row: Trend Sub-text */}
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-2 z-10">
-                      <div className="flex items-center gap-1">
-                        <TrendingUp size={10} style={{ color: c.up ? '#10B981' : '#EF4444', transform: c.up ? 'none' : 'rotate(180deg)' }} />
-                        <span className="text-[10px] font-black" style={{ color: c.up ? '#10B981' : '#EF4444' }}>{c.sub}</span>
+                    {/* Bottom row: Trend indicator */}
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100/80">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          c.up ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                        }`}>
+                          <TrendingUp size={11} className={c.up ? '' : 'rotate-180'} />
+                          {c.sub}
+                        </span>
                       </div>
-                      <span className="text-[9px] font-bold text-slate-400">7d trend</span>
+                      <span className="text-[10px] font-medium text-slate-400">vs last week</span>
                     </div>
                   </div>
                 ))}
