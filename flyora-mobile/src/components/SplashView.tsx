@@ -7,53 +7,69 @@ import {
   Dimensions,
   Platform,
   Easing,
+  useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as SplashScreen from 'expo-splash-screen';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SplashViewProps {
   onFinish?: () => void;
 }
 
 export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
-  // 1. Airplane Flight Animation: smoothly swoops in from bottom-left up across to upper area
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  // Responsive dynamic dimensions for any screen size (small phone, medium, tablet, phablet)
+  const isTablet = windowWidth >= 768;
+  const isSmallPhone = windowWidth < 375;
+
+  // Exact responsive proportional sizes
+  const LOGO_BOX_SIZE = Math.min(Math.round(windowWidth * (isTablet ? 0.32 : isSmallPhone ? 0.52 : 0.48)), 230);
+  const LOGO_IMAGE_SIZE = Math.round(LOGO_BOX_SIZE * 0.94);
+  const GLOW_SIZE = Math.round(LOGO_BOX_SIZE * 0.88);
+
+  // Responsive Airplane size & trajectory
+  const PLANE_WIDTH = Math.min(Math.round(windowWidth * (isTablet ? 0.6 : 0.94)), 460);
+  const PLANE_HEIGHT = Math.round(PLANE_WIDTH * (768 / 1323));
+
+  // 1. Airplane Flight Entry & Float Animations
   const planeProgress = useRef(new Animated.Value(0)).current;
   const planeFloating = useRef(new Animated.Value(0)).current;
 
-  // 2. Official Logo Animation (splash-icon.png): Spring scale & glowing reveal
-  const logoScale = useRef(new Animated.Value(0.75)).current;
+  // 2. Dead-Center Logo Reveal Animations
+  const logoScale = useRef(new Animated.Value(0.72)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoTranslateY = useRef(new Animated.Value(30)).current;
+  const logoTranslateY = useRef(new Animated.Value(34)).current;
   const logoGlowPulse = useRef(new Animated.Value(1)).current;
 
-  // 3. Sonic Jet Airflow Ring Glow Effect
-  const ringScale = useRef(new Animated.Value(0.6)).current;
+  // 3. Ambient Flight Sonic Ring Aura
+  const ringScale = useRef(new Animated.Value(0.5)).current;
   const ringOpacity = useRef(new Animated.Value(0)).current;
 
-  // 4. Tagline Pill Reveal Animation
+  // 4. Tagline Pill Staggered Reveal
   const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const taglineTranslateY = useRef(new Animated.Value(14)).current;
+  const taglineTranslateY = useRef(new Animated.Value(16)).current;
 
-  // 5. YouTube / Top MNC Style Fluid Progress Loader
+  // 5. Google / YouTube MNC Style Micro Progress Loader
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Hide native OS splash screen immediately so our custom animated SplashView takes over seamlessly
+    // Hide native OS splash screen immediately so custom SplashView seamlessly displays
     SplashScreen.hideAsync().catch(() => {});
 
-    // Flight sequence: Starts banking in with acceleration and settles into smooth glide
+    // 1. Airplane Flight Animation: Swoops up across with realistic deceleration curve
     Animated.timing(planeProgress, {
       toValue: 1,
-      duration: 1600,
+      duration: 1550,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
       useNativeDriver: true,
     }).start(() => {
-      // Gentle continuous aerodynamic hovering/floating after arrival
+      // Gentle continuous aerodynamic floating/hovering in the sky
       Animated.loop(
         Animated.sequence([
           Animated.timing(planeFloating, {
@@ -72,18 +88,18 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       ).start();
     });
 
-    // Sonic energy aura expansion accompanying airplane
+    // 2. Sonic energy aura behind airplane
     Animated.sequence([
-      Animated.delay(200),
+      Animated.delay(180),
       Animated.parallel([
         Animated.timing(ringOpacity, {
           toValue: 0.85,
-          duration: 500,
+          duration: 480,
           useNativeDriver: true,
         }),
         Animated.timing(ringScale, {
-          toValue: 1.5,
-          duration: 1300,
+          toValue: 1.45,
+          duration: 1250,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
@@ -95,7 +111,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       }),
     ]).start();
 
-    // Official Logo (splash-icon) springs up as the airplane reaches cruising altitude
+    // 3. Center Logo: Springs cleanly into dead-center
     Animated.sequence([
       Animated.delay(350),
       Animated.parallel([
@@ -107,7 +123,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         Animated.spring(logoScale, {
           toValue: 1,
           friction: 6,
-          tension: 48,
+          tension: 46,
           useNativeDriver: true,
         }),
         Animated.timing(logoTranslateY, {
@@ -118,18 +134,18 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         }),
       ]),
     ]).start(() => {
-      // Gentle breathing glow pulse for the logo
+      // Gentle infinite breathing pulse for logo
       Animated.loop(
         Animated.sequence([
           Animated.timing(logoGlowPulse, {
-            toValue: 1.05,
-            duration: 1600,
+            toValue: 1.045,
+            duration: 1500,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(logoGlowPulse, {
             toValue: 1,
-            duration: 1600,
+            duration: 1500,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
@@ -137,7 +153,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       ).start();
     });
 
-    // Tagline badge glides in right after logo
+    // 4. Tagline Pill Glides in right after logo
     Animated.sequence([
       Animated.delay(650),
       Animated.parallel([
@@ -155,7 +171,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       ]),
     ]).start();
 
-    // YouTube-style continuous loop progress bar
+    // 5. YouTube & Google MNC style continuous loop progress slider
     Animated.loop(
       Animated.sequence([
         Animated.timing(progressAnim, {
@@ -172,7 +188,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
       ])
     ).start();
 
-    // Seamless handoff to app after full animation showcases
+    // Smooth handoff to main app
     const timer = setTimeout(() => {
       if (onFinish) onFinish();
     }, 2800);
@@ -180,16 +196,16 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Compute Airplane trajectory
+  // Responsive Airplane trajectory interpolation
   const planeTranslateX = planeProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [-SCREEN_WIDTH * 0.7, 0],
+    outputRange: [-windowWidth * 0.75, 0],
   });
 
   const planeTranslateY = Animated.add(
     planeProgress.interpolate({
       inputRange: [0, 1],
-      outputRange: [SCREEN_HEIGHT * 0.26, 0],
+      outputRange: [windowHeight * 0.28, 0],
     }),
     planeFloating.interpolate({
       inputRange: [-1, 1],
@@ -199,7 +215,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
 
   const planeScale = planeProgress.interpolate({
     inputRange: [0, 0.6, 1],
-    outputRange: [0.65, 1.05, 1],
+    outputRange: [0.65, 1.04, 1],
   });
 
   const planeRotate = Animated.add(
@@ -214,39 +230,62 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
   );
 
   const planeOpacity = planeProgress.interpolate({
-    inputRange: [0, 0.2, 1],
+    inputRange: [0, 0.25, 1],
     outputRange: [0, 1, 1],
   });
 
-  // Compute YouTube-style sliding loader translate
-  const TRACK_WIDTH = 150;
-  const SLIDER_WIDTH = 64;
+  // Responsive Progress Slider Interpolation
+  const TRACK_WIDTH = Math.min(Math.round(windowWidth * 0.38), 160);
+  const SLIDER_WIDTH = Math.round(TRACK_WIDTH * 0.42);
   const translateX = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [-SLIDER_WIDTH, TRACK_WIDTH],
   });
 
   return (
-    <View style={styles.container}>
+    <View style={styles.rootContainer}>
       <StatusBar style="dark" />
 
-      {/* Atmospheric Aqua Gradient Background: Premium Cloud & Sky feel */}
+      {/* Atmospheric Cloud & Sky Aqua Fluid Gradient */}
       <LinearGradient
         colors={['#CCFBF1', '#E6FAF6', '#F0FDFA', '#F8FAFC', '#FFFFFF']}
-        locations={[0, 0.22, 0.5, 0.78, 1]}
+        locations={[0, 0.2, 0.48, 0.76, 1]}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Decorative Luminous Sky Glow Orbs */}
-      <View style={styles.glowOrbTopLeft} pointerEvents="none" />
-      <View style={styles.glowOrbCenter} pointerEvents="none" />
-      <View style={styles.glowOrbBottomRight} pointerEvents="none" />
+      {/* Responsive Glow Orbs */}
+      <View
+        style={[
+          styles.glowOrbTopLeft,
+          {
+            width: Math.min(windowWidth * 0.7, 320),
+            height: Math.min(windowWidth * 0.7, 320),
+            borderRadius: Math.min(windowWidth * 0.7, 320) / 2,
+          },
+        ]}
+        pointerEvents="none"
+      />
+      <View
+        style={[
+          styles.glowOrbBottomRight,
+          {
+            width: Math.min(windowWidth * 0.75, 340),
+            height: Math.min(windowWidth * 0.75, 340),
+            borderRadius: Math.min(windowWidth * 0.75, 340) / 2,
+          },
+        ]}
+        pointerEvents="none"
+      />
 
-      {/* Glowing Sonic Ring Effect Behind Airplane */}
+      {/* Glowing Sonic Ring Behind Airplane */}
       <Animated.View
         style={[
           styles.sonicRing,
           {
+            top: insets.top + (isSmallPhone ? 40 : 65),
+            width: Math.min(windowWidth * 0.62, 260),
+            height: Math.min(windowWidth * 0.62, 260),
+            borderRadius: Math.min(windowWidth * 0.62, 260) / 2,
             opacity: ringOpacity,
             transform: [{ scale: ringScale }],
           },
@@ -254,18 +293,20 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         pointerEvents="none"
       />
 
-      {/* Flight Air Trails / Aerodynamic Motion Streamlines */}
+      {/* Flight Air Trails */}
       <Animated.View
         style={[
           styles.flightTrailsWrap,
           {
+            top: insets.top + (isSmallPhone ? 60 : 90),
+            width: windowWidth * 0.9,
             opacity: planeOpacity,
           },
         ]}
         pointerEvents="none"
       >
         <LinearGradient
-          colors={['transparent', 'rgba(45, 212, 191, 0.25)', 'transparent']}
+          colors={['transparent', 'rgba(45, 212, 191, 0.28)', 'transparent']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={styles.flightTrailLine1}
@@ -278,11 +319,14 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         />
       </Animated.View>
 
-      {/* HERO SECTION: Flying 3D HD Commercial Airplane */}
+      {/* TOP HERO SECTION: Flying 3D HD Commercial Airplane */}
       <Animated.View
         style={[
           styles.airplaneHeroContainer,
           {
+            top: insets.top + (isSmallPhone ? 15 : isTablet ? 45 : 30),
+            width: PLANE_WIDTH,
+            height: PLANE_HEIGHT,
             opacity: planeOpacity,
             transform: [
               { translateX: planeTranslateX },
@@ -302,12 +346,15 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         />
       </Animated.View>
 
-      {/* CENTER BRAND SECTION: Only the official splash-icon.png with backlight glow */}
-      <View style={styles.centerBrandArea}>
+      {/* DEAD-CENTER BRAND SECTION: Flexbox 100% Guaranteed Absolute Center */}
+      <View style={styles.absoluteCenterContainer} pointerEvents="box-none">
+        {/* Responsive Logo Container with Ambient Glow */}
         <Animated.View
           style={[
             styles.logoContainer,
             {
+              width: LOGO_BOX_SIZE,
+              height: LOGO_BOX_SIZE,
               opacity: logoOpacity,
               transform: [
                 { scale: Animated.multiply(logoScale, logoGlowPulse) },
@@ -317,18 +364,30 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
           ]}
         >
           {/* Circular Ambient Glow Backdrop under Logo */}
-          <View style={styles.logoBackdropGlow} />
+          <View
+            style={[
+              styles.logoBackdropGlow,
+              {
+                width: GLOW_SIZE,
+                height: GLOW_SIZE,
+                borderRadius: GLOW_SIZE / 2,
+              },
+            ]}
+          />
 
-          {/* Official splash-icon.png */}
+          {/* Official splash-icon.png with crisp high resolution */}
           <ExpoImage
             source={require('../../assets/images/splash-icon.png')}
-            style={styles.officialSplashIcon}
+            style={{
+              width: LOGO_IMAGE_SIZE,
+              height: LOGO_IMAGE_SIZE,
+            }}
             contentFit="contain"
             priority="high"
           />
         </Animated.View>
 
-        {/* MNC Style Slogan Badge */}
+        {/* MNC Slogan Pill Badge directly below center logo */}
         <Animated.View
           style={[
             styles.sloganContainer,
@@ -346,9 +405,17 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
         </Animated.View>
       </View>
 
-      {/* BOTTOM SECTION: YouTube & Google MNC Style Animated Micro Loader */}
-      <View style={styles.bottomArea} pointerEvents="none">
-        <View style={styles.loaderTrack}>
+      {/* BOTTOM SECTION: Safe-area responsive MNC micro progress bar & footer */}
+      <View
+        style={[
+          styles.bottomArea,
+          {
+            bottom: Math.max(insets.bottom, 16) + (Platform.OS === 'ios' ? 20 : 16),
+          },
+        ]}
+        pointerEvents="none"
+      >
+        <View style={[styles.loaderTrack, { width: TRACK_WIDTH }]}>
           <Animated.View
             style={[
               styles.loaderSlider,
@@ -377,51 +444,31 @@ export const SplashView: React.FC<SplashViewProps> = ({ onFinish }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  rootContainer: {
     flex: 1,
     width: '100%',
     height: '100%',
     backgroundColor: '#FFFFFF',
     position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
   },
   glowOrbTopLeft: {
     position: 'absolute',
-    top: -80,
-    left: -80,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
+    top: -90,
+    left: -90,
     backgroundColor: 'rgba(45, 212, 191, 0.28)',
-    zIndex: 0,
-  },
-  glowOrbCenter: {
-    position: 'absolute',
-    top: SCREEN_HEIGHT * 0.35,
-    left: SCREEN_WIDTH * 0.1,
-    width: SCREEN_WIDTH * 0.8,
-    height: SCREEN_WIDTH * 0.8,
-    borderRadius: (SCREEN_WIDTH * 0.8) / 2,
-    backgroundColor: 'rgba(204, 251, 241, 0.35)',
     zIndex: 0,
   },
   glowOrbBottomRight: {
     position: 'absolute',
-    bottom: -90,
-    right: -90,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+    bottom: -100,
+    right: -100,
+    backgroundColor: 'rgba(13, 148, 136, 0.16)',
     zIndex: 0,
   },
   sonicRing: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.16,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    alignSelf: 'center',
     borderWidth: 2,
     borderColor: 'rgba(45, 212, 191, 0.45)',
     backgroundColor: 'rgba(45, 212, 191, 0.08)',
@@ -429,9 +476,8 @@ const styles = StyleSheet.create({
   },
   flightTrailsWrap: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.22,
-    width: SCREEN_WIDTH * 0.95,
-    height: 60,
+    alignSelf: 'center',
+    height: 50,
     zIndex: 1,
     transform: [{ rotate: '-12deg' }],
   },
@@ -439,32 +485,32 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 2.5,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: 7,
   },
   flightTrailLine2: {
     width: '80%',
     height: 1.8,
     borderRadius: 2,
-    marginLeft: 30,
+    marginLeft: 32,
   },
   airplaneHeroContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.11 : SCREEN_HEIGHT * 0.09,
-    width: SCREEN_WIDTH * 0.94,
-    height: SCREEN_WIDTH * 0.58,
+    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 3,
+    zIndex: 2,
   },
   airplaneImage: {
     width: '100%',
     height: '100%',
   },
-  centerBrandArea: {
+  // True Dead-Center Layout: Fills entire screen with flexbox center alignment
+  absoluteCenterContainer: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.44,
+    top: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 4,
@@ -473,29 +519,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    width: 200,
-    height: 200,
   },
   logoBackdropGlow: {
     position: 'absolute',
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: 'rgba(45, 212, 191, 0.25)',
+    backgroundColor: 'rgba(45, 212, 191, 0.26)',
     shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 12 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
-    shadowRadius: 24,
+    shadowRadius: 22,
     elevation: 8,
-  },
-  officialSplashIcon: {
-    width: 190,
-    height: 190,
   },
   sloganContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 14,
   },
   sloganBadge: {
     flexDirection: 'row',
@@ -527,7 +564,6 @@ const styles = StyleSheet.create({
   },
   bottomArea: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 52 : 36,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -535,13 +571,12 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   loaderTrack: {
-    width: 150,
     height: 4.5,
     backgroundColor: 'rgba(13, 148, 136, 0.16)',
     borderRadius: 4,
     overflow: 'hidden',
     position: 'relative',
-    marginBottom: 10,
+    marginBottom: 9,
   },
   loaderSlider: {
     height: '100%',
@@ -558,7 +593,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   loaderCaption: {
-    fontSize: 10,
+    fontSize: 9.8,
     fontWeight: '800',
     color: '#0D9488',
     letterSpacing: 1.4,
