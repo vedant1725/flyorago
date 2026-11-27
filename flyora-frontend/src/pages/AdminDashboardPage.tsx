@@ -2737,8 +2737,10 @@ const AdminDashboardPage: React.FC = () => {
           background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2) 30%, rgba(255,255,255,0.1) 70%, transparent);
         }
         .admin-sidebar-logo {
-          background: rgba(0,0,0,0.1);
-          border-bottom: 1px solid rgba(255,255,255,0.12);
+          background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+          border-bottom: 1px solid rgba(13,148,136,0.18);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+          position: relative;
         }
         .admin-nav-item {
           border-radius: 12px;
@@ -3214,20 +3216,22 @@ const AdminDashboardPage: React.FC = () => {
         <div className="w-[260px] h-full flex flex-col justify-between shrink-0">
           <div className="flex flex-col min-h-0">
             {/* Logo */}
-            <div className="admin-sidebar-logo flex items-center justify-between px-5 py-5">
-              <div className="flex items-center gap-3">
-                <div className="relative w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-white shadow-md">
-                  <Plane size={16} className="text-[#0D9488] -rotate-45" />
+            <div className="admin-sidebar-logo px-4 py-3.5 flex items-center justify-between">
+              <Link to="/admin" className="flex items-center gap-2 group flex-1 min-w-0">
+                <div className="flex items-center justify-center w-full py-0.5 px-1.5 transition-transform duration-300 group-hover:scale-[1.02]">
+                  <img
+                    src="/images/flyorago_admin_logo.png"
+                    alt="Flyorago Logo"
+                    className="w-full h-auto max-h-[46px] object-contain drop-shadow-sm"
+                  />
                 </div>
-                <div>
-                  <span className="text-[16px] font-black tracking-wider text-white">
-                    FLYORAGO
-                  </span>
-                  <div className="text-[9px] font-extrabold uppercase tracking-widest text-white/75">ADMIN PORTAL</div>
-                </div>
-              </div>
-              <button onClick={() => setSideOpen(false)} className="lg:hidden p-1.5 rounded-lg transition-colors text-white/70 hover:text-white">
-                <X size={16} />
+              </Link>
+              <button
+                onClick={() => setSideOpen(false)}
+                className="lg:hidden p-1.5 ml-1.5 rounded-lg transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                title="Close Sidebar"
+              >
+                <X size={17} />
               </button>
             </div>
 
