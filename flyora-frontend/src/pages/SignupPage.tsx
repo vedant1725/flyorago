@@ -34,6 +34,8 @@ const countries: Country[] = [
 ];
 
 import { API_BASE_URL } from '../config';
+import { SeoHead } from '../components/seo/SeoHead';
+import { trackEvent } from '../utils/analytics';
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -93,6 +95,7 @@ const SignupPage: React.FC = () => {
       localStorage.setItem('flyora_kyc_status', kycStatus);
 
       sessionStorage.setItem('flyora_show_welcome', 'true');
+      trackEvent('signup_completed', { method: 'google', role: userRole });
       navigate('/dashboard');
     } catch (err: any) {
       setErrorMsg(err.message || 'Could not connect to server during Google sign up.');
@@ -157,6 +160,7 @@ const SignupPage: React.FC = () => {
       }
 
       // Success: Redirect to KYC verification page!
+      trackEvent('signup_completed', { method: 'email_otp', role: resData.data?.role || 'sender' });
       navigate('/kyc');
     } catch (err: any) {
       setOtpError(err.message || 'Verification failed. Please check the code.');
@@ -187,6 +191,7 @@ const SignupPage: React.FC = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    trackEvent('signup_started', { method: 'email' });
     setIsLoading(true);
     setErrorMsg('');
 
@@ -245,11 +250,20 @@ const SignupPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row w-full bg-white">
+      <SeoHead
+        title="Sign Up | Flyorago"
+        description="Create your Flyorago account to send packages internationally or earn money sharing spare luggage space."
+        path="/signup"
+        noindex
+      />
       {/* Left side */}
       <div className="hidden lg:flex lg:w-[60%] relative bg-black overflow-hidden p-12 lg:p-16">
         <img
-          src="/images/signup%20page.png"
-          alt="Signup background"
+          src="/images/signup-page.webp"
+          alt="Create a Flyorago sender or traveler account"
+          width={1280}
+          height={853}
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out hover:scale-105"
         />
         {/* Subtle overlays to keep image prominent while making logo readable */}
@@ -279,8 +293,11 @@ const SignupPage: React.FC = () => {
         {/* Mobile Image Header - full width image, no text */}
         <div className="lg:hidden w-full relative overflow-hidden" style={{ height: '28vh', minHeight: '180px' }}>
           <img
-            src="/images/signup%20page.png"
-            alt="Signup"
+            src="/images/signup-page.webp"
+            alt="Flyorago signup"
+            width={1280}
+            height={853}
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover"
           />
           {/* Top nav overlay */}

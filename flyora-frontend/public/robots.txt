@@ -1,0 +1,33 @@
+User-agent: *
+Allow: /
+
+# Disallow private, authenticated, admin, and transactional endpoints
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /kyc
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /trips
+Disallow: /bookings
+Disallow: /shipments
+Disallow: /sender
+Disallow: /traveler
+Disallow: /wallet
+Disallow: /earnings
+Disallow: /messages
+Disallow: /support
+Disallow: /profile
+Disallow: /settings
+Disallow: /analytics
+Disallow: /reports
+Disallow: /booking/
+Disallow: /trip/
+Disallow: /shipment/
+Disallow: /notifications
+Disallow: /trust
+Disallow: /ai
+Disallow: /api/
+
+Sitemap: https://flyorago.me/sitemap.xml

@@ -5,6 +5,7 @@ import {
   Eye, EyeOff
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
+import { SeoHead } from '../components/seo/SeoHead';
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,12 +68,21 @@ const AdminLoginPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col lg:flex-row items-center justify-between font-sans select-none overflow-x-hidden bg-[#D4EDFC]">
+      <SeoHead
+        title="Admin Login | Flyorago"
+        description="Flyorago administration portal."
+        path="/admin/login"
+        noindex
+      />
 
       {/* ─── 1. 100% Clean Background (NO text, NO mock forms behind) ─── */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img
-          src="/images/admin_clean_bg.png"
+          src="/images/admin_clean_bg.webp"
           alt="Flight Network & 3D Globe"
+          width={1376}
+          height={768}
+          decoding="async"
           className="w-full h-full object-cover object-center"
         />
         {/* Soft daylight ambient wash */}

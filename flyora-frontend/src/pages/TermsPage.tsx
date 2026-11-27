@@ -1,15 +1,33 @@
 import React, { useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { FileText, Shield, CheckCircle2 } from 'lucide-react';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
+import { FileText } from 'lucide-react';
 
 const TermsPage: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Terms of Service — Marketplace Rules & Safety | Flyorago';
+  const description =
+    'Read Flyorago Terms of Service covering KYC verification, prohibited items, ICAO/IATA aviation compliance, and escrow OTP payment release rules.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/terms"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/terms' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Terms of Service', path: '/terms' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">

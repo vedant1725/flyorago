@@ -1,15 +1,33 @@
 import React, { useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { Lock, Shield } from 'lucide-react';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
+import { Lock } from 'lucide-react';
 
 const PrivacyPage: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Privacy Policy — Data Protection & KYC Security | Flyorago';
+  const description =
+    'Review Flyorago Privacy Policy detailing what account and KYC verification data is collected, 256-bit encryption standards, and strict non-selling policy.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/privacy"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/privacy' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Privacy Policy', path: '/privacy' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">

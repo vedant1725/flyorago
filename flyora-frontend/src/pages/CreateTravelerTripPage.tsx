@@ -11,6 +11,7 @@ import { NotificationDropdown } from '../components/ui/NotificationDropdown';
 import { LocationAutocomplete } from '../components/ui/LocationAutocomplete';
 import { useKycValidation } from '../hooks/useKycValidation';
 import { KycValidationModal } from '../components/ui/KycValidationModal';
+import { trackEvent } from '../utils/analytics';
 import '../pages/dashboard.css';
 
 const CreateTravelerTripPage: React.FC = () => {
@@ -92,6 +93,7 @@ const CreateTravelerTripPage: React.FC = () => {
       });
 
       if (res.data || res.status === 'success') {
+        trackEvent('trip_posted', { weight_kg: weightNum, travel_mode: formData.travelMode });
         navigate('/traveler');
       } else {
         throw new Error(res.message || "Failed to create trip");

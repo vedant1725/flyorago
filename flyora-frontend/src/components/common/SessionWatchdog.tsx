@@ -2,8 +2,32 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 
-// Max session duration: 3 Hours (in milliseconds)
 const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/trips',
+  '/bookings',
+  '/shipments',
+  '/sender',
+  '/traveler',
+  '/wallet',
+  '/earnings',
+  '/messages',
+  '/support',
+  '/profile',
+  '/settings',
+  '/analytics',
+  '/reports',
+  '/booking',
+  '/trip',
+  '/shipment',
+  '/notifications',
+  '/trust',
+  '/ai',
+  '/kyc',
+  '/admin',
+];
 
 export const SessionWatchdog: React.FC = () => {
   const navigate = useNavigate();
@@ -16,29 +40,13 @@ export const SessionWatchdog: React.FC = () => {
       const loginTimeStr = localStorage.getItem('flyora_login_time');
       const pathname = location.pathname;
 
-      const publicPrefixes = [
-        '/login',
-        '/signup',
-        '/forgot-password',
-        '/admin/login',
-        '/how-it-works',
-        '/services',
-        '/about',
-        '/contact',
-        '/terms',
-        '/privacy',
-        '/safety',
-        '/escrow',
-        '/careers',
-        '/press',
-        '/blog'
-      ];
-      const isExactHome = pathname === '/';
-      const isPublic = isExactHome || publicPrefixes.some(p => pathname === p || pathname.startsWith(p + '/'));
+      const isAdminLogin = pathname === '/admin/login' || pathname.startsWith('/admin/login/');
+      const isProtected =
+        !isAdminLogin &&
+        PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
-      // If user is on a protected route without any token, redirect immediately to login
       if (!token) {
-        if (!isPublic) {
+        if (isProtected) {
           console.warn('[Security Watchdog] Protected route accessed without access token. Redirecting to login.');
           if (pathname.startsWith('/admin')) {
             navigate('/admin/login', { replace: true });
@@ -55,9 +63,8 @@ export const SessionWatchdog: React.FC = () => {
         const elapsed = now - loginTime;
 
         if (elapsed >= THREE_HOURS_MS) {
-          // Trigger security session expiry
           console.warn('[Security Watchdog] 3-Hour session expired. Clearing credentials and logging out.');
-          
+
           localStorage.removeItem('flyora_access_token');
           localStorage.removeItem('flyora_refresh_token');
           localStorage.removeItem('flyora_user_id');
@@ -82,19 +89,14 @@ export const SessionWatchdog: React.FC = () => {
           }
         }
       } else {
-        // If logged in with token but no login timestamp, set it now
         localStorage.setItem('flyora_login_time', Date.now().toString());
       }
     };
 
-    // Initial check
     checkSession();
-
-    // Check periodically every 10 seconds
     const interval = setInterval(checkSession, 10000);
     return () => clearInterval(interval);
   }, [location.pathname, navigate, addToast]);
 
   return null;
 };
-

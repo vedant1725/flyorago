@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { SeoHead } from '../components/seo/SeoHead';
+import { getBreadcrumbSchema, getWebPageSchema } from '../data/seoConfig';
 import { 
   Briefcase, Globe, Rocket, Heart, Users, Zap, Shield, 
   ArrowRight, CheckCircle2, MapPin, Clock, Award
@@ -53,8 +56,24 @@ const CareersPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const title = 'Careers at Flyorago — Build Global Peer-to-Peer Logistics';
+  const description =
+    'Explore career opportunities at Flyorago across engineering, product design, trust and safety operations, and international growth.';
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <SeoHead
+        title={title}
+        description={description}
+        path="/careers"
+        schemas={[
+          getWebPageSchema({ title, description, path: '/careers' }),
+          getBreadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: 'Careers', path: '/careers' },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">
@@ -126,9 +145,9 @@ const CareersPage: React.FC = () => {
                     <h3 className="text-xl font-bold text-flyora-navy">{p.title}</h3>
                     <p className="text-xs text-flyora-gray-600 leading-relaxed font-medium">{p.description}</p>
                   </div>
-                  <button className="px-6 py-3 bg-flyora-navy text-white text-xs font-bold rounded-xl hover:bg-flyora-navy-light transition flex items-center gap-2 shrink-0 self-start md:self-auto">
+                  <Link to="/contact" className="px-6 py-3 bg-flyora-navy text-white text-xs font-bold rounded-xl hover:bg-flyora-navy-light transition flex items-center gap-2 shrink-0 self-start md:self-auto">
                     Apply Now <ArrowRight size={14} />
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
