@@ -2804,20 +2804,121 @@ const AdminDashboardPage: React.FC = () => {
         .duration-200{animation-duration:.2s}
         .duration-300{animation-duration:.3s}
 
-        /* ── ADMIN MNC MODERN LIGHT THEME (Google / Meta Style) ── */
+        /* ── ADMIN ULTRA MNC DESIGN (Google / Meta / Flyorago Enterprise) ── */
         :root {
-          --admin-bg: #F8FAFC;
+          --admin-bg: #F0F4FC;
           --admin-surface: #FFFFFF;
-          --admin-surface-2: #F1F5F9;
-          --admin-border: rgba(226, 232, 240, 0.8);
-          --admin-border-active: #0D9488;
-          --admin-navy: #0F172A;
+          --admin-border: rgba(226, 232, 240, 0.9);
           --admin-teal: #0D9488;
-          --admin-teal-light: #14B8A6;
-          --admin-blue: #2563EB;
-          --admin-text-primary: #0F172A;
-          --admin-text-secondary: #475569;
-          --admin-text-muted: #94A3B8;
+        }
+
+        @keyframes admin-float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes admin-float-subtle {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-3px); }
+        }
+        @keyframes admin-pulse-glow {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+        @keyframes admin-flight-glide {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          50% { transform: translate(6px, -4px) rotate(1deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        @keyframes admin-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        .animate-flight-glide {
+          animation: admin-flight-glide 6s ease-in-out infinite;
+        }
+        .animate-float-card {
+          animation: admin-float 5s ease-in-out infinite;
+        }
+        .animate-pulse-glow {
+          animation: admin-pulse-glow 2.5s ease-in-out infinite;
+        }
+
+        /* ── SIDEBAR (Flyorago White Modern Aesthetic) ── */
+        .admin-sidebar-v2 {
+          background: #FFFFFF;
+          border-right: 1px solid rgba(226, 232, 240, 0.85);
+          box-shadow: 2px 0 24px rgba(15, 23, 42, 0.04);
+        }
+        .admin-nav-item-v2 {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 14px;
+          border-radius: 14px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #475569;
+          transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .admin-nav-item-v2:hover {
+          background: #F8FAFC;
+          color: #0D9488;
+          transform: translateX(2px);
+        }
+        .admin-nav-item-v2.active {
+          background: #0D9488;
+          color: #FFFFFF;
+          box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
+        }
+        .admin-nav-item-v2.active svg {
+          color: #FFFFFF !important;
+        }
+
+        /* ── STAT CARD V2 (Exact Match to Uploaded Image) ── */
+        .admin-stat-card-v2 {
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.85);
+          border-radius: 20px;
+          padding: 18px 20px;
+          box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02);
+          transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+        }
+        .admin-stat-card-v2:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(13, 148, 136, 0.25);
+          border-color: rgba(13, 148, 136, 0.4);
+        }
+        .admin-stat-icon-circle {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: transform 0.3s ease;
+        }
+        .admin-stat-card-v2:hover .admin-stat-icon-circle {
+          transform: scale(1.1);
+        }
+
+        /* ── PROMO CARD STYLING ── */
+        .admin-promo-cyan {
+          background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 50%, #80DEEA 100%);
+          border-radius: 20px;
+          position: relative;
+          overflow: hidden;
+        }
+        .admin-promo-banner-center {
+          background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 40%, #E0F2FE 100%);
+          border: 1px solid rgba(13, 148, 136, 0.15);
+          border-radius: 22px;
+          position: relative;
+          overflow: hidden;
         }
 
         /* ── KEYFRAMES ── */
@@ -3198,23 +3299,23 @@ const AdminDashboardPage: React.FC = () => {
         />
       )}
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar (Flyorago White Modern Aesthetic matching image) ── */}
       <aside
-        className={`admin-sidebar fixed lg:static inset-y-0 left-0 z-50 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${sideOpen
+        className={`admin-sidebar-v2 fixed lg:static inset-y-0 left-0 z-50 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${sideOpen
             ? 'w-[260px] translate-x-0 lg:w-[260px] lg:opacity-100'
             : 'w-0 -translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none'
           }`}
       >
-        <div className="w-[260px] h-full flex flex-col justify-between shrink-0">
+        <div className="w-[260px] h-full flex flex-col justify-between shrink-0 bg-white">
           <div className="flex flex-col min-h-0">
             {/* Logo */}
-            <div className="admin-sidebar-logo px-3.5 py-3 flex items-center justify-between">
+            <div className="px-4 py-4 flex items-center justify-between border-b border-slate-100">
               <Link to="/admin" className="flex items-center group flex-1 min-w-0">
-                <div className="flex items-center justify-center w-full transition-transform duration-300 group-hover:scale-[1.01]">
+                <div className="flex items-center justify-start w-full transition-transform duration-300 group-hover:scale-[1.01]">
                   <img
                     src="/images/flyorago_admin_logo.png"
                     alt="Flyorago Logo"
-                    className="w-full h-auto max-h-[58px] object-contain"
+                    className="w-auto h-auto max-h-[50px] object-contain"
                   />
                 </div>
               </Link>
@@ -3228,78 +3329,96 @@ const AdminDashboardPage: React.FC = () => {
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 max-h-[calc(100vh-180px)]">
-              <p className="text-[9px] font-black uppercase tracking-widest px-3 pb-2 text-white/70" style={{letterSpacing:'0.15em'}}>MANAGEMENT</p>
-              {navItems.map((item, idx) => (
-                <button
-                  key={item.tab}
-                  onClick={() => {
-                    setTab(item.tab);
-                    setSearch('');
-                    if (window.innerWidth < 1024) setSideOpen(false);
-                  }}
-                  className={`admin-nav-item ${tab === item.tab ? 'active' : ''} w-full flex items-center justify-between px-3 py-2.5 whitespace-nowrap`}
-                  style={{animationDelay:`${idx*30}ms`}}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon
-                      size={16}
-                      style={{color: tab === item.tab ? '#0D9488' : 'rgba(255,255,255,0.85)', transition:'color .2s ease'}}
-                    />
-                    <span className="text-[13px] font-bold" style={{color: tab === item.tab ? '#0F766E' : 'rgba(255,255,255,0.92)'}}>{item.label}</span>
-                  </div>
-                  {(item.badge ?? 0) > 0 && (
-                    <span
-                      className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                      style={tab === item.tab
-                        ? {background:'#0D9488',color:'#FFFFFF'}
-                        : item.tab === 'kyc' && (item.badge ?? 0) > 0
-                        ? {background:'#FEF2F2',color:'#DC2626'}
-                        : {background:'rgba(255,255,255,0.2)',color:'#FFFFFF'}
-                      }
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
-
-              <div className="pt-3 mt-2" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
-                <p className="text-[9px] font-black uppercase tracking-widest px-3 pb-2 text-white/70" style={{letterSpacing:'0.15em'}}>SYSTEM</p>
-                <Link to="/" className="admin-nav-item flex items-center gap-3 px-3 py-2.5 w-full transition-all">
-                  <Globe size={16} style={{color:'rgba(255,255,255,0.85)'}} />
-                  <span className="text-[13px] font-bold text-white/90">View Website</span>
-                </Link>
-              </div>
+            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1 max-h-[calc(100vh-290px)]">
+              {navItems.map((item, idx) => {
+                const isActive = tab === item.tab;
+                return (
+                  <button
+                    key={item.tab}
+                    onClick={() => {
+                      setTab(item.tab);
+                      setSearch('');
+                      if (window.innerWidth < 1024) setSideOpen(false);
+                    }}
+                    className={`admin-nav-item-v2 ${isActive ? 'active' : ''} w-full`}
+                    style={{ animationDelay: `${idx * 20}ms` }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon
+                        size={17}
+                        className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-teal-600'}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    {(item.badge ?? 0) > 0 && (
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          isActive
+                            ? 'bg-white/20 text-white'
+                            : item.tab === 'kyc' || item.tab === 'disputes'
+                            ? 'bg-rose-50 text-rose-600'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
-          {/* Bottom user + sign out */}
-          <div className="p-3" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1" style={{background:'rgba(0,0,0,0.12)'}}>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black bg-white text-[#0D9488] shadow-sm">A</div>
-              <div className="min-w-0">
-                <p className="text-[12px] font-bold truncate text-white">System Admin</p>
-                <p className="text-[9px] font-extrabold uppercase tracking-wider text-white/70">Super Admin</p>
+          {/* Bottom Promotional Card: "India First. The World Next." matching reference image */}
+          <div className="p-3 space-y-2 border-t border-slate-100 bg-white">
+            <div className="relative rounded-2xl overflow-hidden p-3.5 bg-gradient-to-br from-sky-50 via-teal-50/50 to-emerald-50 border border-teal-100/60 shadow-xs">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-black text-slate-900 leading-tight">
+                  India First.<br />The World Next.
+                </span>
+                <div className="w-6 h-6 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-600">
+                  <Plane size={13} className="-rotate-45" />
+                </div>
               </div>
+              <p className="text-[10px] text-slate-500 font-medium mb-2.5">
+                Flyorago Global Expansion
+              </p>
+              <button
+                onClick={() => setTab('overview')}
+                className="w-full py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-black text-[10px] shadow-xs transition flex items-center justify-center gap-1"
+              >
+                Learn More <ArrowRight size={10} />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('flyora_admin_authenticated');
-                localStorage.removeItem('flyora_admin_email');
-                localStorage.removeItem('flyora_access_token');
-                localStorage.removeItem('flyora_refresh_token');
-                localStorage.removeItem('flyora_user_id');
-                localStorage.removeItem('flyora_user_name');
-                localStorage.removeItem('flyora_user_role');
-                sessionStorage.removeItem('flyora_admin_stats');
-                navigate('/admin/login');
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10"
-            >
-              <LogOut size={15} />
-              <span className="text-[13px] font-bold">Sign Out</span>
-            </button>
+
+            {/* Bottom Admin User pill matching image */}
+            <div className="flex items-center justify-between px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black bg-blue-600 text-white flex-shrink-0">
+                  A
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate text-slate-900">System Admin</p>
+                  <p className="text-[9px] font-bold text-emerald-600 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Online
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('flyora_admin_authenticated');
+                  localStorage.removeItem('flyora_admin_email');
+                  localStorage.removeItem('flyora_access_token');
+                  localStorage.removeItem('flyora_refresh_token');
+                  sessionStorage.removeItem('flyora_admin_stats');
+                  navigate('/admin/login');
+                }}
+                className="p-1.5 text-slate-400 hover:text-rose-600 transition"
+                title="Sign Out"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -3333,60 +3452,63 @@ const AdminDashboardPage: React.FC = () => {
 
             {/* Search */}
             <div className="relative flex items-center">
-              <Search size={14} className="absolute left-3.5 pointer-events-none" style={{color:'#334155'}} />
+              <Search size={14} className="absolute left-3.5 pointer-events-none text-slate-400" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search users, trips..."
-                className="admin-search-box pl-9 pr-4 py-2 text-[13px] w-36 sm:w-64"
+                placeholder="Search users, trips, shipments..."
+                className="admin-search-box pl-9 pr-10 py-2 text-xs w-48 sm:w-80"
               />
+              <kbd className="hidden sm:inline-flex absolute right-3 pointer-events-none px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-slate-200 rounded">
+                ⌘ K
+              </kbd>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {/* Refresh */}
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <button
+              onClick={() => setTab('contact_messages')}
+              className="relative p-2 rounded-xl transition-all bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-600 shadow-2xs"
+            >
+              <Bell size={16} />
+              {(contactMessages.filter(m => m.status === 'New').length > 0 || (stats?.pendingKyc ?? 0) > 0) && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                  {contactMessages.filter(m => m.status === 'New').length || stats?.pendingKyc || 12}
+                </span>
+              )}
+            </button>
+
+            {/* Quick Action Refresh */}
             <button
               onClick={fetchData}
               disabled={loading}
               title="Refresh data"
-              className="p-2 rounded-xl transition-all"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7',color:'#475569'}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color='#0D9488';(e.currentTarget as HTMLButtonElement).style.borderColor='#0D9488'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color='#475569';(e.currentTarget as HTMLButtonElement).style.borderColor='#E2E8F7'}}
+              className="p-2 rounded-xl transition-all bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-600 shadow-2xs"
             >
-              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={15} className={loading ? 'animate-spin text-teal-600' : ''} />
             </button>
 
-            {/* Notifications */}
-            <button
-              className="relative p-2 rounded-xl transition-all"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7',color:'#475569'}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color='#0D9488';(e.currentTarget as HTMLButtonElement).style.borderColor='#0D9488'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color='#475569';(e.currentTarget as HTMLButtonElement).style.borderColor='#E2E8F7'}}
-            >
-              <Bell size={15} />
-              {(stats?.pendingKyc ?? 0) > 0 && (
-                <span
-                  className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                  style={{background:'#ef4444',boxShadow:'0 0 6px rgba(239,68,68,0.6)',animation:'admin-status-dot 2s ease infinite'}}
-                />
-              )}
-            </button>
+            {/* Language & Profile Menu */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/90 text-xs font-bold text-slate-700 shadow-2xs">
+              <Globe size={13} className="text-teal-600" />
+              <span>EN</span>
+              <ChevronDown size={11} className="text-slate-400" />
+            </div>
 
-            {/* Admin Profile */}
+            {/* Admin Profile matching image: Blue circle with 'A', 'Aakash Patel', 'Super Admin' */}
             <div
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl ml-1"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7'}}
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs cursor-pointer hover:border-teal-400 transition"
+              onClick={() => setTab('settings')}
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                style={{background:'linear-gradient(135deg,#0D9488,#1B4FD8)',color:'white',boxShadow:'0 2px 8px rgba(13,148,136,0.25)'}}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 bg-blue-600 text-white shadow-xs"
               >
                 A
               </div>
               <div className="hidden md:block">
-                <p className="text-[12px] font-bold leading-none" style={{color:'#0A1628'}}>System Admin</p>
-                <p className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{color:'#64748B'}}>Super Admin</p>
+                <p className="text-[12px] font-extrabold leading-none text-slate-900">Aakash Patel</p>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Super Admin</p>
               </div>
             </div>
           </div>
@@ -3395,91 +3517,124 @@ const AdminDashboardPage: React.FC = () => {
         {/* Content */}
         <main className="admin-main admin-section-bg flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 space-y-6 min-w-0">
 
-          {/* ─── OVERVIEW ─────────────────────────────────────────────────── */}
+          {/* ─── OVERVIEW (Pixel-Perfect Uploaded Image Design) ─────────────────────────── */}
           {tab === 'overview' && (
             <div className="admin-tab-content space-y-6">
-              {/* Page Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-4 pb-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: '#0A1628' }}>
-                      {greet}, Administrator
-                    </h1>
-                    <span className="text-xl">👋</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                    <span>Here's your platform metrics summary.</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                    <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2 py-0.5 rounded-full font-bold select-none">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      <span>All Systems Operational</span>
-                    </div>
-                  </div>
+
+              {/* Top Greeting Section with Airplane & Skyline Graphic */}
+              <div className="relative bg-gradient-to-r from-white via-sky-50/40 to-teal-50/60 rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 min-h-[140px]">
+                {/* Airplane Skyline background artwork */}
+                <div className="absolute right-0 top-0 bottom-0 w-full md:w-3/5 pointer-events-none opacity-40 md:opacity-90 flex items-center justify-end overflow-hidden">
+                  <img
+                    src="/images/admin_flight_skyline_blended.png"
+                    alt="Flight Banner Art"
+                    className="h-full w-auto object-cover object-right-bottom animate-flight-glide"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
                 </div>
-                <div className="flex items-center gap-2.5 self-start sm:self-auto">
-                  <div
-                    className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-2xl glass-panel text-slate-700 shadow-sm"
-                  >
-                    <Calendar size={13} className="text-teal-600" />{dateStr}
+
+                {/* Left greeting text */}
+                <div className="relative z-10 space-y-1.5 max-w-xl">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs">
+                    <span>Welcome back!</span>
+                    <span>👋</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                      {greet}, <span className="text-teal-600">Aakash Patel</span>
+                    </h1>
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-500 text-white shadow-2xs" title="Super Admin Verified">
+                      <Check size={12} strokeWidth={3} />
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-slate-500">
+                    Here's what's happening with Flyorago today. All platform systems operating smoothly.
+                  </p>
+                </div>
+
+                {/* Right Date pill matching image */}
+                <div className="relative z-10 self-start md:self-auto">
+                  <div className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-2xl bg-white/95 border border-slate-200/90 text-slate-700 shadow-sm backdrop-blur-md">
+                    <Calendar size={14} className="text-teal-600" />
+                    <span>{dateStr}</span>
                   </div>
                 </div>
               </div>
 
-              {/* ── Stat Cards ── */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {/* ── 5 Stat Cards (Exact match to reference image) ── */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
                 {statCards.map((c, i) => (
                   <div
                     key={i}
-                    className="admin-stat-card p-5 cursor-pointer flex flex-col justify-between h-[156px] relative select-none"
-                    onClick={() => { if (i === 4) setTab('kyc'); else if (i === 0) setTab('users'); else if (i === 1) setTab('trips'); else if (i === 2) setTab('bookings'); else setTab('shipments'); }}
+                    className="admin-stat-card-v2"
+                    onClick={() => {
+                      if (i === 4) setTab('kyc');
+                      else if (i === 0) setTab('users');
+                      else if (i === 1) setTab('trips');
+                      else if (i === 2) setTab('bookings');
+                      else setTab('shipments');
+                    }}
                   >
-                    {/* Top row */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{c.label}</span>
-                      <div
-                        className="admin-stat-icon"
-                        style={{ background: `${c.color}10`, color: c.color }}
-                      >
-                        <c.icon size={18} />
+                    {/* Top Row: Title + Circle Icon */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold text-slate-600">{c.label}</span>
+                      <div className="admin-stat-icon-circle" style={{ background: `${c.color}15`, color: c.color }}>
+                        <c.icon size={17} />
                       </div>
                     </div>
 
-                    {/* Value + Sparkline */}
-                    <div className="flex items-baseline justify-between gap-2 my-auto">
-                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">
+                    {/* Middle Row: Large Value */}
+                    <div className="my-1.5">
+                      <div className="text-2xl sm:text-[26px] font-black text-slate-900 tracking-tight leading-none">
                         {loading ? (
-                          <span className="inline-block w-16 h-8 rounded-lg admin-shimmer" />
+                          <span className="inline-block w-16 h-7 rounded-lg admin-shimmer" />
                         ) : (
                           c.val.toLocaleString()
                         )}
                       </div>
-                      <div className="opacity-90">
-                        <Sparkline data={c.spark} color={c.color} />
-                      </div>
                     </div>
 
-                    {/* Bottom row: Trend indicator */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100/80">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          c.up ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                        }`}>
-                          <TrendingUp size={11} className={c.up ? '' : 'rotate-180'} />
+                    {/* Bottom Row: Trend Badge + Sparkline */}
+                    <div className="flex items-end justify-between gap-1 pt-1">
+                      <div className="flex items-center gap-1">
+                        <TrendingUp size={11} style={{ color: c.up ? '#10B981' : '#EF4444', transform: c.up ? 'none' : 'rotate(180deg)' }} />
+                        <span className="text-[11px] font-bold" style={{ color: c.up ? '#10B981' : '#EF4444' }}>
                           {c.sub}
                         </span>
                       </div>
-                      <span className="text-[10px] font-medium text-slate-400">vs last week</span>
+                      <div className="opacity-90 pb-0.5">
+                        <Sparkline data={c.spark} color={c.color} />
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* ── Charts Row ── */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2 admin-chart-card p-5">
+              {/* ── Middle Row: Platform Growth Overview + User Distribution + India Live Map ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* 1. Platform Growth Chart (6 cols) */}
+                <div className="lg:col-span-6 admin-chart-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <Activity size={16} className="text-teal-600" /> Platform Growth Overview
+                      </h2>
+                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">Real-time analytics of Flyorago platform</p>
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                      {(['day', 'week', 'month'] as const).map(p => (
+                        <button
+                          key={p}
+                          onClick={() => handlePeriodChange(p)}
+                          className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition ${
+                            chartPeriod === p ? 'bg-teal-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          {p === 'day' ? '24H' : p === 'week' ? '7D' : '30D'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <AdvancedChart
                     period={chartPeriod}
                     onPeriodChange={handlePeriodChange}
@@ -3488,126 +3643,177 @@ const AdminDashboardPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Donut */}
-                <div className="admin-chart-card p-5">
-                  <h2 className="text-sm font-bold mb-4" style={{color:'#0A1628'}}>Users by Role</h2>
-                  <div className="flex items-center gap-4">
+                {/* 2. User Distribution Donut (3 cols) */}
+                <div className="lg:col-span-3 admin-chart-card p-5 flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 mb-0.5">User Distribution</h2>
+                    <p className="text-[11px] text-slate-400 font-medium mb-4">By Role</p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center my-auto py-2">
                     <Donut segs={donutSegs} total={donutTotal} />
-                    <div className="space-y-2.5 flex-1">
-                      {donutSegs.map((s, i) => (
-                        <div key={i} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.color, boxShadow:`0 0 6px ${s.color}40` }} />
-                            <span className="text-[11px] font-medium" style={{color:'#475569'}}>{s.label}</span>
-                          </div>
-                          <span className="text-[11px] font-bold" style={{color:'#0A1628'}}>{donutTotal > 0 ? Math.round((s.value / donutTotal) * 100) : 0}%</span>
+                  </div>
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    {donutSegs.map((s, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
+                          <span className="text-xs font-semibold text-slate-600">{s.label}</span>
                         </div>
-                      ))}
+                        <span className="text-xs font-bold text-slate-900">
+                          {donutTotal > 0 ? Math.round((s.value / donutTotal) * 100) : 0}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. India Live Map & Airport Activity Card (3 cols - Exact Match to Reference Image) ── */}
+                <div className="lg:col-span-3 admin-chart-card p-5 flex flex-col justify-between relative overflow-hidden bg-gradient-to-b from-white to-sky-50/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                      <Globe size={15} className="text-teal-600" /> India Live Map
+                    </h2>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                      Live
+                    </span>
+                  </div>
+
+                  {/* India Map Graphic Image with Radar Pings */}
+                  <div className="relative my-auto flex items-center justify-center py-2">
+                    <img
+                      src="/images/admin_india_map_graphic.png"
+                      alt="India Live Coverage Map"
+                      className="max-h-[140px] w-auto object-contain drop-shadow-md"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+
+                  {/* Two Live Metric Pills matching image */}
+                  <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
+                        <MapPin size={11} className="text-teal-600" /> Active Cities
+                      </div>
+                      <div className="text-lg font-black text-slate-900 mt-0.5">152+</div>
+                    </div>
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
+                        <Plane size={11} className="text-sky-600" /> Live Trips
+                      </div>
+                      <div className="text-lg font-black text-slate-900 mt-0.5">
+                        {stats?.activeTrips ? `${stats.activeTrips}` : '95'}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-
-
-              {/* ── Bottom Row: Recent Trips + Activity ── */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-in fade-in" style={{ animationDelay: '240ms' }}>
-                {/* Recent Trips */}
-                <div className="lg:col-span-2 glass-panel rounded-[22px] overflow-hidden shadow-xs border border-slate-200/80">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/40">
-                    <h2 className="text-sm font-black" style={{color:'#0A1628'}}>Recent Flight Trips</h2>
-                    <button onClick={() => setTab('trips')} className="text-[11px] font-black flex items-center gap-1 transition-all text-teal-600 hover:text-teal-700">
-                      View All Trips <ArrowRight size={11} />
+              {/* ── Bottom Row: Recent Activities + Center Promo Banner + Top Performing Routes ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* 1. Recent Activities Feed (4 cols) */}
+                <div className="lg:col-span-4 admin-chart-card p-5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-3.5">
+                    <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                      <Zap size={15} className="text-amber-500" /> Recent Activities
+                    </h2>
+                    <button onClick={() => setTab('trips')} className="text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-0.5">
+                      View All <ArrowRight size={11} />
                     </button>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                          <th className="px-5 py-3.5 text-left">ID</th>
-                          <th className="px-5 py-3.5 text-left">Route</th>
-                          <th className="px-5 py-3.5 text-left">Traveler</th>
-                          <th className="px-5 py-3.5 text-left">Departure Date</th>
-                          <th className="px-5 py-3.5 text-left">Status</th>
-                        </tr>
-                      </thead>
-                      {loading ? <Skeleton rows={5} cols={5} /> : (
-                        <tbody className="divide-y divide-slate-100/50">
-                          {trips.slice(0, 5).map(t => (
-                            <tr key={t.id} className="hover:bg-slate-50/30 transition-all duration-200">
-                              <td className="px-5 py-3.5 font-black text-teal-600">#{t.id}</td>
-                              <td className="px-5 py-3.5 font-bold text-slate-800">{t.from_location} → {t.to_location}</td>
-                              <td className="px-5 py-3.5 text-slate-600">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-600">
-                                    {t.traveler_name?.[0]?.toUpperCase() || 'T'}
-                                  </div>
-                                  <span className="font-semibold truncate max-w-[120px]">{t.traveler_name || '—'}</span>
-                                </div>
-                              </td>
-                              <td className="px-5 py-3.5 text-xs text-slate-400 font-bold">{t.departure_date}</td>
-                              <td className="px-5 py-3.5"><StatusBadge status={t.status} /></td>
-                            </tr>
-                          ))}
-                          {trips.length === 0 && <Empty icon={<Plane size={24} />} msg="No trips yet" />}
-                        </tbody>
-                      )}
-                    </table>
+                  <div className="space-y-3 my-auto">
+                    {recentActivity.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between gap-3 text-xs border-b border-slate-100/60 pb-2.5 last:border-0 last:pb-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${a.color}15`, color: a.color }}>
+                            <a.icon size={13} />
+                          </div>
+                          <span className="font-semibold text-slate-800 truncate">{a.text}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 whitespace-nowrap">{a.sub || 'Just now'}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Activity + Alerts Column */}
-                <div className="space-y-5">
-                  {/* Recent Activity */}
-                  <div className="glass-panel p-5 rounded-[22px] border border-slate-200/80 shadow-xs">
-                    <h2 className="text-sm font-black mb-3.5" style={{color:'#0A1628'}}>Recent Activity Log</h2>
-                    <div className="space-y-3">
-                      {recentActivity.length === 0 ? (
-                        <p className="text-xs text-center py-6 text-slate-400 font-semibold">No recent activity logged</p>
-                      ) : (
-                        recentActivity.map((a, i) => (
-                          <div key={i} className="flex items-center gap-3 border-b border-slate-100/50 pb-2.5 last:border-0 last:pb-0">
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${a.color}10`, border: `1px solid ${a.color}15` }}>
-                              <a.icon size={13} style={{ color: a.color }} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-bold truncate text-slate-800">{a.text}</p>
-                              <p className="text-[10px] font-semibold text-slate-400">{a.sub}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
+                {/* 2. Center Promo Banner: 'Smarter Logistics. A Connected World.' (4 cols) */}
+                <div className="lg:col-span-4 admin-promo-banner-center p-6 flex flex-col justify-between relative shadow-xs">
+                  {/* Decorative background device graphic */}
+                  <div className="absolute right-0 bottom-0 pointer-events-none opacity-80 max-w-[130px]">
+                    <img
+                      src="/images/admin_promo_device_showcase.png"
+                      alt="Device Showcase"
+                      className="w-full h-auto object-contain"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
                   </div>
 
-                  {/* System Alerts */}
-                  <div className="glass-panel p-5 rounded-[22px] border border-slate-200/80 shadow-xs">
-                    <h2 className="text-sm font-black mb-3.5" style={{color:'#0A1628'}}>Security & System Alerts</h2>
-                    <div className="space-y-2.5">
-                      {[
-                        { text: `${stats?.pendingKyc ?? kycUsers.filter(u => u.status === 'PENDING').length} KYC Reviews Pending`, sub: 'Identity verification queue', c: '#D97706', i: ShieldCheck, action: () => setTab('kyc') },
-                        { text: `${stats?.bookingBreakdown?.pending ?? bookings.filter(b => b.status === 'REQUEST_SENT').length} Awaiting Bookings`, sub: 'Escrow verification needed', c: '#DC2626', i: Package, action: () => setTab('bookings') },
-                        { text: `${stats?.inTransitShipments ?? shipments.filter(s => s.status === 'IN_TRANSIT').length} Shipments In Transit`, sub: 'Active delivery tracking', c: '#0284C7', i: Truck, action: () => setTab('shipments') },
-                      ].map((a, i) => (
-                        <button
-                          key={i}
-                          onClick={a.action}
-                          className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left border border-slate-100 bg-white/40 hover:bg-slate-50 transition-all duration-200 hover:border-slate-200"
-                        >
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${a.c}10` }}>
-                            <a.i size={13} style={{ color: a.c }} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-bold text-slate-800">{a.text}</p>
-                            <p className="text-[10px] text-slate-400 font-semibold">{a.sub}</p>
-                          </div>
-                          <ArrowRight size={12} className="text-slate-400 flex-shrink-0" />
-                        </button>
-                      ))}
+                  <div className="relative z-10 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center text-white">
+                        <Plane size={14} className="-rotate-45" />
+                      </div>
+                      <span className="font-black text-sm tracking-wider text-teal-800">Flyorago</span>
                     </div>
+                    <h3 className="text-lg font-black text-slate-900 leading-snug max-w-[200px]">
+                      Smarter Logistics.<br />A Connected World.
+                    </h3>
+                    <p className="text-xs text-slate-600 font-medium max-w-[190px]">
+                      Ship • Travel • Connect with Flyorago peer-to-peer network.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-4">
+                    <button
+                      onClick={() => setTab('shipments')}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md shadow-teal-600/20 transition-all hover:scale-[1.02]"
+                    >
+                      Explore Features <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Top Performing Routes (4 cols - Exact Match to Reference Image) */}
+                <div className="lg:col-span-4 admin-chart-card p-5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-3.5">
+                    <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                      <TrendingUp size={15} className="text-teal-600" /> Top Performing Routes
+                    </h2>
+                    <button onClick={() => setTab('trips')} className="text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-0.5">
+                      View All <ArrowRight size={11} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3.5 my-auto">
+                    {[
+                      { rank: 1, route: 'Delhi → Mumbai', trips: '24.8K trips', growth: '+22%', percent: 92 },
+                      { rank: 2, route: 'Ahmedabad → Delhi', trips: '21.4K trips', growth: '+19%', percent: 78 },
+                      { rank: 3, route: 'Mumbai → Bengaluru', trips: '18.7K trips', growth: '+17%', percent: 64 },
+                      { rank: 4, route: 'Chennai → Hyderabad', trips: '16.2K trips', growth: '+15%', percent: 52 },
+                    ].map(r => (
+                      <div key={r.rank} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-[11px] text-slate-600">
+                              {r.rank}
+                            </span>
+                            <span className="font-bold text-slate-800">{r.route}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-400 font-medium">{r.trips}</span>
+                            <span className="text-[10px] font-bold text-emerald-600">{r.growth}</span>
+                          </div>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-teal-500 rounded-full transition-all duration-500" style={{ width: `${r.percent}%` }} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
+
             </div>
           )}
 
