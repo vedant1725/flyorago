@@ -56,30 +56,30 @@ const Header: React.FC = () => {
         fixed left-0 right-0 z-50 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-none
         ${isScrolled
           ? 'top-2 sm:top-3 px-3 sm:px-6'
-          : 'top-3 sm:top-5 px-3 sm:px-6'
+          : 'top-0 px-0'
         }
       `}
     >
       <div
         className={`
           mx-auto transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-auto
-          ${isScrolled ? 'max-w-5xl' : 'max-w-6xl'}
+          ${isScrolled ? 'max-w-5xl' : 'max-w-full'}
         `}
       >
-        {/* Floating Glassmorphic Pill Header: Translucent, ultra-modern, seamless integration with Hero */}
+        {/* Header Container: Straight/flat clean glass at top, morphs into floating rounded pill only on scroll */}
         <div
           className={`
-            w-full transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) rounded-full
+            w-full transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
             ${isScrolled
-              ? 'bg-white/85 backdrop-blur-xl shadow-[0_12px_40px_rgba(10,22,40,0.10)] border border-white/60 py-1.5 px-3 sm:px-5 scale-[0.99]'
-              : 'bg-white/50 hover:bg-white/70 backdrop-blur-lg shadow-[0_6px_25px_rgba(10,22,40,0.04)] border border-white/40 py-2 px-3 sm:px-5 scale-100'
+              ? 'rounded-full bg-white/85 backdrop-blur-xl shadow-[0_12px_40px_rgba(10,22,40,0.10)] border border-white/60 py-1.5 px-3 sm:px-5 scale-[0.99]'
+              : 'rounded-none bg-white/40 hover:bg-white/60 backdrop-blur-md border-b border-white/30 py-2.5 px-4 sm:px-8 lg:px-12 scale-100 shadow-none'
             }
           `}
         >
           <div
             className={`
-              flex items-center justify-between transition-all duration-500 ease-out
-              ${isScrolled ? 'h-10 sm:h-12' : 'h-11 sm:h-13'}
+              flex items-center justify-between transition-all duration-500 ease-out mx-auto
+              ${isScrolled ? 'h-10 sm:h-12 max-w-5xl' : 'h-12 sm:h-14 max-w-7xl'}
             `}
           >
             {/* ─── Left: Official Standalone Logo + FLYORAGO Brand Wordmark ─── */}
