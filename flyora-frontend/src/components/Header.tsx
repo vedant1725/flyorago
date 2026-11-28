@@ -53,56 +53,56 @@ const Header: React.FC = () => {
   return (
     <header
       className={`
-        fixed left-0 right-0 z-50 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
+        fixed left-0 right-0 z-50 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-none
         ${isScrolled
-          ? 'top-2 sm:top-2.5 px-3 sm:px-6'
-          : 'top-0 px-0'
+          ? 'top-2 sm:top-3 px-3 sm:px-6'
+          : 'top-3 sm:top-5 px-3 sm:px-6'
         }
       `}
     >
       <div
         className={`
-          mx-auto transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
-          ${isScrolled ? 'max-w-6xl' : 'max-w-full'}
+          mx-auto transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-auto
+          ${isScrolled ? 'max-w-5xl' : 'max-w-6xl'}
         `}
       >
-        {/* Container: Perfect flat full-width fit at top-of-page, smoothly morphs into rounded pill on scroll */}
+        {/* Floating Glassmorphic Pill Header: Translucent, ultra-modern, seamless integration with Hero */}
         <div
           className={`
-            w-full transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
+            w-full transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) rounded-full
             ${isScrolled
-              ? 'rounded-full bg-white/95 backdrop-blur-2xl shadow-[0_16px_50px_rgba(10,22,40,0.14)] border border-gray-200/90 py-1.5 px-3 sm:px-6 scale-[0.99]'
-              : 'rounded-none bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 py-2.5 px-4 sm:px-8 lg:px-12 scale-100'
+              ? 'bg-white/85 backdrop-blur-xl shadow-[0_12px_40px_rgba(10,22,40,0.10)] border border-white/60 py-1.5 px-3 sm:px-5 scale-[0.99]'
+              : 'bg-white/50 hover:bg-white/70 backdrop-blur-lg shadow-[0_6px_25px_rgba(10,22,40,0.04)] border border-white/40 py-2 px-3 sm:px-5 scale-100'
             }
           `}
         >
           <div
             className={`
-              flex items-center justify-between transition-all duration-500 ease-out mx-auto
-              ${isScrolled ? 'h-11 sm:h-13 max-w-6xl' : 'h-14 sm:h-16 max-w-[1536px]'}
+              flex items-center justify-between transition-all duration-500 ease-out
+              ${isScrolled ? 'h-10 sm:h-12' : 'h-11 sm:h-13'}
             `}
           >
             {/* ─── Left: Official Standalone Logo + FLYORAGO Brand Wordmark ─── */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group flex-shrink-0" id="flyora-logo">
+            <Link to="/" className="flex items-center gap-2 group flex-shrink-0" id="flyora-logo">
               <div className="relative flex items-center justify-center p-0.5">
-                {/* Luminous Ambient Glow Backdrop */}
-                <div className="absolute inset-0 rounded-full bg-flyora-teal/25 blur-md group-hover:bg-flyora-teal/40 transition-all duration-300" />
+                {/* Subtle Ambient Glow */}
+                <div className="absolute inset-0 rounded-full bg-flyora-teal/20 blur-sm group-hover:bg-flyora-teal/35 transition-all duration-300" />
                 <img
                   src="/images/flyorago-header-icon.png"
                   alt="Flyorago Official Logo"
                   className={`
-                    relative object-contain transform group-hover:scale-108 transition-all duration-500 drop-shadow-[0_4px_10px_rgba(13,148,136,0.3)]
-                    ${isScrolled ? 'w-9 h-9 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12'}
+                    relative object-contain transform group-hover:scale-105 transition-all duration-300 drop-shadow-[0_2px_8px_rgba(13,148,136,0.25)]
+                    ${isScrolled ? 'w-8 h-8 sm:w-9 sm:h-9' : 'w-9 h-9 sm:w-10 sm:h-10'}
                   `}
                 />
               </div>
 
-              {/* Brand Wordmark (Visible everywhere on Mobile and Desktop so it never looks empty) */}
+              {/* Brand Wordmark (Compact & Elegant Proportions) */}
               <div className="flex flex-col leading-none select-none">
                 <span
                   className={`
                     font-black tracking-tight text-flyora-navy transition-all duration-300
-                    ${isScrolled ? 'text-[16px] sm:text-[18px]' : 'text-[18px] sm:text-[21px]'}
+                    ${isScrolled ? 'text-[15px] sm:text-[17px]' : 'text-[16px] sm:text-[18px]'}
                   `}
                 >
                   FLYORA<span className="text-flyora-teal">GO</span>
@@ -110,7 +110,7 @@ const Header: React.FC = () => {
                 <span
                   className={`
                     font-extrabold text-flyora-teal-dark tracking-widest uppercase transition-all duration-300
-                    ${isScrolled ? 'text-[7.5px] sm:text-[8px] opacity-80' : 'text-[8px] sm:text-[8.5px] opacity-90'}
+                    ${isScrolled ? 'text-[6.5px] sm:text-[7.5px] opacity-75' : 'text-[7px] sm:text-[8px] opacity-85'}
                   `}
                 >
                   Ship Smarter
