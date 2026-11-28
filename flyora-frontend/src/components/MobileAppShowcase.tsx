@@ -148,19 +148,19 @@ const MobileAppShowcase: React.FC = () => {
           <div className="lg:col-span-5 flex justify-center order-2 lg:order-1 relative">
             
             {/* Ambient Device Backdrop Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[310px] h-[610px] bg-gradient-to-tr from-flyora-teal/15 via-sky-400/10 to-indigo-500/10 rounded-[44px] blur-2xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[600px] bg-gradient-to-tr from-flyora-teal/10 via-sky-400/5 to-transparent rounded-[44px] blur-2xl pointer-events-none" />
 
-            {/* Modern Slim Black Smartphone Frame (Ultra-thin 1.5px Black Bezel) */}
-            <div className="relative w-full max-w-[290px] sm:max-w-[310px] rounded-[42px] p-1.5 bg-black shadow-[0_20px_50px_rgba(10,22,40,0.18)] border border-slate-800">
+            {/* Modern Slim Black Smartphone Frame (Ultra-thin 1px Minimal Black Border) */}
+            <div className="relative w-full max-w-[280px] sm:max-w-[295px] rounded-[40px] p-[2px] bg-black shadow-[0_16px_40px_rgba(0,0,0,0.14)] ring-1 ring-black/80">
               
               {/* Dynamic Island Pill Notch */}
-              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-20 h-3.5 bg-black rounded-full z-30 flex items-center justify-between px-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-3 bg-black rounded-full z-30 flex items-center justify-between px-2">
+                <div className="w-1 h-1 rounded-full bg-slate-800" />
+                <div className="w-1 h-1 rounded-full bg-emerald-500/80" />
               </div>
 
               {/* Active Mobile Screenshot Display (Edge-to-Edge with Slim Rounded Radius) */}
-              <div className="relative rounded-[36px] overflow-hidden bg-slate-950 aspect-[9/19.5]">
+              <div className="relative rounded-[38px] overflow-hidden bg-black aspect-[9/19.5]">
                 <img
                   key={current.image}
                   src={current.image}
@@ -173,7 +173,7 @@ const MobileAppShowcase: React.FC = () => {
               </div>
 
               {/* Bottom Home Indicator Bar */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/30 rounded-full z-30" />
+              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-20 h-0.5 bg-white/40 rounded-full z-30" />
             </div>
 
           </div>
@@ -251,11 +251,11 @@ const MobileAppShowcase: React.FC = () => {
                 </div>
               </div>
 
-              {/* ─── Early Access / Launch Email Notification ─── */}
-              <div className="pt-6 border-t border-slate-200/70">
-                <span className="text-xs font-bold text-flyora-navy mb-2 block">
-                  Get notified the instant the app launches:
-                </span>
+              {/* Early Access / Launch Email Notification */}
+              <div className="pt-5 border-t border-slate-200/60">
+                <p className="text-xs font-semibold text-slate-500 mb-2.5">
+                  Get notified when the app launches:
+                </p>
 
                 {isSubscribed ? (
                   <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
