@@ -120,56 +120,56 @@ const Header: React.FC = () => {
                   />
                 </button>
 
-                {/* Dropdown Menu Card */}
+                {/* Dropdown Menu Card with Solid White Background & High Contrast */}
                 {activeDropdown === 'services' && (
-                  <div className="absolute top-full left-0 mt-3 w-72 bg-white/98 backdrop-blur-2xl rounded-2xl shadow-[0_16px_50px_rgba(10,22,40,0.14)] border border-gray-100 p-2.5 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-white rounded-2xl shadow-[0_20px_60px_rgba(10,22,40,0.18)] border border-gray-100 p-3 flex flex-col gap-1.5 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
                     <Link
                       to="/send-package-internationally"
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-flyora-teal/5 transition-colors group"
+                      className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-teal-50/70 transition-all group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-teal-50 text-flyora-teal flex items-center justify-center flex-shrink-0 group-hover:bg-flyora-teal group-hover:text-white transition-colors">
-                        <Send size={15} />
+                      <div className="w-9 h-9 rounded-xl bg-teal-100/70 text-flyora-teal flex items-center justify-center flex-shrink-0 group-hover:bg-flyora-teal group-hover:text-white transition-all shadow-sm">
+                        <Send size={16} />
                       </div>
                       <div>
-                        <div className="text-[13px] font-bold text-flyora-navy group-hover:text-flyora-teal transition-colors">
+                        <div className="text-[13.5px] font-extrabold text-flyora-navy group-hover:text-flyora-teal transition-colors">
                           For Senders
                         </div>
-                        <div className="text-[11px] text-flyora-gray-500 leading-snug">
-                          Send packages with verified flyers
+                        <div className="text-[12px] text-gray-500 leading-snug mt-0.5">
+                          Send packages worldwide with verified travelers
                         </div>
                       </div>
                     </Link>
 
                     <Link
                       to="/travelers-earn-money"
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-flyora-teal/5 transition-colors group"
+                      className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-blue-50/70 transition-all group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        <Briefcase size={15} />
+                      <div className="w-9 h-9 rounded-xl bg-blue-100/70 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                        <Briefcase size={16} />
                       </div>
                       <div>
-                        <div className="text-[13px] font-bold text-flyora-navy group-hover:text-flyora-teal transition-colors">
+                        <div className="text-[13.5px] font-extrabold text-flyora-navy group-hover:text-blue-600 transition-colors">
                           For Travelers
                         </div>
-                        <div className="text-[11px] text-flyora-gray-500 leading-snug">
-                          Earn up to $300 by sharing baggage
+                        <div className="text-[12px] text-gray-500 leading-snug mt-0.5">
+                          Earn up to $300 per trip by sharing baggage
                         </div>
                       </div>
                     </Link>
 
                     <Link
                       to="/services"
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-flyora-teal/5 transition-colors group border-t border-gray-100/80 mt-1 pt-2.5"
+                      className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-emerald-50/70 transition-all group border-t border-gray-100 mt-0.5 pt-3"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                        <ShieldCheck size={15} />
+                      <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                        <ShieldCheck size={16} />
                       </div>
                       <div>
-                        <div className="text-[13px] font-bold text-flyora-navy group-hover:text-flyora-teal transition-colors">
+                        <div className="text-[13.5px] font-extrabold text-flyora-navy group-hover:text-emerald-600 transition-colors">
                           All Protection Services
                         </div>
-                        <div className="text-[11px] text-flyora-gray-500 leading-snug">
-                          Escrow vault, insurance & live tracking
+                        <div className="text-[12px] text-gray-500 leading-snug mt-0.5">
+                          Escrow vault, insurance & verified live tracking
                         </div>
                       </div>
                     </Link>
