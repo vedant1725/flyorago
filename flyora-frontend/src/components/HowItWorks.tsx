@@ -137,12 +137,12 @@ const HowItWorks: React.FC = () => {
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-flyora-navy tracking-tight leading-[1.18] mb-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-flyora-navy tracking-tight leading-[1.18] mb-3">
             How Flyorago Works
           </h2>
 
-          <p className="text-slate-500 text-sm sm:text-base lg:text-lg leading-relaxed font-normal max-w-2xl mx-auto">
-            A frictionless peer-to-peer delivery network built on biometric KYC identity verification, escrow payment vaults, and two-factor handover confirmation.
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-normal max-w-xl mx-auto">
+            A verified peer-to-peer delivery network with KYC checks, escrow holding, and dynamic OTP handover.
           </p>
         </div>
 

@@ -148,22 +148,19 @@ const MobileAppShowcase: React.FC = () => {
           <div className="lg:col-span-5 flex justify-center order-2 lg:order-1 relative">
             
             {/* Ambient Device Backdrop Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[640px] bg-gradient-to-tr from-flyora-teal/20 via-sky-400/10 to-indigo-500/15 rounded-[56px] blur-2xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[600px] bg-gradient-to-tr from-flyora-teal/15 via-sky-300/10 to-teal-500/10 rounded-[50px] blur-2xl pointer-events-none" />
 
-            {/* Apple iPhone 15 Pro Titanium Frame Mockup */}
-            <div className="relative w-full max-w-[310px] sm:max-w-[330px] rounded-[50px] p-3.5 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-950 shadow-[0_30px_90px_rgba(10,22,40,0.22)] border-[3.5px] border-slate-700/80">
+            {/* Apple iPhone 16 Pro Natural Titanium / Silver Light Sleek Frame */}
+            <div className="relative w-full max-w-[300px] sm:max-w-[315px] rounded-[48px] p-2.5 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 shadow-[0_25px_60px_rgba(10,22,40,0.12)] border-[2px] border-slate-300/90 ring-1 ring-black/5">
               
               {/* Dynamic Island Pill Notch */}
-              <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-30 flex items-center justify-between px-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-900" />
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-slate-900 rounded-full z-30 flex items-center justify-between px-2.5">
+                <div className="w-2 h-2 rounded-full bg-slate-950" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500/80" />
               </div>
 
-              {/* Speaker & Mic Slit */}
-              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-14 h-1 bg-slate-700 rounded-full z-30 opacity-70" />
-
               {/* Active Mobile Screenshot Display */}
-              <div className="relative rounded-[40px] overflow-hidden bg-slate-950 aspect-[9/19.5] shadow-inner">
+              <div className="relative rounded-[40px] overflow-hidden bg-slate-900 aspect-[9/19.5] shadow-inner border border-slate-200/40">
                 <img
                   key={current.image}
                   src={current.image}
@@ -172,11 +169,11 @@ const MobileAppShowcase: React.FC = () => {
                 />
 
                 {/* Subtle Glass Reflection Glare */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/8 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
               </div>
 
               {/* Bottom Home Indicator Bar */}
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full z-30" />
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-400/50 rounded-full z-30" />
             </div>
 
           </div>
@@ -200,24 +197,24 @@ const MobileAppShowcase: React.FC = () => {
               </div>
 
               {/* Step Headline */}
-              <h3 className="text-2xl sm:text-3xl lg:text-[34px] font-black text-flyora-navy tracking-tight leading-tight mb-4">
+              <h3 className="text-2xl sm:text-3xl font-black text-flyora-navy tracking-tight leading-tight mb-3">
                 {current.headline}
               </h3>
 
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-8 font-normal">
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-6 font-normal">
                 {current.description}
               </p>
 
-              {/* 3 Executive Architecture Bullets */}
-              <div className="space-y-3 mb-10">
+              {/* 3 Clean Bullets */}
+              <div className="space-y-2.5 mb-8">
                 {[
-                  'Instant radar notifications for matching travelers & parcels',
-                  'Encrypted 6-digit dynamic handover OTP code generation',
-                  'Direct bank escrow settlement with automated dispute protection',
+                  'Instant radar alerts for matching shipments',
+                  'Encrypted 6-digit dynamic OTP handover',
+                  'Direct bank escrow settlement upon delivery',
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 font-semibold">
-                    <div className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-flyora-teal shrink-0">
-                      <CheckCircle2 size={13} strokeWidth={2.5} />
+                  <div key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700 font-semibold">
+                    <div className="w-4 h-4 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-flyora-teal shrink-0">
+                      <CheckCircle2 size={11} strokeWidth={2.5} />
                     </div>
                     <span>{item}</span>
                   </div>

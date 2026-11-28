@@ -71,13 +71,12 @@ const WhyChoose: React.FC = () => {
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-flyora-navy tracking-tight leading-[1.16] mb-4">
-            Built on Trust. <br className="hidden sm:block" />
-            Designed for Global Peer-to-Peer Logistics.
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-flyora-navy tracking-tight leading-[1.16] mb-3">
+            Built on Trust. Designed for Speed.
           </h2>
 
-          <p className="text-slate-500 text-sm sm:text-base lg:text-lg leading-relaxed font-normal">
-            Flyorago eliminates international shipping delays and inflated courier fees through a secure, transparent, and technology-driven traveler network.
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-normal max-w-xl">
+            Verified travelers, secure escrow payments, and reliable delivery across global flight corridors.
           </p>
         </div>
 
