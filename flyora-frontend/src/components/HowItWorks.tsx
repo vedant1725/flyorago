@@ -158,15 +158,15 @@ const HowItWorks: React.FC = () => {
                 key={step.id}
                 type="button"
                 onClick={() => handleStepSelect(idx)}
-                className={`group relative text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl transition-all duration-300 border flex flex-col justify-between ${
+                className={`group relative text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl transition-all duration-300 border flex flex-col justify-between overflow-hidden ${
                   isCurrent
                     ? 'bg-white border-flyora-teal shadow-[0_12px_32px_rgba(13,148,136,0.12)] -translate-y-1'
                     : 'bg-white/70 hover:bg-white border-slate-200/80 hover:border-slate-300 shadow-sm'
                 }`}
               >
-                {/* Active Step Progress Pill Bar */}
+                {/* Active Step Progress Pill Bar (Fully contained inside button boundaries) */}
                 {isCurrent && (
-                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl overflow-hidden bg-teal-100">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-teal-100 overflow-hidden">
                     <div
                       className="h-full bg-flyora-teal transition-all ease-linear"
                       style={{ width: `${progress}%` }}
