@@ -107,7 +107,7 @@ const MobileAppShowcase: React.FC = () => {
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-flyora-navy tracking-tight leading-[1.16] mb-4">
-            Flyorago on iOS and Android
+            Flyorago Mobile App — <span className="bg-gradient-to-r from-flyora-teal via-cyan-600 to-indigo-600 bg-clip-text text-transparent">Coming Soon</span>
           </h2>
 
           <p className="text-slate-500 text-sm sm:text-base lg:text-lg leading-relaxed font-normal max-w-2xl mx-auto">
@@ -179,20 +179,6 @@ const MobileAppShowcase: React.FC = () => {
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full z-30" />
             </div>
 
-            {/* Floating Live Badge Indicator */}
-            <div className="absolute -bottom-3 sm:bottom-6 right-2 sm:-right-4 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-200/90 shadow-xl flex items-center gap-3 z-30">
-              <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-flyora-teal">
-                <ShieldCheck size={16} strokeWidth={2.5} />
-              </div>
-              <div className="leading-tight">
-                <p className="text-xs font-black text-flyora-navy">Official Flyorago App</p>
-                <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Sync Engine
-                </p>
-              </div>
-            </div>
-
           </div>
 
           {/* ══════════════════════════════════════════════════════════
@@ -238,42 +224,32 @@ const MobileAppShowcase: React.FC = () => {
                 ))}
               </div>
 
-              {/* ─── Apple App Store & Google Play Badges ─── */}
-              <div className="mb-8">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest block mb-3.5">
-                  Coming Soon to Official App Stores
-                </span>
-
-                <div className="flex flex-wrap items-center gap-3.5">
+              {/* ─── Apple App Store & Google Play Badges (Clean, Large, Bold MNC Standard) ─── */}
+              <div className="mb-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Apple App Store */}
-                  <div className="flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-slate-900 text-white border border-slate-800 shadow-md hover:bg-slate-800 transition-all cursor-pointer">
-                    <svg className="w-7 h-7 fill-white" viewBox="0 0 24 24">
+                  <div className="group flex items-center gap-4 px-6 py-4 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-800 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+                    <svg className="w-8 h-8 fill-white shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 24 24">
                       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.64 1.35-.57.65-1.07 1.72-.94 2.74 1 .08 2.04-.49 2.66-1.24z"/>
                     </svg>
                     <div className="flex flex-col text-left leading-tight">
-                      <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Coming Soon on</span>
-                      <span className="text-sm font-bold tracking-tight text-white">Apple App Store</span>
+                      <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Download on the</span>
+                      <span className="text-base sm:text-lg font-bold tracking-tight text-white">Apple App Store</span>
                     </div>
-                    <span className="ml-2 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[9.5px] font-bold uppercase tracking-wider border border-teal-500/30">
-                      iOS
-                    </span>
                   </div>
 
                   {/* Google Play Store */}
-                  <div className="flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-slate-900 text-white border border-slate-800 shadow-md hover:bg-slate-800 transition-all cursor-pointer">
-                    <svg className="w-7 h-7" viewBox="0 0 24 24">
+                  <div className="group flex items-center gap-4 px-6 py-4 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-800 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+                    <svg className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M3.61 1.81L13.88 12 3.61 22.19c-.36-.36-.61-.92-.61-1.61V3.42c0-.69.25-1.25.61-1.61z"/>
                       <path fill="#34A853" d="M17.44 8.44l-3.56 3.56 3.56 3.56 4.02-2.32c.73-.42.73-1.1 0-1.52l-4.02-3.28z"/>
                       <path fill="#FBBC05" d="M13.88 12L3.61 1.81c.54-.54 1.46-.46 2.15-.06l11.68 6.69-3.56 3.56z"/>
                       <path fill="#EA4335" d="M13.88 12l3.56 3.56-11.68 6.69c-.69.4-1.61.48-2.15-.06L13.88 12z"/>
                     </svg>
                     <div className="flex flex-col text-left leading-tight">
-                      <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Coming Soon on</span>
-                      <span className="text-sm font-bold tracking-tight text-white">Google Play Store</span>
+                      <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Get it on</span>
+                      <span className="text-base sm:text-lg font-bold tracking-tight text-white">Google Play</span>
                     </div>
-                    <span className="ml-2 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[9.5px] font-bold uppercase tracking-wider border border-cyan-500/30">
-                      Android
-                    </span>
                   </div>
                 </div>
               </div>
