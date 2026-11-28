@@ -1,641 +1,398 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Search, CreditCard, Briefcase, PackageCheck, Star,
-  ArrowRight, Sparkles, Shield, Zap, Globe, CheckCircle2,
-  ChevronRight, Play
+  Search, ShieldCheck, Plane, CheckCircle2, Star,
+  ArrowRight, Sparkles, Lock, Clock, Zap, Globe, Check
 } from 'lucide-react';
 
-// ─── Step data ────────────────────────────────────────────────────────────────
-const STEPS = [
+interface WorkflowStep {
+  id: number;
+  number: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  badge: string;
+  icon: React.ElementType;
+  metric: string;
+  metricLabel: string;
+  highlights: string[];
+}
+
+const STEPS: WorkflowStep[] = [
   {
-    step: 1,
+    id: 1,
+    number: '01',
+    title: 'Match Trip or Package',
+    subtitle: 'Smart AI Courier Matching',
+    description: 'Post your verified itinerary or shipment details in under 2 minutes. Our algorithmic engine pairs senders with vetted flyers headed to the exact destination.',
+    badge: 'Instant Matching',
     icon: Search,
-    title: 'Find or Post a Trip',
-    desc: 'Senders find travelers going to their destination, or travelers post available luggage space.',
-    color: '#14b8a6',
-    lightColor: 'rgba(20,184,166,0.08)',
-    borderColor: 'rgba(20,184,166,0.2)',
-    shadowColor: 'rgba(20,184,166,0.25)',
-    gradient: 'from-teal-500 to-cyan-500',
-    tag: 'Step 1',
-    detail: 'AI-powered matching',
-    stat: '2 min avg.',
+    metric: '2 Min',
+    metricLabel: 'Average Match Time',
+    highlights: ['Vetted passenger itineraries', 'Autonomous routing checks', 'Instant mutual notification'],
   },
   {
-    step: 2,
-    icon: CreditCard,
-    title: 'Book & Pay Securely',
-    desc: "Choose your match, agree on terms, and pay safely through Flyorago's secure escrow system.",
-    color: '#6366f1',
-    lightColor: 'rgba(99,102,241,0.08)',
-    borderColor: 'rgba(99,102,241,0.2)',
-    shadowColor: 'rgba(99,102,241,0.25)',
-    gradient: 'from-indigo-500 to-purple-500',
-    tag: 'Step 2',
-    detail: 'Escrow protected',
-    stat: '100% safe',
+    id: 2,
+    number: '02',
+    title: 'Escrow Vault Payment',
+    subtitle: 'Institutional-Grade Security',
+    description: 'Confirm the booking with total peace of mind. Payout funds are vaulted in a secure bank escrow account and only released when delivery is completed.',
+    badge: '100% Escrow Protection',
+    icon: Lock,
+    metric: '$0 Loss',
+    metricLabel: 'Financial Guarantee',
+    highlights: ['Multi-currency supported', 'Zero fraud chargeback risk', 'Automated dispute arbitration'],
   },
   {
-    step: 3,
-    icon: Briefcase,
-    title: 'Traveler Carries Package',
-    desc: 'The verified traveler picks up the package and carries it safely to the destination.',
-    color: '#f59e0b',
-    lightColor: 'rgba(245,158,11,0.08)',
-    borderColor: 'rgba(245,158,11,0.2)',
-    shadowColor: 'rgba(245,158,11,0.25)',
-    gradient: 'from-amber-500 to-orange-500',
-    tag: 'Step 3',
-    detail: 'KYC verified only',
-    stat: 'Real-time tracking',
+    id: 3,
+    number: '03',
+    title: 'Secure Handover & Transit',
+    subtitle: 'Aviation Compliance & Inspection',
+    description: 'The traveler and sender meet for an unsealed item safety check. The verified flyer carries the package in their dedicated baggage allowance with real-time milestones.',
+    badge: 'KYC & Aviation Compliant',
+    icon: Plane,
+    metric: '100%',
+    metricLabel: 'KYC Verified Flyers',
+    highlights: ['Open-box item inspection', 'Aviation customs compliant', 'Milestone departure alerts'],
   },
   {
-    step: 4,
-    icon: PackageCheck,
-    title: 'Delivered with Care',
-    desc: 'Package is handed to the recipient at the destination, securely and on time.',
-    color: '#10b981',
-    lightColor: 'rgba(16,185,129,0.08)',
-    borderColor: 'rgba(16,185,129,0.2)',
-    shadowColor: 'rgba(16,185,129,0.25)',
-    gradient: 'from-emerald-500 to-teal-500',
-    tag: 'Step 4',
-    detail: 'GPS confirmed',
-    stat: '99.2% on-time',
-  },
-  {
-    step: 5,
-    icon: Star,
-    title: 'Release & Review',
-    desc: 'Payment is released to the traveler once delivery is confirmed. Both parties leave a review.',
-    color: '#d97706',
-    lightColor: 'rgba(217,119,6,0.08)',
-    borderColor: 'rgba(217,119,6,0.2)',
-    shadowColor: 'rgba(217,119,6,0.22)',
-    gradient: 'from-amber-500 to-yellow-500',
-    tag: 'Step 5',
-    detail: 'Instant payout',
-    stat: '4.9★ avg. rating',
+    id: 4,
+    number: '04',
+    title: 'OTP Handover & Instant Payout',
+    subtitle: 'Two-Factor Recipient Verification',
+    description: 'The recipient validates package receipt using a secure 6-digit dynamic OTP. Once entered, the escrow vault immediately unlocks payment directly to the flyer.',
+    badge: 'Automated Settlement',
+    icon: CheckCircle2,
+    metric: '99.8%',
+    metricLabel: 'Successful Deliveries',
+    highlights: ['Dynamic 6-digit OTP code', 'Instant automated payout', 'Verified bilateral feedback'],
   },
 ];
 
-// ─── Hook: Intersection Observer ─────────────────────────────────────────────
-function useInView(threshold = 0.15): [React.RefObject<HTMLDivElement>, boolean] {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setInView(true); obs.disconnect(); } },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-
-  return [ref, inView];
-}
-
-// ─── Animated counter ─────────────────────────────────────────────────────────
-const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({
-  value, suffix = '', duration = 1500
-}) => {
-  const [display, setDisplay] = useState(0);
-  const [started, setStarted] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setStarted(true); obs.disconnect(); } }, { threshold: 0.5 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!started) return;
-    const start = Date.now();
-    const tick = () => {
-      const pct = Math.min((Date.now() - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - pct, 3);
-      setDisplay(Math.round(ease * value));
-      if (pct < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [started, value, duration]);
-
-  return <span ref={ref}>{display}{suffix}</span>;
-};
-
-// ─── Step Card Component ──────────────────────────────────────────────────────
-const StepCard: React.FC<{ step: typeof STEPS[0]; index: number; isActive: boolean; onClick: () => void; globalInView: boolean }> = ({
-  step, index, isActive, onClick, globalInView
-}) => {
-  const Icon = step.icon;
-  const delay = index * 120;
-
-  return (
-    <div
-      className="group cursor-pointer select-none"
-      style={{
-        opacity: globalInView ? 1 : 0,
-        transform: globalInView ? 'translateY(0)' : 'translateY(40px)',
-        transition: `opacity 0.7s cubic-bezier(0.4,0,0.2,1) ${delay}ms, transform 0.7s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms`,
-      }}
-      onClick={onClick}
-      id={`step-${step.step}`}
-    >
-      <div
-        className="relative rounded-2xl p-6 h-full transition-all duration-500 overflow-hidden"
-        style={{
-          background: isActive ? `linear-gradient(135deg, ${step.lightColor}, rgba(255,255,255,0.95))` : 'rgba(255,255,255,0.7)',
-          border: `1.5px solid ${isActive ? step.borderColor : 'rgba(0,0,0,0.06)'}`,
-          boxShadow: isActive
-            ? `0 20px 60px ${step.shadowColor}, 0 4px 16px rgba(0,0,0,0.06)`
-            : '0 2px 12px rgba(0,0,0,0.04)',
-          transform: isActive ? 'translateY(-6px) scale(1.02)' : 'translateY(0) scale(1)',
-        }}
-      >
-        {/* Shimmer overlay on hover */}
-        <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%)' }}
-        />
-
-        {/* Active step glow */}
-        {isActive && (
-          <div
-            className="absolute -inset-1 rounded-2xl pointer-events-none"
-            style={{
-              background: `radial-gradient(ellipse at top left, ${step.shadowColor} 0%, transparent 70%)`,
-              opacity: 0.4,
-              zIndex: -1,
-            }}
-          />
-        )}
-
-        {/* Step number badge */}
-        <div className="flex items-center justify-between mb-5">
-          <div
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300"
-            style={{
-              background: isActive ? step.lightColor : 'rgba(0,0,0,0.04)',
-              color: isActive ? step.color : '#94a3b8',
-              border: `1px solid ${isActive ? step.borderColor : 'transparent'}`,
-            }}
-          >
-            <span
-              className="w-4 h-4 rounded-full flex items-center justify-center text-white font-black"
-              style={{ background: isActive ? `linear-gradient(135deg, ${step.color}, ${step.color}cc)` : '#cbd5e1', fontSize: '8px' }}
-            >
-              {step.step}
-            </span>
-            {step.tag}
-          </div>
-
-          {/* Animated check when active */}
-          <div
-            className="transition-all duration-400"
-            style={{ opacity: isActive ? 1 : 0, transform: isActive ? 'scale(1) rotate(0deg)' : 'scale(0.5) rotate(-90deg)' }}
-          >
-            <CheckCircle2 size={18} style={{ color: step.color }} />
-          </div>
-        </div>
-
-        {/* Icon */}
-        <div className="mb-4 relative">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500"
-            style={{
-              background: isActive
-                ? `linear-gradient(135deg, ${step.color}, ${step.color}cc)`
-                : 'rgba(0,0,0,0.05)',
-              boxShadow: isActive ? `0 8px 24px ${step.shadowColor}` : 'none',
-              transform: isActive ? 'rotate(-3deg) scale(1.1)' : 'rotate(0deg) scale(1)',
-            }}
-          >
-            <Icon
-              size={24}
-              style={{ color: isActive ? '#fff' : '#94a3b8', transition: 'all 0.4s' }}
-            />
-          </div>
-          {/* Floating micro-dot */}
-          {isActive && (
-            <div
-              className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-ping"
-              style={{ background: step.color, opacity: 0.5 }}
-            />
-          )}
-        </div>
-
-        {/* Text */}
-        <h3
-          className="text-[15px] font-black mb-2 leading-snug transition-colors duration-300"
-          style={{ color: isActive ? '#0f172a' : '#475569' }}
-        >
-          {step.title}
-        </h3>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed font-medium mb-4 line-clamp-3">
-          {step.desc}
-        </p>
-
-        {/* Detail stat chip */}
-        <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: isActive ? step.borderColor : 'rgba(0,0,0,0.05)' }}>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{step.detail}</span>
-          <span
-            className="text-[11px] font-black px-2 py-0.5 rounded-full transition-all duration-300"
-            style={{
-              background: isActive ? step.lightColor : 'rgba(0,0,0,0.04)',
-              color: isActive ? step.color : '#94a3b8',
-            }}
-          >
-            {step.stat}
-          </span>
-        </div>
-
-        {/* Bottom hover bar */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl transition-all duration-500"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${step.color}, transparent)`,
-            opacity: isActive ? 1 : 0,
-            transform: isActive ? 'scaleX(1)' : 'scaleX(0)',
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-// ─── Main Section ─────────────────────────────────────────────────────────────
 const HowItWorks: React.FC = () => {
-  const [sectionRef, inView] = useInView(0.1);
-  const [headerRef, headerInView] = useInView(0.2);
   const [activeStep, setActiveStep] = useState(0);
-  const [progressWidth, setProgressWidth] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(true);
-  const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-advance active step
+  const STEP_DURATION = 6000; // 6 seconds per step for clean digestion
+
+  // Progress counter and auto-advance
   useEffect(() => {
-    if (!inView || !autoPlay) return;
-    autoTimer.current = setInterval(() => {
-      setActiveStep(prev => (prev + 1) % STEPS.length);
-    }, 2800);
-    return () => { if (autoTimer.current) clearInterval(autoTimer.current); };
-  }, [inView, autoPlay]);
+    if (!isAutoPlaying) {
+      setProgress(100);
+      return;
+    }
 
-  // Progress bar
-  useEffect(() => {
-    if (!inView) return;
-    const target = ((activeStep + 1) / STEPS.length) * 100;
-    setProgressWidth(target);
-  }, [activeStep, inView]);
+    setProgress(0);
+    const intervalTime = 50;
+    const increment = (intervalTime / STEP_DURATION) * 100;
 
-  const handleStepClick = (idx: number) => {
-    setActiveStep(idx);
-    setAutoPlay(false);
-    if (autoTimer.current) clearInterval(autoTimer.current);
+    progressIntervalRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          return 100;
+        }
+        return prev + increment;
+      });
+    }, intervalTime);
+
+    autoPlayRef.current = setTimeout(() => {
+      setActiveStep((prev) => (prev + 1) % STEPS.length);
+    }, STEP_DURATION);
+
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      if (autoPlayRef.current) clearTimeout(autoPlayRef.current);
+    };
+  }, [activeStep, isAutoPlaying]);
+
+  const handleStepSelect = (index: number) => {
+    setActiveStep(index);
+    setIsAutoPlaying(false);
   };
 
-  const activeData = STEPS[activeStep];
+  const current = STEPS[activeStep];
+  const CurrentIcon = current.icon;
 
   return (
     <section
-      className="relative py-28 overflow-hidden"
+      className="relative py-20 sm:py-28 bg-[#FBFDFE] border-y border-slate-200/60 overflow-hidden select-none"
       id="how-it-works"
-      aria-label="How Flyorago works"
-      style={{ background: 'linear-gradient(180deg, #f8faff 0%, #ffffff 40%, #f0fdf8 100%)' }}
+      aria-label="How Flyorago Works"
     >
-      {/* ── Background decoration ── */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: 'linear-gradient(#0f172a 1px, transparent 1px), linear-gradient(90deg, #0f172a 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-          }}
-        />
-        {/* Blobs */}
-        <div
-          className="absolute -top-40 right-[-100px] w-[600px] h-[600px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.06) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute bottom-[-80px] left-[-80px] w-[500px] h-[500px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%)' }}
-        />
-        {/* Floating orbs */}
-        {[
-          { top: '15%', left: '5%', size: 8, color: '#14b8a6', delay: 0 },
-          { top: '70%', left: '90%', size: 6, color: '#6366f1', delay: 1.5 },
-          { top: '40%', left: '95%', size: 10, color: '#f59e0b', delay: 0.8 },
-          { top: '85%', left: '15%', size: 7, color: '#10b981', delay: 2 },
-          { top: '25%', left: '88%', size: 5, color: '#f43f5e', delay: 1.2 },
-        ].map((o, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full animate-pulse"
-            style={{
-              top: o.top, left: o.left,
-              width: o.size, height: o.size,
-              background: o.color,
-              opacity: 0.4,
-              animationDelay: `${o.delay}s`,
-              animationDuration: '3s',
-            }}
-          />
-        ))}
-      </div>
+      {/* ─── Architectural Grid Background (MNC Clean Look) ─── */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-35 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-flyora-teal/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {/* ── Section Header ── */}
-        <div
-          ref={headerRef}
-          className="text-center mb-16"
-          style={{
-            opacity: headerInView ? 1 : 0,
-            transform: headerInView ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 0.8s cubic-bezier(0.4,0,0.2,1)',
-          }}
-        >
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div
-              className="flex items-center gap-2 px-4 py-2 rounded-full"
-              style={{
-                background: 'linear-gradient(135deg, rgba(20,184,166,0.1), rgba(99,102,241,0.08))',
-                border: '1px solid rgba(20,184,166,0.2)',
-              }}
-            >
-              <Sparkles size={13} className="text-teal-500" />
-              <span className="text-xs font-black text-teal-600 uppercase tracking-widest">Simple. Secure. Smart.</span>
-              <Sparkles size={13} className="text-indigo-500" />
-            </div>
+        {/* ─── Section Header (Google / Stripe Editorial Style) ─── */}
+        <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-20">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-teal-200/80 shadow-[0_2px_8px_rgba(13,148,136,0.08)] mb-4">
+            <span className="w-2 h-2 rounded-full bg-flyora-teal animate-pulse" />
+            <span className="text-[11px] sm:text-xs font-bold text-flyora-teal-dark tracking-wide uppercase">
+              Transparent & Verified Logistics
+            </span>
           </div>
 
-          {/* Main title */}
-          <h2
-            className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-5 leading-tight"
-            id="how-it-works-heading"
-          >
-            How{' '}
-            <span
-              className="relative inline-block"
-              style={{
-                background: 'linear-gradient(135deg, #14b8a6, #38bdf8, #6366f1)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              Flyorago
-              {/* Underline squiggle */}
-              <svg
-                className="absolute -bottom-1 left-0 w-full"
-                viewBox="0 0 200 8"
-                preserveAspectRatio="none"
-                style={{ height: '6px' }}
-              >
-                <path
-                  d="M0,4 Q25,0 50,4 Q75,8 100,4 Q125,0 150,4 Q175,8 200,4"
-                  fill="none"
-                  stroke="url(#waveGrad)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#14b8a6" />
-                    <stop offset="50%" stopColor="#38bdf8" />
-                    <stop offset="100%" stopColor="#6366f1" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>{' '}
-            Works
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-flyora-navy tracking-tight leading-[1.18] mb-4">
+            How Flyorago Works
           </h2>
 
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
-            We make global shipping easy by connecting senders with trusted travelers{' '}
-            <span className="text-teal-600 font-bold">in just a few steps.</span>
+          <p className="text-slate-500 text-sm sm:text-base lg:text-lg leading-relaxed font-normal max-w-2xl mx-auto">
+            A frictionless peer-to-peer delivery network built on biometric KYC identity verification, escrow payment vaults, and two-factor handover confirmation.
           </p>
-
         </div>
 
-        {/* ── Progress bar + step indicator ── */}
-        <div
-          ref={sectionRef}
-          className="mb-8"
-          style={{
-            opacity: inView ? 1 : 0,
-            transition: 'opacity 0.6s ease 0.2s',
-          }}
-        >
-          {/* Step dots navigation */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            {STEPS.map((s, i) => (
+        {/* ─── Top Step Progression Bar ─── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12">
+          {STEPS.map((step, idx) => {
+            const isCurrent = activeStep === idx;
+            const isCompleted = activeStep > idx;
+            const StepIcon = step.icon;
+
+            return (
               <button
-                key={i}
-                onClick={() => handleStepClick(i)}
-                className="relative transition-all duration-400 rounded-full"
-                style={{
-                  width: activeStep === i ? '32px' : '8px',
-                  height: '8px',
-                  background: activeStep === i
-                    ? `linear-gradient(90deg, ${s.color}, ${s.color}cc)`
-                    : activeStep > i ? s.color : '#e2e8f0',
-                  boxShadow: activeStep === i ? `0 0 12px ${s.shadowColor}` : 'none',
-                }}
-                aria-label={`Go to step ${s.step}`}
-              />
-            ))}
-          </div>
-
-          {/* Progress track */}
-          <div className="max-w-xs mx-auto h-1 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${progressWidth}%`,
-                background: `linear-gradient(90deg, #14b8a6, ${activeData.color})`,
-                boxShadow: `0 0 8px ${activeData.shadowColor}`,
-              }}
-            />
-          </div>
-
-          {/* Auto-play toggle */}
-          <div className="flex justify-center mt-3">
-            <button
-              onClick={() => setAutoPlay(!autoPlay)}
-              className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full transition-all duration-200"
-              style={{
-                background: autoPlay ? activeData.lightColor : 'rgba(0,0,0,0.04)',
-                color: autoPlay ? activeData.color : '#94a3b8',
-                border: `1px solid ${autoPlay ? activeData.borderColor : 'transparent'}`,
-              }}
-            >
-              <Play size={9} className={autoPlay ? 'text-current' : 'text-slate-400'} />
-              {autoPlay ? 'Auto-playing' : 'Paused — click a step'}
-            </button>
-          </div>
-        </div>
-
-        {/* ── Step Cards Grid ── */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
-          style={{ alignItems: 'stretch' }}
-        >
-          {STEPS.map((step, idx) => (
-            <StepCard
-              key={step.step}
-              step={step}
-              index={idx}
-              isActive={activeStep === idx}
-              onClick={() => handleStepClick(idx)}
-              globalInView={inView}
-            />
-          ))}
-        </div>
-
-        {/* ── Active Step Detail Panel ── */}
-        <div
-          className="mt-8 rounded-3xl overflow-hidden transition-all duration-500"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.6s cubic-bezier(0.4,0,0.2,1) 0.4s, background 0.5s ease',
-            background: `linear-gradient(135deg, ${activeData.lightColor}, rgba(255,255,255,0.95))`,
-            border: `1.5px solid ${activeData.borderColor}`,
-            boxShadow: `0 8px 40px ${activeData.shadowColor}`,
-          }}
-        >
-          <div className="flex flex-col md:flex-row items-center gap-6 px-8 py-6">
-            {/* Step icon large */}
-            <div
-              className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{
-                background: `linear-gradient(135deg, ${activeData.color}, ${activeData.color}cc)`,
-                boxShadow: `0 12px 32px ${activeData.shadowColor}`,
-              }}
-            >
-              {React.createElement(activeData.icon, { size: 30, color: '#fff' })}
-            </div>
-
-            <div className="flex-1 text-center md:text-left">
-              <div className="flex items-center gap-2 justify-center md:justify-start mb-1">
-                <span
-                  className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                  style={{ background: activeData.lightColor, color: activeData.color, border: `1px solid ${activeData.borderColor}` }}
-                >
-                  {activeData.tag}
-                </span>
-                <span className="text-[10px] text-slate-400 font-bold">{activeData.detail}</span>
-              </div>
-              <h4 className="text-xl font-black text-slate-900 mb-1">{activeData.title}</h4>
-              <p className="text-sm text-slate-500 font-medium max-w-lg">{activeData.desc}</p>
-            </div>
-
-            {/* Stat + navigation arrows */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="text-center">
-                <p className="text-2xl font-black" style={{ color: activeData.color }}>{activeData.stat}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Performance</p>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleStepClick((activeStep - 1 + STEPS.length) % STEPS.length)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  style={{ background: activeData.lightColor, color: activeData.color, border: `1px solid ${activeData.borderColor}` }}
-                >
-                  <ChevronRight size={16} className="rotate-180" />
-                </button>
-                <button
-                  onClick={() => handleStepClick((activeStep + 1) % STEPS.length)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  style={{ background: `linear-gradient(135deg, ${activeData.color}, ${activeData.color}cc)`, color: '#fff' }}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Trust badges strip ── */}
-        <div
-          className="mt-10 grid grid-cols-3 sm:grid-cols-5 gap-3"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s cubic-bezier(0.4,0,0.2,1) 0.6s',
-          }}
-        >
-          {[
-            { icon: Shield, label: 'KYC Verified', sub: '100% trusted' },
-            { icon: Zap, label: 'Escrow Safe', sub: 'Zero loss' },
-            { icon: Globe, label: '120+ Countries', sub: 'Global reach' },
-            { icon: Star, label: '4.9★ Rating', sub: '12K+ reviews' },
-            { icon: CheckCircle2, label: 'On-time', sub: '99.2% rate' },
-          ].map((b, i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center gap-2 py-4 px-3 rounded-2xl transition-all duration-300 hover:scale-105 group cursor-default"
-              style={{
-                background: 'rgba(255,255,255,0.7)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                backdropFilter: 'blur(8px)',
-                animationDelay: `${i * 80}ms`,
-              }}
-            >
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                style={{ background: `${STEPS[i]?.lightColor || 'rgba(20,184,166,0.08)'}` }}
+                key={step.id}
+                type="button"
+                onClick={() => handleStepSelect(idx)}
+                className={`group relative text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl transition-all duration-300 border flex flex-col justify-between ${
+                  isCurrent
+                    ? 'bg-white border-flyora-teal shadow-[0_12px_32px_rgba(13,148,136,0.12)] -translate-y-1'
+                    : 'bg-white/70 hover:bg-white border-slate-200/80 hover:border-slate-300 shadow-sm'
+                }`}
               >
-                <b.icon size={16} style={{ color: STEPS[i]?.color || '#14b8a6' }} />
-              </div>
-              <div className="text-center">
-                <p className="text-[12px] font-black text-slate-700">{b.label}</p>
-                <p className="text-[10px] text-slate-400 font-semibold">{b.sub}</p>
-              </div>
-            </div>
-          ))}
+                {/* Active Step Progress Pill Bar */}
+                {isCurrent && (
+                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl overflow-hidden bg-teal-100">
+                    <div
+                      className="h-full bg-flyora-teal transition-all ease-linear"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[11px] font-black tracking-widest ${
+                        isCurrent ? 'text-flyora-teal' : 'text-slate-400'
+                      }`}>
+                        {step.number}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                        isCurrent
+                          ? 'bg-teal-50 text-flyora-teal-dark border border-teal-100'
+                          : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {step.badge}
+                      </span>
+                    </div>
+
+                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors ${
+                      isCurrent
+                        ? 'bg-flyora-teal text-white shadow-xs'
+                        : isCompleted
+                        ? 'bg-teal-50 text-flyora-teal'
+                        : 'bg-slate-100 text-slate-400 group-hover:text-slate-600'
+                    }`}>
+                      {isCompleted ? (
+                        <Check size={14} strokeWidth={2.5} />
+                      ) : (
+                        <StepIcon size={14} strokeWidth={2} />
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 className={`text-sm sm:text-base font-bold tracking-tight leading-snug line-clamp-1 ${
+                    isCurrent ? 'text-flyora-navy' : 'text-slate-600'
+                  }`}>
+                    {step.title}
+                  </h3>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400 font-medium">Metric</span>
+                  <span className={`font-bold ${isCurrent ? 'text-flyora-teal-dark' : 'text-slate-500'}`}>
+                    {step.metric}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* ── Bottom CTA ── */}
-        <div
-          className="text-center mt-14"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s cubic-bezier(0.4,0,0.2,1) 0.7s',
-          }}
-        >
-          <Link
-            to="/signup"
-            className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-white font-bold text-sm transition-all duration-300 hover:scale-[1.04] hover:shadow-2xl active:scale-[0.97] relative overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, #0d9488, #14b8a6, #38bdf8)',
-              boxShadow: '0 8px 32px rgba(20,184,166,0.35)',
-            }}
-            id="how-it-works-cta"
-          >
-            {/* Shine sweep */}
-            <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
-            <Sparkles size={16} className="relative z-10" />
-            <span className="relative z-10">Start shipping today — it's free</span>
-            <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
-          </Link>
-          <p className="text-sm text-slate-400 font-medium mt-3">
-            No credit card required · Join 50,000+ users
-          </p>
+        {/* ─── Main Heroic Interactive Showcase Card ─── */}
+        <div className="bg-white rounded-3xl sm:rounded-[32px] border border-slate-200/90 shadow-[0_20px_60px_rgba(10,22,40,0.06)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
+            
+            {/* Left Content Column */}
+            <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-flyora-teal">
+                    <CurrentIcon size={20} strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-extrabold text-flyora-teal uppercase tracking-widest block">
+                      Phase {current.number}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">
+                      {current.subtitle}
+                    </span>
+                  </div>
+                </div>
+
+                <h3 className="text-2xl sm:text-3xl font-black text-flyora-navy tracking-tight leading-tight mb-4">
+                  {current.title}
+                </h3>
+
+                <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6 font-normal">
+                  {current.description}
+                </p>
+
+                {/* Technical Feature Checkpoints */}
+                <div className="space-y-3 mb-8">
+                  {current.highlights.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 font-semibold">
+                      <div className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-flyora-teal flex-shrink-0">
+                        <Check size={12} strokeWidth={3} />
+                      </div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Strip */}
+              <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/how-it-works"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-flyora-teal text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(13,148,136,0.3)] hover:bg-teal-700 hover:shadow-teal-600/40 transition-all group"
+                  >
+                    <span>Read Full Guide</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                    className="text-xs font-semibold text-slate-500 hover:text-flyora-teal px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    {isAutoPlaying ? 'Pause Walkthrough' : 'Resume Auto-Play'}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-medium">Step {activeStep + 1} of 4</span>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleStepSelect((activeStep - 1 + STEPS.length) % STEPS.length)}
+                      aria-label="Previous step"
+                      className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-flyora-navy transition-colors text-xs"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStepSelect((activeStep + 1) % STEPS.length)}
+                      aria-label="Next step"
+                      className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-flyora-navy transition-colors text-xs"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Visual Architecture Column */}
+            <div className="lg:col-span-5 bg-gradient-to-br from-slate-50 via-teal-50/40 to-sky-50/50 p-6 sm:p-10 lg:p-12 border-t lg:border-t-0 lg:border-l border-slate-200/70 h-full flex flex-col justify-center relative overflow-hidden">
+              
+              {/* Background Ambient Aura */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-flyora-teal/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Interactive Visual Glass Card */}
+              <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 sm:p-7 border border-white shadow-[0_10px_35px_rgba(10,22,40,0.06)] space-y-5">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-flyora-teal to-teal-500 flex items-center justify-center text-white shadow-xs">
+                      <CurrentIcon size={16} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-flyora-navy block">Security Verification</span>
+                      <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                        Live Protocol Active
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="text-[11px] font-extrabold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                    256-bit Encrypted
+                  </span>
+                </div>
+
+                {/* Dynamic Metric Display */}
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100/90 text-center">
+                  <span className="text-3xl sm:text-4xl font-black text-flyora-navy tracking-tight block">
+                    {current.metric}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    {current.metricLabel}
+                  </span>
+                </div>
+
+                {/* Key Verification Features */}
+                <div className="space-y-2.5 text-xs text-slate-600 font-medium">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-100">
+                    <span className="text-slate-500">System Status</span>
+                    <span className="font-bold text-emerald-600">Operational & Insured</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-100">
+                    <span className="text-slate-500">Government ID Vetting</span>
+                    <span className="font-bold text-flyora-navy">Passports & Aadhaar Verified</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-100">
+                    <span className="text-slate-500">Payment Security</span>
+                    <span className="font-bold text-flyora-navy">Direct Bank Escrow Vault</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ─── Bottom MNC Trust Pillars Bar ─── */}
+        <div className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          {[
+            { label: 'Bank-Grade Escrow', desc: 'Zero payout before verified delivery', icon: Lock },
+            { label: 'Biometric KYC Check', desc: '100% ID-verified travelers & senders', icon: ShieldCheck },
+            { label: 'Global Corridors', desc: 'Connecting India, US, UK, Canada & UAE', icon: Globe },
+            { label: '24/7 Priority Support', desc: 'Live dispatch team always on standby', icon: Sparkles },
+          ].map((item, idx) => {
+            const PillarIcon = item.icon;
+            return (
+              <div
+                key={idx}
+                className="flex items-start gap-3.5 p-4 rounded-2xl bg-white/60 border border-slate-200/70 shadow-xs"
+              >
+                <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-flyora-teal flex-shrink-0 mt-0.5">
+                  <PillarIcon size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-flyora-navy tracking-tight">{item.label}</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
       </div>
