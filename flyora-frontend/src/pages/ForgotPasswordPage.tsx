@@ -205,7 +205,7 @@ export const ForgotPasswordPage: React.FC = () => {
         </div>
 
         {/* ── Right Side Form Panel ── */}
-        <div className="w-full lg:w-[40%] flex flex-col items-center lg:justify-center p-0 lg:p-10 xl:p-12 relative bg-gray-50 lg:bg-white overflow-y-auto">
+        <div className="w-full lg:w-[45%] xl:w-[40%] flex flex-col items-center p-0 lg:px-12 lg:py-10 relative bg-gray-50 lg:bg-white overflow-y-auto min-h-screen">
           {/* Mobile Image Header */}
           <div className="lg:hidden w-full relative overflow-hidden" style={{ height: '24vh', minHeight: '160px' }}>
             <img
@@ -216,34 +216,40 @@ export const ForgotPasswordPage: React.FC = () => {
               decoding="async"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
-            <div className="absolute inset-x-0 top-0 flex justify-between items-center px-5 pt-6 z-10">
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-x-0 top-0 flex justify-between items-center px-5 pt-5 z-10">
               <Link
                 to="/login"
-                className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm"
+                className="w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform"
                 aria-label="Back to login"
               >
                 <ArrowLeft size={18} className="text-flyora-navy" />
               </Link>
+              <Link to="/contact" className="px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-xs font-bold text-flyora-navy shadow-sm">
+                Need help?
+              </Link>
             </div>
           </div>
 
-          {/* Desktop Top Nav */}
-          <Link
-            to="/"
-            className="hidden lg:flex absolute top-8 left-8 items-center gap-2 text-sm font-bold text-gray-500 hover:text-flyora-navy transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to home
-          </Link>
-          <div className="hidden lg:block absolute top-8 right-8">
-            <Link to="/contact" className="text-sm font-bold text-flyora-teal hover:text-flyora-teal-dark transition-colors">
+          {/* Desktop Top Header Bar (Fixed / In-Flow at Top with Safe Margin) */}
+          <div className="hidden lg:flex w-full items-center justify-between pt-2 pb-6 px-2 mb-2">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-flyora-navy transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100"
+            >
+              <ArrowLeft size={15} />
+              Back to home
+            </Link>
+            <Link
+              to="/contact"
+              className="text-xs font-bold text-slate-500 hover:text-flyora-teal transition-colors px-3 py-1.5 rounded-lg hover:bg-teal-50"
+            >
               Need help?
             </Link>
           </div>
 
           {/* Form Container */}
-          <div className="w-full max-w-[420px] px-6 py-8 lg:p-0 bg-white lg:bg-transparent relative z-20 flex-1 lg:flex-none flex flex-col justify-center">
+          <div className="w-full max-w-[420px] px-6 py-8 lg:p-0 bg-white lg:bg-transparent relative z-20 flex-1 flex flex-col justify-center my-auto">
             {/* Brand + Title */}
             <div className="text-center mb-7 flex flex-col items-center">
               <Link to="/" className="hidden lg:flex items-center gap-3 group mb-5 w-fit">
