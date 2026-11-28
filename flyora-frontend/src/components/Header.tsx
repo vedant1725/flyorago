@@ -72,26 +72,17 @@ const Header: React.FC = () => {
             }
           `}
         >
-          <div className="flex items-center justify-between h-12 sm:h-14">
-            {/* ─── Left: Original HD Official Logo (Clean Icon Symbol with Glow) ─── */}
-            <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0" id="flyora-logo">
-              <div className="relative flex items-center justify-center">
-                {/* Ambient Soft Glow Behind Official Symbol */}
-                <div className="absolute inset-0 rounded-full bg-flyora-teal/20 blur-md group-hover:bg-flyora-teal/35 transition-all duration-300" />
+          <div className="flex items-center justify-between h-13 sm:h-15">
+            {/* ─── Left: Prominent Official Standalone Logo Icon (Matches Reference) ─── */}
+            <Link to="/" className="flex items-center group flex-shrink-0" id="flyora-logo">
+              <div className="relative flex items-center justify-center p-0.5">
+                {/* Luminous Ambient Glow Backdrop */}
+                <div className="absolute inset-0 rounded-full bg-flyora-teal/25 blur-md group-hover:bg-flyora-teal/40 transition-all duration-300" />
                 <img
-                  src="/images/flyorago-logo-icon.png"
+                  src="/images/flyorago-header-icon.png"
                   alt="Flyorago Official Logo"
-                  className="relative w-8 h-8 sm:w-9 sm:h-9 object-contain transform group-hover:scale-105 transition-transform duration-300"
+                  className="relative w-11 h-11 sm:w-12 sm:h-12 object-contain transform group-hover:scale-108 transition-transform duration-300 drop-shadow-[0_4px_10px_rgba(13,148,136,0.3)]"
                 />
-              </div>
-
-              <div className="flex flex-col leading-tight">
-                <span className="text-[17px] sm:text-[19px] font-black tracking-tight text-flyora-navy">
-                  FLYORA<span className="text-flyora-teal">GO</span>
-                </span>
-                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-flyora-gray-500 tracking-widest uppercase">
-                  Ship Smarter
-                </span>
               </div>
             </Link>
 
