@@ -444,6 +444,38 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </View>
             </View>
           </View>
+
+          {/* MNC Community Network Banner */}
+          <TouchableOpacity
+            style={styles.communityBannerCard}
+            onPress={() => onNavigateTab('community')}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={['#033D37', '#089A8D']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0.8 }}
+              style={styles.communityBannerGradient}
+            >
+              <View style={styles.communityBannerContent}>
+                <View style={styles.communityBadge}>
+                  <Ionicons name="sparkles" size={11} color="#2DD4BF" />
+                  <Text style={styles.communityBadgeText}>TRAVEL & PARCEL NETWORK</Text>
+                </View>
+                <Text style={styles.communityBannerTitle}>Flyorago Community Hub</Text>
+                <Text style={styles.communityBannerSub}>
+                  Connect directly with verified travelers on Ahmedabad-Mumbai, Surat, Vadodara routes. Share trips & parcel needs.
+                </Text>
+                <View style={styles.communityCtaRow}>
+                  <Text style={styles.communityCtaText}>Join Route & City Groups</Text>
+                  <Ionicons name="arrow-forward-circle" size={16} color="#2DD4BF" />
+                </View>
+              </View>
+              <View style={styles.communityBannerIconWrap}>
+                <Ionicons name="people" size={48} color="rgba(255, 255, 255, 0.22)" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
         {/* Section 2: Active Traveler Journey Overview (Only Traveler Trips - Clean Background without duplicate overlap) */}
@@ -881,6 +913,69 @@ const styles = StyleSheet.create({
   actionsGrid: {
     flexDirection: 'row',
     gap: scale(10),
+  },
+  communityBannerCard: {
+    borderRadius: scale(18),
+    overflow: 'hidden',
+    marginTop: verticalScale(12),
+    ...Shadows.card,
+  },
+  communityBannerGradient: {
+    padding: scale(14),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  communityBannerContent: {
+    flex: 1,
+    paddingRight: scale(8),
+  },
+  communityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(4),
+    backgroundColor: 'rgba(45, 212, 191, 0.2)',
+    paddingHorizontal: scale(8),
+    paddingVertical: verticalScale(2),
+    borderRadius: BorderRadius.full,
+    alignSelf: 'flex-start',
+    marginBottom: verticalScale(4),
+  },
+  communityBadgeText: {
+    fontSize: fontScale(9),
+    fontWeight: '900',
+    color: '#2DD4BF',
+    letterSpacing: 0.5,
+  },
+  communityBannerTitle: {
+    fontSize: fontScale(15),
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginBottom: verticalScale(3),
+  },
+  communityBannerSub: {
+    fontSize: fontScale(11),
+    color: '#CCFBF1',
+    lineHeight: fontScale(15),
+    marginBottom: verticalScale(8),
+  },
+  communityCtaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(5),
+  },
+  communityCtaText: {
+    fontSize: fontScale(12),
+    fontWeight: '800',
+    color: '#2DD4BF',
+  },
+  communityBannerIconWrap: {
+    width: scale(54),
+    height: scale(54),
+    borderRadius: scale(27),
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionCard: {
     flex: 1,

@@ -25,6 +25,7 @@ import { ChatScreen } from '../screens/Chat/ChatScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { NotificationsScreen } from '../screens/Notifications/NotificationsScreen';
 import { TrustScoreScreen } from '../screens/Trust/TrustScoreScreen';
+import { CommunityScreen } from '../screens/Community/CommunityScreen';
 import { WelcomeModal } from '../components/WelcomeModal';
 import { Storage } from '../services/storage';
 import { GlobalNotificationSync } from '../services/notificationSync';
@@ -33,7 +34,7 @@ import { getSafeHeaderPaddingTop, getSafeBottomPadding } from '../constants/resp
 const STORAGE_FIRST_LAUNCH_SHOWN_KEY = 'flyora_has_seen_welcome_modal';
 
 type MainTabKey = 'dashboard' | 'trips' | 'wallet' | 'shipments' | 'profile';
-type SubScreenKey = 'chat' | 'kyc' | 'notifications' | 'trust' | null;
+type SubScreenKey = 'chat' | 'kyc' | 'notifications' | 'trust' | 'community' | null;
 
 export default function AppEntry() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -176,6 +177,7 @@ export default function AppEntry() {
   const handleOpenKyc = () => setActiveSubScreen('kyc');
   const handleOpenNotifications = () => setActiveSubScreen('notifications');
   const handleOpenTrust = () => setActiveSubScreen('trust');
+  const handleOpenCommunity = () => setActiveSubScreen('community');
   const handleCloseSubScreen = () => {
     setActiveSubScreen(null);
     setActiveChatTarget(null);
@@ -232,6 +234,22 @@ export default function AppEntry() {
               onUnreadCountChange={(count) => setUnreadNotifs(count)}
             />
           );
+        case 'community':
+          return (
+            <View style={{ flex: 1 }}>
+              <CommunityScreen
+                onOpenChatWithUser={(userId, userName) => handleOpenChat({ userId, userName })}
+                onNavigateToTrips={() => {
+                  handleCloseSubScreen();
+                  setMainTab('trips');
+                }}
+                onNavigateToShipments={() => {
+                  handleCloseSubScreen();
+                  setMainTab('shipments');
+                }}
+              />
+            </View>
+          );
       }
     }
 
@@ -245,6 +263,7 @@ export default function AppEntry() {
               else if (tab === 'kyc') handleOpenKyc();
               else if (tab === 'notifications') handleOpenNotifications();
               else if (tab === 'trust') handleOpenTrust();
+              else if (tab === 'community') handleOpenCommunity();
               else if (tab === 'trips' || tab === 'shipments' || tab === 'wallet' || tab === 'profile') {
                 setMainTab(tab as MainTabKey);
               }
@@ -291,8 +310,8 @@ export default function AppEntry() {
         onClose={handleCloseWelcomeModal}
       />
 
-      {/* World-Class 5-Tab Navigation Bar with Elevated Center Wallet Button (Hidden on active SubScreen e.g. Chat, KYC, Notifications) */}
-      {!activeSubScreen && (
+      {/* Bottom Navigation Bar with Elevated Center Wallet Button (Hidden on active SubScreen e.g. Chat, KYC, Notifications, but visible or accessible) */}
+      {(!activeSubScreen || activeSubScreen === 'community') && (
         <View style={[styles.bottomNavWrapper, { paddingBottom: getSafeBottomPadding(insets.bottom, 10) }]}>
         <View style={styles.bottomNavContainer}>
           {/* 1. Left Tab 1: Home */}
@@ -456,6 +475,36 @@ export default function AppEntry() {
               ]}
             >
               Profile
+            </Text>
+          </TouchableOpacity>
+
+          {/* 6. Right Tab 3: Community */}
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => {
+              handleOpenCommunity();
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.iconBox,
+                activeSubScreen === 'community' && styles.iconBoxActive,
+              ]}
+            >
+              <Ionicons
+                name={activeSubScreen === 'community' ? 'people' : 'people-outline'}
+                size={22}
+                color={activeSubScreen === 'community' ? '#089A8D' : '#64748B'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.navLabel,
+                activeSubScreen === 'community' && styles.navLabelActive,
+              ]}
+            >
+              Community
             </Text>
           </TouchableOpacity>
         </View>
