@@ -148,19 +148,19 @@ const MobileAppShowcase: React.FC = () => {
           <div className="lg:col-span-5 flex justify-center order-2 lg:order-1 relative">
             
             {/* Ambient Device Backdrop Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[600px] bg-gradient-to-tr from-flyora-teal/15 via-sky-300/10 to-teal-500/10 rounded-[50px] blur-2xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[310px] h-[610px] bg-gradient-to-tr from-flyora-teal/15 via-sky-400/10 to-indigo-500/10 rounded-[44px] blur-2xl pointer-events-none" />
 
-            {/* Apple iPhone 16 Pro Natural Titanium / Silver Light Sleek Frame */}
-            <div className="relative w-full max-w-[300px] sm:max-w-[315px] rounded-[48px] p-2.5 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 shadow-[0_25px_60px_rgba(10,22,40,0.12)] border-[2px] border-slate-300/90 ring-1 ring-black/5">
+            {/* Modern Slim Black Smartphone Frame (Ultra-thin 1.5px Black Bezel) */}
+            <div className="relative w-full max-w-[290px] sm:max-w-[310px] rounded-[42px] p-1.5 bg-black shadow-[0_20px_50px_rgba(10,22,40,0.18)] border border-slate-800">
               
               {/* Dynamic Island Pill Notch */}
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-slate-900 rounded-full z-30 flex items-center justify-between px-2.5">
-                <div className="w-2 h-2 rounded-full bg-slate-950" />
-                <div className="w-2 h-2 rounded-full bg-emerald-500/80" />
+              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-20 h-3.5 bg-black rounded-full z-30 flex items-center justify-between px-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />
               </div>
 
-              {/* Active Mobile Screenshot Display */}
-              <div className="relative rounded-[40px] overflow-hidden bg-slate-900 aspect-[9/19.5] shadow-inner border border-slate-200/40">
+              {/* Active Mobile Screenshot Display (Edge-to-Edge with Slim Rounded Radius) */}
+              <div className="relative rounded-[36px] overflow-hidden bg-slate-950 aspect-[9/19.5]">
                 <img
                   key={current.image}
                   src={current.image}
@@ -173,7 +173,7 @@ const MobileAppShowcase: React.FC = () => {
               </div>
 
               {/* Bottom Home Indicator Bar */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-400/50 rounded-full z-30" />
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/30 rounded-full z-30" />
             </div>
 
           </div>
