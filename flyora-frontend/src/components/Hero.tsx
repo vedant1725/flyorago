@@ -93,9 +93,9 @@ const Hero: React.FC = () => {
         <div className="lg:hidden absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-flyora-teal/10 blur-[60px] pointer-events-none" />
         <div className="lg:hidden absolute bottom-1/4 left-0 -ml-16 w-56 h-56 rounded-full bg-flyora-blue/5 blur-[50px] pointer-events-none" />
 
-        <div className="container-flyora relative z-20">
+        <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-8 lg:px-12 relative z-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-14 items-center">
-            <div className="max-w-lg w-full mx-auto lg:mx-0 flex flex-col items-center text-center lg:items-start lg:text-left z-30">
+            <div className="max-w-xl w-full mx-auto lg:mx-0 flex flex-col items-center text-center lg:items-start lg:text-left z-30">
               {/* Top Badge */}
               <div className="inline-flex items-center gap-2.5 bg-white/80 backdrop-blur-xl border border-flyora-gray-200/60 lg:border-flyora-teal/25 rounded-full p-1.5 pr-4 lg:pl-3 lg:py-2 mb-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] lg:shadow-sm w-max">
                 <div className="lg:hidden w-7 h-7 rounded-full bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-inner">

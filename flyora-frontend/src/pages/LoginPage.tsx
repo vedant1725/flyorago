@@ -490,16 +490,21 @@ const LoginPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-transparent" />
 
           <div className="relative z-10 w-full h-full flex flex-col justify-between">
-            <Link to="/" className="flex items-center gap-2.5 group w-fit">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal group-hover:shadow-[0_8px_25px_rgba(13,148,136,0.5)] transition-all duration-300">
-                  <Plane size={20} className="text-white transform -rotate-45 group-hover:rotate-0 transition-transform duration-300" />
-                </div>
-                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-flyora-blue rounded-full border-2 border-flyora-navy" />
+            <Link to="/" className="flex items-center gap-3 group w-fit">
+              <div className="relative flex items-center justify-center p-0.5">
+                <div className="absolute inset-0 rounded-full bg-flyora-teal/40 blur-md group-hover:bg-flyora-teal/70 transition-all duration-300" />
+                <img
+                  src="/images/flyorago-header-icon.png"
+                  alt="Flyorago Logo"
+                  className="relative w-12 h-12 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_15px_rgba(13,148,136,0.5)]"
+                />
               </div>
               <div className="flex flex-col leading-none">
                 <span className="text-2xl font-black tracking-tight text-white transition-colors duration-300">
-                  fly<span className="text-flyora-teal">orago</span>
+                  FLYORA<span className="text-flyora-teal-bright">GO</span>
+                </span>
+                <span className="text-[9px] font-extrabold text-white/60 tracking-widest uppercase mt-0.5">
+                  Ship Smarter
                 </span>
               </div>
             </Link>
@@ -507,50 +512,64 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* ── Right side — Form ── */}
-        <div className="w-full lg:w-[40%] flex flex-col items-center lg:justify-center p-0 lg:p-10 xl:p-12 relative bg-gray-50 lg:bg-white overflow-y-auto">
+        <div className="w-full lg:w-[45%] xl:w-[40%] flex flex-col items-center p-0 lg:px-12 lg:py-10 relative bg-gray-50 lg:bg-white overflow-y-auto min-h-screen">
 
           {/* Mobile Image Header */}
-          <div className="lg:hidden w-full relative overflow-hidden" style={{ height: '28vh', minHeight: '180px' }}>
+          <div className="lg:hidden w-full relative overflow-hidden" style={{ height: '24vh', minHeight: '170px' }}>
             <img src="/images/login-page.webp" alt="Flyorago login" width={1280} height={853} decoding="async" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-x-0 top-0 flex justify-between items-center px-5 pt-6 z-10">
-              <Link to="/" className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-x-0 top-0 flex justify-between items-center px-5 pt-5 z-10">
+              <Link to="/" className="w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
                 <ArrowLeft size={18} className="text-flyora-navy" />
               </Link>
+              <a href="#" className="px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-xs font-bold text-flyora-navy shadow-sm">
+                Need help?
+              </a>
             </div>
           </div>
 
-          {/* Desktop Top Nav */}
-          <Link
-            to="/"
-            className="hidden lg:flex absolute top-8 left-8 items-center gap-2 text-sm font-bold text-gray-500 hover:text-flyora-navy transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to home
-          </Link>
-          <div className="hidden lg:block absolute top-8 right-8">
-            <a href="#" className="text-sm font-bold text-flyora-teal hover:text-flyora-teal-dark transition-colors">Need help?</a>
+          {/* Desktop Top Header Bar (Fixed / In-Flow at Top with Safe Margin) */}
+          <div className="hidden lg:flex w-full items-center justify-between pt-2 pb-6 px-2 mb-2">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-flyora-navy transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100"
+            >
+              <ArrowLeft size={15} />
+              Back to home
+            </Link>
+            <a
+              href="#"
+              className="text-xs font-bold text-slate-500 hover:text-flyora-teal transition-colors px-3 py-1.5 rounded-lg hover:bg-teal-50"
+            >
+              Need help?
+            </a>
           </div>
 
           {/* Form Container */}
-          <div className="w-full max-w-[420px] px-6 py-8 lg:p-0 bg-white lg:bg-transparent relative z-20 lg:shadow-none flex-1 lg:flex-none flex flex-col justify-center">
+          <div className="w-full max-w-[420px] px-6 py-8 lg:p-0 bg-white lg:bg-transparent relative z-20 lg:shadow-none flex-1 flex flex-col justify-center my-auto">
 
             {/* Logo + Title */}
-            <div className="text-center mb-8 hidden lg:flex flex-col items-center">
-              <Link to="/" className="flex items-center gap-2.5 group mb-6 w-fit">
-                <div className="relative">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
-                    <Plane size={18} className="text-white transform -rotate-45" />
-                  </div>
-                  <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-flyora-blue rounded-full border-2 border-white" />
+            <div className="text-center mb-7 flex flex-col items-center">
+              <Link to="/" className="flex items-center gap-3 group mb-5 w-fit">
+                <div className="relative flex items-center justify-center p-0.5">
+                  <div className="absolute inset-0 rounded-full bg-flyora-teal/30 blur-md group-hover:bg-flyora-teal/60 transition-all duration-300" />
+                  <img
+                    src="/images/flyorago-header-icon.png"
+                    alt="Flyorago Logo"
+                    className="relative w-11 h-11 object-contain transform group-hover:scale-105 transition-all duration-300 drop-shadow-[0_4px_12px_rgba(13,148,136,0.35)]"
+                  />
                 </div>
                 <div className="flex flex-col leading-none text-left">
                   <span className="text-2xl font-black tracking-tight text-flyora-navy">
-                    fly<span className="text-flyora-teal">orago</span>
+                    FLYORA<span className="text-flyora-teal">GO</span>
+                  </span>
+                  <span className="text-[8.5px] font-extrabold text-flyora-teal-dark tracking-widest uppercase mt-0.5">
+                    Ship Smarter
                   </span>
                 </div>
               </Link>
-              <h2 className="text-[28px] font-bold text-flyora-navy mb-2">Welcome Back!</h2>
-              <p className="text-flyora-gray-500 text-sm font-medium">Log in to continue your smart shipping journey.</p>
+              <h2 className="text-2xl sm:text-[28px] font-extrabold text-flyora-navy mb-1.5 tracking-tight">Welcome Back!</h2>
+              <p className="text-slate-500 text-xs sm:text-sm font-medium">Log in to continue your smart shipping journey.</p>
             </div>
 
             {/* Form */}

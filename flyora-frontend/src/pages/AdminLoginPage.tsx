@@ -92,12 +92,22 @@ const AdminLoginPage: React.FC = () => {
       {/* ─── 2. Top-Left Logo ─── */}
       <div className="absolute top-6 sm:top-8 lg:top-10 left-6 sm:left-10 lg:left-14 z-20">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#00D2B4] via-[#0D9488] to-[#0284C7] flex items-center justify-center shadow-lg shadow-teal-500/25 border border-white/60 group-hover:scale-105 transition-transform duration-300">
-            <Plane size={24} className="text-white transform -rotate-45" />
+          <div className="relative flex items-center justify-center p-0.5">
+            <div className="absolute inset-0 rounded-full bg-flyora-teal/30 blur-md group-hover:bg-flyora-teal/60 transition-all duration-300" />
+            <img
+              src="/images/flyorago-header-icon.png"
+              alt="Flyorago Logo"
+              className="relative w-12 h-12 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_15px_rgba(13,148,136,0.4)]"
+            />
           </div>
-          <span className="text-2xl sm:text-3xl font-black text-[#0A2540] tracking-tight">
-            fly<span className="text-[#0D9488]">orago</span>
-          </span>
+          <div className="flex flex-col leading-none text-left">
+            <span className="text-2xl sm:text-3xl font-black text-[#0A2540] tracking-tight">
+              FLYORA<span className="text-[#0D9488]">GO</span>
+            </span>
+            <span className="text-[9px] font-extrabold text-[#0D9488] tracking-widest uppercase mt-0.5">
+              Admin Portal
+            </span>
+          </div>
         </Link>
       </div>
 

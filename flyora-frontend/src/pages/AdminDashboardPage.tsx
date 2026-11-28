@@ -16,10 +16,10 @@ const api = async (path: string, opts: RequestInit = {}) => {
   const token = localStorage.getItem('flyora_access_token');
   const r = await fetch(`${BASE}${path}`, {
     cache: 'no-store',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...(opts.headers || {}) 
+      ...(opts.headers || {})
     },
     ...opts,
   });
@@ -92,15 +92,15 @@ interface Booking {
 }
 interface Shipment { id: number; booking: { id: number; trip: Trip | null; sender: { first_name: string; last_name: string }; traveler: { first_name: string; last_name: string } } | null; status: string; created_at: string; }
 interface KycUser { userId: string; fullName: string; email: string; phone: string; documentType: string; frontImage: string; backImage: string; passportImage: string; selfieImage: string; status: string; rejectionReason?: string; submittedAt: string; }
-interface AppUser { 
-  id: string; 
-  fullName: string; 
-  email: string; 
-  phone: string; 
-  role: string; 
-  isActive: boolean; 
-  isStaff: boolean; 
-  dateJoined: string; 
+interface AppUser {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: string;
+  isActive: boolean;
+  isStaff: boolean;
+  dateJoined: string;
   kycStatus: string;
   deletionRequested?: boolean;
   deletionRequestedAt?: string | null;
@@ -244,8 +244,8 @@ const BlockUserModal: React.FC<{
             <div className="relative">
               <div className={`absolute inset-0 rounded-full animate-ping opacity-30 ${isBlocking ? 'bg-red-300' : 'bg-emerald-300'}`} style={{ animationDuration: '2s' }} />
               <div className={`relative w-20 h-20 rounded-full flex items-center justify-center shadow-lg ${isBlocking
-                  ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-200'
-                  : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200'
+                ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-200'
+                : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200'
                 }`}>
                 {isBlocking ? <UserX size={36} className="text-white" strokeWidth={1.5} /> : <UserCheck size={36} className="text-white" strokeWidth={1.5} />}
               </div>
@@ -287,8 +287,8 @@ const BlockUserModal: React.FC<{
         {/* Warning message */}
         <div className="px-8 py-4">
           <div className={`flex gap-3 p-3.5 rounded-xl border text-sm ${isBlocking
-              ? 'bg-amber-50 border-amber-200 text-amber-800'
-              : 'bg-blue-50 border-blue-200 text-blue-800'
+            ? 'bg-amber-50 border-amber-200 text-amber-800'
+            : 'bg-blue-50 border-blue-200 text-blue-800'
             }`}>
             <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
             <p className="leading-relaxed text-xs font-medium">
@@ -312,8 +312,8 @@ const BlockUserModal: React.FC<{
             onClick={handleConfirm}
             disabled={isLoading}
             className={`flex-1 py-3.5 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed shadow-lg ${isBlocking
-                ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-200 hover:shadow-red-300'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-200 hover:shadow-emerald-300'
+              ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-200 hover:shadow-red-300'
+              : 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-200 hover:shadow-emerald-300'
               }`}
           >
             {isBlocking ? <UserX size={16} /> : <UserCheck size={16} />}
@@ -570,263 +570,261 @@ const UserDetailsModal: React.FC<{
   onRejectDeletion,
   onViewKyc
 }) => {
-  return (
-    <div 
-      className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-[300] flex items-center justify-center p-4 sm:p-6 transition-all duration-300"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white/95 rounded-[28px] border border-slate-200/80 shadow-2xl shadow-slate-900/20 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden backdrop-blur-xl animate-in zoom-in-95 fade-in duration-300"
-        onClick={e => e.stopPropagation()}
+    return (
+      <div
+        className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-[300] flex items-center justify-center p-4 sm:p-6 transition-all duration-300"
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0 bg-white/50 backdrop-blur-md gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-100 relative overflow-hidden flex-shrink-0">
-              <span className="relative z-10">{(user.fullName?.[0] || 'U').toUpperCase()}</span>
-              <div className="absolute inset-0 bg-white/10 opacity-40 mix-blend-overlay" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="font-black text-slate-900 text-base leading-none">{user.fullName || 'User Profile'}</h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-                  ID: #{user.id}
-                </span>
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                  user.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                  {user.isActive ? 'Active' : 'Blocked'}
-                </span>
-                {user.isStaff && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-900">
-                    STAFF
+        <div
+          className="bg-white/95 rounded-[28px] border border-slate-200/80 shadow-2xl shadow-slate-900/20 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden backdrop-blur-xl animate-in zoom-in-95 fade-in duration-300"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0 bg-white/50 backdrop-blur-md gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-100 relative overflow-hidden flex-shrink-0">
+                <span className="relative z-10">{(user.fullName?.[0] || 'U').toUpperCase()}</span>
+                <div className="absolute inset-0 bg-white/10 opacity-40 mix-blend-overlay" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-black text-slate-900 text-base leading-none">{user.fullName || 'User Profile'}</h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                    ID: #{user.id}
                   </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3 mt-2 flex-wrap text-xs font-semibold text-slate-400">
-                <span className="flex items-center gap-1.5"><Mail size={12} className="text-teal-650" /> {user.email}</span>
-                <span className="w-1 h-1 rounded-full bg-slate-355" />
-                <span className="flex items-center gap-1.5"><Phone size={12} className="text-teal-650" /> {user.phone || 'No phone'}</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${user.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    {user.isActive ? 'Active' : 'Blocked'}
+                  </span>
+                  {user.isStaff && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-900">
+                      STAFF
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 mt-2 flex-wrap text-xs font-semibold text-slate-400">
+                  <span className="flex items-center gap-1.5"><Mail size={12} className="text-teal-650" /> {user.email}</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-355" />
+                  <span className="flex items-center gap-1.5"><Phone size={12} className="text-teal-650" /> {user.phone || 'No phone'}</span>
+                </div>
               </div>
             </div>
+            <button onClick={onClose} className="p-2.5 hover:bg-slate-100/80 rounded-2xl transition-all self-end sm:self-auto text-slate-450 hover:text-slate-800">
+              <X size={16} />
+            </button>
           </div>
-          <button onClick={onClose} className="p-2.5 hover:bg-slate-100/80 rounded-2xl transition-all self-end sm:self-auto text-slate-450 hover:text-slate-800">
-            <X size={16} />
-          </button>
-        </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {user.deletionRequested && (
-            <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-200 text-left space-y-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="flex items-center gap-1.5 text-xs font-black text-rose-900 uppercase tracking-wide">
-                  <AlertTriangle size={15} className="text-rose-600" /> Account Deletion Requested by User
-                </span>
-                {user.deletionRequestedAt && (
-                  <span className="text-[11px] text-rose-600 font-mono font-bold">
-                    Requested on: {new Date(user.deletionRequestedAt).toLocaleDateString()}
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {user.deletionRequested && (
+              <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-200 text-left space-y-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="flex items-center gap-1.5 text-xs font-black text-rose-900 uppercase tracking-wide">
+                    <AlertTriangle size={15} className="text-rose-600" /> Account Deletion Requested by User
                   </span>
-                )}
-              </div>
-              <p className="text-xs text-rose-800 font-medium">
-                User Reason: <span className="font-bold">{user.deletionReason ? `"${user.deletionReason}"` : 'No specific reason provided.'}</span>
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => onDelete(user)}
-                  className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-xs transition"
-                >
-                  Approve & Delete Account
-                </button>
-                {onRejectDeletion && (
+                  {user.deletionRequestedAt && (
+                    <span className="text-[11px] text-rose-600 font-mono font-bold">
+                      Requested on: {new Date(user.deletionRequestedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-rose-800 font-medium">
+                  User Reason: <span className="font-bold">{user.deletionReason ? `"${user.deletionReason}"` : 'No specific reason provided.'}</span>
+                </p>
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => onRejectDeletion(user)}
-                    className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-slate-700 hover:bg-slate-100 font-extrabold text-xs transition"
+                    onClick={() => onDelete(user)}
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-xs transition"
                   >
-                    Dismiss Request
+                    Approve & Delete Account
                   </button>
-                )}
-              </div>
-            </div>
-          )}
-          {/* 4 Metric Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Status</p>
-              <p className={`text-xs font-black capitalize mt-1.5 flex items-center gap-1.5 ${user.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                <span className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                {user.isActive ? 'Active Account' : 'Restricted'}
-              </p>
-            </div>
-
-            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Role</p>
-              <p className="text-xs font-black text-slate-800 capitalize mt-1.5 flex items-center gap-1.5">
-                <User size={13} className="text-indigo-500" />
-                {user.role || 'General'}
-              </p>
-            </div>
-
-            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trust Score</p>
-              <p className="text-xs font-black text-amber-600 mt-1.5 flex items-center gap-1.5">
-                <Star size={13} className="fill-amber-400 text-amber-500" />
-                {trustScore} / 1000
-              </p>
-            </div>
-
-            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</p>
-              <div className="mt-1">
-                <StatusBadge status={user.kycStatus || 'NOT_SUBMITTED'} />
-              </div>
-            </div>
-          </div>
-
-          {/* Details 2-Column Split */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Account & Contact Dossier */}
-            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-4 space-y-3">
-              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                <User size={13} className="text-teal-600" /> Contact & Account Dossier
-              </h4>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
-                  <span className="text-slate-400 font-bold">Email:</span>
-                  <span className="font-mono font-extrabold text-slate-800 select-all truncate max-w-[200px]" title={user.email}>{user.email}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
-                  <span className="text-slate-400 font-bold">Phone:</span>
-                  <span className="font-bold text-slate-800">{user.phone || 'Not provided'}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
-                  <span className="text-slate-400 font-bold">Joined Platform:</span>
-                  <span className="font-bold text-slate-700">
-                    {user.dateJoined ? new Date(user.dateJoined).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 py-1">
-                  <span className="text-slate-400 font-bold">Access Level:</span>
-                  <span className="font-bold text-slate-800">{user.isStaff ? 'Administrator & Staff' : 'Standard Platform User'}</span>
+                  {onRejectDeletion && (
+                    <button
+                      type="button"
+                      onClick={() => onRejectDeletion(user)}
+                      className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-slate-700 hover:bg-slate-100 font-extrabold text-xs transition"
+                    >
+                      Dismiss Request
+                    </button>
+                  )}
                 </div>
               </div>
-            </div>
-
-            {/* KYC & Identity Status */}
-            <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <ShieldCheck size={13} className="text-teal-600" /> Identity & Verification
-                </h4>
-                {kycRecord && (
-                  <button
-                    onClick={() => onViewKyc(kycRecord)}
-                    className="text-[11px] font-black text-teal-600 hover:text-teal-700 underline"
-                  >
-                    View Documents
-                  </button>
-                )}
+            )}
+            {/* 4 Metric Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Status</p>
+                <p className={`text-xs font-black capitalize mt-1.5 flex items-center gap-1.5 ${user.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  <span className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  {user.isActive ? 'Active Account' : 'Restricted'}
+                </p>
               </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
-                  <span className="text-slate-400 font-bold">Verification Status:</span>
+
+              <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Role</p>
+                <p className="text-xs font-black text-slate-800 capitalize mt-1.5 flex items-center gap-1.5">
+                  <User size={13} className="text-indigo-500" />
+                  {user.role || 'General'}
+                </p>
+              </div>
+
+              <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trust Score</p>
+                <p className="text-xs font-black text-amber-600 mt-1.5 flex items-center gap-1.5">
+                  <Star size={13} className="fill-amber-400 text-amber-500" />
+                  {trustScore} / 1000
+                </p>
+              </div>
+
+              <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-3.5 flex flex-col justify-between hover-float transition-all duration-300">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KYC Status</p>
+                <div className="mt-1">
                   <StatusBadge status={user.kycStatus || 'NOT_SUBMITTED'} />
                 </div>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                  {user.kycStatus === 'APPROVED' 
-                    ? '✅ User identity document has been fully reviewed and verified by admin.' 
-                    : user.kycStatus === 'PENDING' 
-                    ? '⏳ Documents submitted and awaiting administrative review in KYC queue.' 
-                    : user.kycStatus === 'REJECTED' 
-                    ? '❌ Identity verification was declined. User may resubmit.' 
-                    : '⚠️ User has not submitted identity documents yet.'}
-                </p>
-                {kycRecord?.documentType && (
-                  <div className="pt-1 text-[11px] font-bold text-slate-700 border-t border-slate-200/40">
-                    Submitted Doc: <span className="capitalize">{kycRecord.documentType.replace(/_/g, ' ')}</span>
+              </div>
+            </div>
+
+            {/* Details 2-Column Split */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Account & Contact Dossier */}
+              <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-4 space-y-3">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <User size={13} className="text-teal-600" /> Contact & Account Dossier
+                </h4>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                    <span className="text-slate-400 font-bold">Email:</span>
+                    <span className="font-mono font-extrabold text-slate-800 select-all truncate max-w-[200px]" title={user.email}>{user.email}</span>
                   </div>
-                )}
+                  <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                    <span className="text-slate-400 font-bold">Phone:</span>
+                    <span className="font-bold text-slate-800">{user.phone || 'Not provided'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                    <span className="text-slate-400 font-bold">Joined Platform:</span>
+                    <span className="font-bold text-slate-700">
+                      {user.dateJoined ? new Date(user.dateJoined).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 py-1">
+                    <span className="text-slate-400 font-bold">Access Level:</span>
+                    <span className="font-bold text-slate-800">{user.isStaff ? 'Administrator & Staff' : 'Standard Platform User'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* KYC & Identity Status */}
+              <div className="bg-slate-50/60 border border-slate-200/50 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ShieldCheck size={13} className="text-teal-600" /> Identity & Verification
+                  </h4>
+                  {kycRecord && (
+                    <button
+                      onClick={() => onViewKyc(kycRecord)}
+                      className="text-[11px] font-black text-teal-600 hover:text-teal-700 underline"
+                    >
+                      View Documents
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between gap-2 py-1 border-b border-slate-200/40">
+                    <span className="text-slate-400 font-bold">Verification Status:</span>
+                    <StatusBadge status={user.kycStatus || 'NOT_SUBMITTED'} />
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    {user.kycStatus === 'APPROVED'
+                      ? '✅ User identity document has been fully reviewed and verified by admin.'
+                      : user.kycStatus === 'PENDING'
+                        ? '⏳ Documents submitted and awaiting administrative review in KYC queue.'
+                        : user.kycStatus === 'REJECTED'
+                          ? '❌ Identity verification was declined. User may resubmit.'
+                          : '⚠️ User has not submitted identity documents yet.'}
+                  </p>
+                  {kycRecord?.documentType && (
+                    <div className="pt-1 text-[11px] font-bold text-slate-700 border-t border-slate-200/40">
+                      Submitted Doc: <span className="capitalize">{kycRecord.documentType.replace(/_/g, ' ')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Activity Footprint Section */}
+            <div className="space-y-2.5">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Activity & Footprint</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
+                    <Plane size={18} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Traveler Trips</span>
+                    <span className="text-sm font-black text-slate-900">{tripsCount} Trips Listed</span>
+                  </div>
+                </div>
+
+                <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                    <Package size={18} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Parcel Bookings</span>
+                    <span className="text-sm font-black text-slate-900">{bookingsCount} Orders</span>
+                  </div>
+                </div>
+
+                <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                    <Shield size={18} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Safety Tier</span>
+                    <span className="text-sm font-black text-slate-900">
+                      {trustScore >= 750 ? 'Tier 1 (High Trust)' : trustScore >= 600 ? 'Tier 2 (Good)' : 'Tier 3 (Standard)'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Activity Footprint Section */}
-          <div className="space-y-2.5">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Activity & Footprint</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
-                  <Plane size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Traveler Trips</span>
-                  <span className="text-sm font-black text-slate-900">{tripsCount} Trips Listed</span>
-                </div>
-              </div>
-
-              <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                  <Package size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Parcel Bookings</span>
-                  <span className="text-sm font-black text-slate-900">{bookingsCount} Orders</span>
-                </div>
-              </div>
-
-              <div className="glass-panel border border-slate-200/80 rounded-2xl p-3.5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                  <Shield size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Safety Tier</span>
-                  <span className="text-sm font-black text-slate-900">
-                    {trustScore >= 750 ? 'Tier 1 (High Trust)' : trustScore >= 600 ? 'Tier 2 (Good)' : 'Tier 3 (Standard)'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Actions (Matching KycModal layout) */}
-        <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 flex-shrink-0 bg-slate-50/50 backdrop-blur-md rounded-b-3xl">
-          <button
-            onClick={() => onToggleActive(user)}
-            className={`flex-1 text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] ${
-              user.isActive 
-                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200' 
-                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-            }`}
-          >
-            {user.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
-            {user.isActive ? 'Block / Restrict This Account' : 'Reactivate / Unblock Account'}
-          </button>
-
-          {!user.isStaff && (
+          {/* Footer Actions (Matching KycModal layout) */}
+          <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 flex-shrink-0 bg-slate-50/50 backdrop-blur-md rounded-b-3xl">
             <button
-              onClick={() => onDelete(user)}
-              className="bg-white hover:bg-rose-50/50 text-rose-600 border border-rose-200 hover:border-rose-300 text-xs font-black py-3 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]"
+              onClick={() => onToggleActive(user)}
+              className={`flex-1 text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] ${user.isActive
+                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                }`}
             >
-              <Trash2 size={15} /> Delete Account
+              {user.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
+              {user.isActive ? 'Block / Restrict This Account' : 'Reactivate / Unblock Account'}
             </button>
-          )}
 
-          <button
-            onClick={onClose}
-            className="py-3 px-6 rounded-xl border border-slate-200 text-xs font-black text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            Close
-          </button>
+            {!user.isStaff && (
+              <button
+                onClick={() => onDelete(user)}
+                className="bg-white hover:bg-rose-50/50 text-rose-600 border border-rose-200 hover:border-rose-300 text-xs font-black py-3 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]"
+              >
+                <Trash2 size={15} /> Delete Account
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="py-3 px-6 rounded-xl border border-slate-200 text-xs font-black text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 // ─── Sender Request Inspection Modal ─────────────────────────────────────────
 const BookingModal: React.FC<{
@@ -919,8 +917,8 @@ const BookingModal: React.FC<{
                           key={idx}
                           onClick={() => setSelectedImgIndex(idx)}
                           className={`relative w-16 h-16 rounded-xl border-2 overflow-hidden transition-all flex-shrink-0 ${selectedImgIndex === idx
-                              ? 'border-emerald-500 ring-2 ring-emerald-400/30 scale-105 shadow-sm'
-                              : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300'
+                            ? 'border-emerald-500 ring-2 ring-emerald-400/30 scale-105 shadow-sm'
+                            : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300'
                             }`}
                         >
                           <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
@@ -1134,27 +1132,27 @@ const TripModal: React.FC<{
 // ─── Status Badge (Light Theme) ─────────────────────────────────────────
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const map: Record<string, { bg: string; color: string; border: string }> = {
-    Active:             { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    Completed:          { bg: '#CCFBF1', color: '#0F766E', border: '#5EEAD4' },
-    PAYMENT_RELEASED:   { bg: '#CCFBF1', color: '#0F766E', border: '#5EEAD4' },
-    Cancelled:          { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
-    CANCELLED:          { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
-    Pending:            { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
-    REQUEST_SENT:       { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
-    Confirmed:          { bg: '#DBEAFE', color: '#1E40AF', border: '#93C5FD' },
-    IN_TRANSIT:         { bg: '#EDE9FE', color: '#5B21B6', border: '#C4B5FD' },
+    Active: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
+    Completed: { bg: '#CCFBF1', color: '#0F766E', border: '#5EEAD4' },
+    PAYMENT_RELEASED: { bg: '#CCFBF1', color: '#0F766E', border: '#5EEAD4' },
+    Cancelled: { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
+    CANCELLED: { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
+    Pending: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    REQUEST_SENT: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    Confirmed: { bg: '#DBEAFE', color: '#1E40AF', border: '#93C5FD' },
+    IN_TRANSIT: { bg: '#EDE9FE', color: '#5B21B6', border: '#C4B5FD' },
     'Package Received': { bg: '#CCFBF1', color: '#0F766E', border: '#5EEAD4' },
-    'Customs Clearance':{ bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    'Customs Clearance': { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
     'Out for Delivery': { bg: '#DBEAFE', color: '#1E40AF', border: '#93C5FD' },
-    DELIVERED:          { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    APPROVED:           { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    REJECTED:           { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
-    PENDING:            { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
-    NOT_SUBMITTED:      { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
-    RESOLVED:           { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    'Under Review':     { bg: '#EDE9FE', color: '#5B21B6', border: '#C4B5FD' },
-    Open:               { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
-    Closed:             { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
+    DELIVERED: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
+    APPROVED: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
+    REJECTED: { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
+    PENDING: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    NOT_SUBMITTED: { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
+    RESOLVED: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
+    'Under Review': { bg: '#EDE9FE', color: '#5B21B6', border: '#C4B5FD' },
+    Open: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    Closed: { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
   };
   const cfg = map[status] || { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' };
   return (
@@ -1308,24 +1306,24 @@ const AdvancedChart: React.FC<AdvancedChartProps> = ({ period, onPeriodChange, p
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-black flex items-center gap-2" style={{color:'#0A1628'}}>
+          <h2 className="text-sm font-black flex items-center gap-2" style={{ color: '#0A1628' }}>
             <span>Platform Activity ({period === 'day' ? 'Last 24 Hours' : period === 'month' ? 'Last 30 Days' : 'Last 7 Days'})</span>
-            {loading && <span className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{borderColor:'#0D9488',borderTopColor:'transparent'}} />}
+            {loading && <span className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#0D9488', borderTopColor: 'transparent' }} />}
           </h2>
-          <p className="text-[11px] mt-0.5 font-medium" style={{color:'#64748B'}}>
+          <p className="text-[11px] mt-0.5 font-medium" style={{ color: '#64748B' }}>
             Real-time analytics comparison across trips, bookings, shipments, and users
           </p>
         </div>
 
-        <div className="flex items-center gap-1 p-1 rounded-xl self-start sm:self-auto" style={{background:'#F1F5F9',border:'1px solid #E2E8F7'}}>
+        <div className="flex items-center gap-1 p-1 rounded-xl self-start sm:self-auto" style={{ background: '#F1F5F9', border: '1px solid #E2E8F7' }}>
           {(['day', 'week', 'month'] as const).map(p => (
             <button
               key={p}
               onClick={() => onPeriodChange(p)}
               className="text-xs font-black px-3 py-1.5 rounded-lg transition-all capitalize"
               style={period === p
-                ? {background:'#fff',color:'#0F766E',border:'1px solid #E2E8F7',boxShadow:'0 2px 8px rgba(10,22,40,0.06)'}
-                : {color:'#64748B'}
+                ? { background: '#fff', color: '#0F766E', border: '1px solid #E2E8F7', boxShadow: '0 2px 8px rgba(10,22,40,0.06)' }
+                : { color: '#64748B' }
               }
             >
               {p === 'day' ? 'Day' : p === 'week' ? 'Week' : 'Month'}
@@ -1334,7 +1332,7 @@ const AdvancedChart: React.FC<AdvancedChartProps> = ({ period, onPeriodChange, p
         </div>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap py-2.5" style={{borderTop:'1px solid #F1F5F9',borderBottom:'1px solid #F1F5F9'}}>
+      <div className="flex items-center gap-2 flex-wrap py-2.5" style={{ borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
         {seriesConfig.map(s => {
           const isActive = activeSeries[s.key];
           const totalVal = points.reduce((acc, curr) => acc + (curr[s.key] || 0), 0);
@@ -1344,16 +1342,16 @@ const AdvancedChart: React.FC<AdvancedChartProps> = ({ period, onPeriodChange, p
               onClick={() => setActiveSeries(prev => ({ ...prev, [s.key]: !prev[s.key] }))}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
               style={isActive
-                ? {background:'#fff',border:`1px solid ${s.color}60`,color:'#0A1628',boxShadow:'0 2px 8px rgba(10,22,40,0.05)'}
-                : {background:'transparent',border:'1px dashed #E2E8F7',color:'#94A3B8',opacity:0.7}
+                ? { background: '#fff', border: `1px solid ${s.color}60`, color: '#0A1628', boxShadow: '0 2px 8px rgba(10,22,40,0.05)' }
+                : { background: 'transparent', border: '1px dashed #E2E8F7', color: '#94A3B8', opacity: 0.7 }
               }
             >
               <div
                 className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: s.color, transform: isActive ? 'scale(1)' : 'scale(0.7)', transition:'transform .2s' }}
+                style={{ backgroundColor: s.color, transform: isActive ? 'scale(1)' : 'scale(0.7)', transition: 'transform .2s' }}
               />
               <span>{s.label}</span>
-              <span className="font-mono text-[10px] px-1.5 rounded" style={{background:'#F1F5F9',color:'#64748B'}}>
+              <span className="font-mono text-[10px] px-1.5 rounded" style={{ background: '#F1F5F9', color: '#64748B' }}>
                 {totalVal}
               </span>
             </button>
@@ -1740,20 +1738,6 @@ const DisputeModal: React.FC<{
   );
 };
 
-interface EmailLogItem {
-  id: number;
-  recipient: string;
-  template: string;
-  subject: string;
-  event: string;
-  provider: string;
-  status: string;
-  messageId?: string;
-  createdAt?: string;
-  sentAt?: string;
-  error?: string;
-}
-
 // ─── Settings / Admin Credentials Tab ───────────────────────────────────────
 const SettingsTab: React.FC<{
   toast: (variant: any, message: string) => void;
@@ -1769,27 +1753,6 @@ const SettingsTab: React.FC<{
   const [platformFee, setPlatformFee] = useState<string>('10.00');
   const [loadingFee, setLoadingFee] = useState(false);
   const [savingFee, setSavingFee] = useState(false);
-
-  // Database Migrations Management
-  const [runningMigration, setRunningMigration] = useState(false);
-  const [migrationOutput, setMigrationOutput] = useState<string | null>(null);
-
-  const handleRunMigrations = async () => {
-    setRunningMigration(true);
-    setMigrationOutput(null);
-    try {
-      const res = await api('/api/admin/run-migrations/', { method: 'POST' });
-      const msg = res?.message || 'Database migrations executed successfully!';
-      setMigrationOutput(msg);
-      toast('success', `✅ ${msg}`);
-    } catch (err: any) {
-      const errMsg = err?.message || 'Migration execution failed';
-      setMigrationOutput(`Error: ${errMsg}`);
-      toast('error', errMsg);
-    } finally {
-      setRunningMigration(false);
-    }
-  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -2087,48 +2050,6 @@ const SettingsTab: React.FC<{
           </div>
         </form>
 
-        {/* Database Migrations & Maintenance Controls */}
-        <div className="space-y-5 pt-6 border-t border-slate-100">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <RefreshCcw size={16} className="text-indigo-600" /> Database Schema & Backend Sync
-            </h3>
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-              Live AWS Database
-            </span>
-          </div>
-
-          <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="text-xs font-black text-slate-900 flex items-center gap-2">
-                Apply Pending Django Migrations
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium max-w-xl">
-                Executes <code>python manage.py migrate</code> safely via backend API. Automatically syncs all new tables, relationships, and model alterations in PostgreSQL without restarting the server.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleRunMigrations}
-              disabled={runningMigration}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 shrink-0"
-            >
-              <RefreshCw size={14} className={runningMigration ? 'animate-spin' : ''} />
-              {runningMigration ? 'Running Migrations...' : 'Execute Migrations'}
-            </button>
-          </div>
-
-          {migrationOutput && (
-            <div className={`p-4 rounded-xl text-xs font-mono border ${
-              migrationOutput.startsWith('Error') 
-                ? 'bg-rose-50 text-rose-800 border-rose-200' 
-                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-            }`}>
-              {migrationOutput}
-            </div>
-          )}
-        </div>
-
       </div>
 
     </div>
@@ -2204,8 +2125,8 @@ const ContactMessageModal: React.FC<{
                   key={st}
                   onClick={() => onStatusChange(msg.id, st)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${msg.status === st
-                      ? 'bg-teal-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-teal-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                 >
                   {st}
@@ -2239,7 +2160,7 @@ const ContactMessageModal: React.FC<{
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  type Tab = 'overview' | 'users' | 'trips' | 'bookings' | 'shipments' | 'kyc' | 'disputes' | 'trust' | 'transactions' | 'ai_knowledge' | 'contact_messages' | 'email_activity' | 'settings';
+  type Tab = 'overview' | 'users' | 'trips' | 'bookings' | 'shipments' | 'kyc' | 'disputes' | 'trust' | 'transactions' | 'ai_knowledge' | 'contact_messages' | 'settings';
   const [tab, setTab] = useState<Tab>('overview');
   const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
@@ -2257,10 +2178,6 @@ const AdminDashboardPage: React.FC = () => {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [selectedContactMsg, setSelectedContactMsg] = useState<ContactMessage | null>(null);
   const [msgStatusFilter, setMsgStatusFilter] = useState<'ALL' | 'New' | 'Read' | 'Replied' | 'Resolved'>('ALL');
-  const [emailLogs, setEmailLogs] = useState<EmailLogItem[]>([]);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailFilter, setEmailFilter] = useState<string>('ALL');
-  const [emailSearch, setEmailSearch] = useState<string>('');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirm, setConfirm] = useState<(ConfirmOptions & { onCancel: () => void }) | null>(null);
   const [statusModal, setStatusModal] = useState<{ title: string; current: string; options: string[]; onSelect: (s: string) => void } | null>(null);
@@ -2350,12 +2267,6 @@ const AdminDashboardPage: React.FC = () => {
       api('/api/ai/admin/faqs/')
         .then(res => setAiFaqs(res.data || []))
         .catch(err => console.warn('AI faqs fetch warning:', err));
-    } else if (tab === 'email_activity') {
-      setEmailLoading(true);
-      api('/api/admin/email-activity/')
-        .then(res => setEmailLogs(res.data || []))
-        .catch(err => console.warn('Email activity fetch warning:', err))
-        .finally(() => setEmailLoading(false));
     }
   }, [tab]);
 
@@ -2382,7 +2293,7 @@ const AdminDashboardPage: React.FC = () => {
     try {
       const stored = sessionStorage.getItem(`flyora_admin_chart_${p}`);
       if (stored) setChartPoints(JSON.parse(stored));
-    } catch (e) {}
+    } catch (e) { }
 
     setChartLoading(true);
     try {
@@ -2444,7 +2355,7 @@ const AdminDashboardPage: React.FC = () => {
     try {
       const storedStats = sessionStorage.getItem('flyora_admin_stats');
       if (storedStats && !stats) setStats(JSON.parse(storedStats));
-    } catch (e) {}
+    } catch (e) { }
 
     if (!dataCacheRef.current && !stats) {
       setLoading(true);
@@ -2669,7 +2580,7 @@ const AdminDashboardPage: React.FC = () => {
   const totalKycPages = Math.max(1, Math.ceil(filteredKycUsers.length / kycPageSize));
   const paginatedKycUsers = filteredKycUsers.slice((kycPage - 1) * kycPageSize, kycPage * kycPageSize);
   const fKyc = paginatedKycUsers;
-  
+
   // Advanced Top-MNC User Management Filtering & Sorting
   const uSearch = (userSearchInput || S).toLowerCase().trim();
   const filteredUsers = users.filter(u => {
@@ -2752,7 +2663,6 @@ const AdminDashboardPage: React.FC = () => {
     { label: 'Trust & Risk', icon: ShieldCheck, tab: 'trust' },
     { label: 'Contact Messages', icon: MessageSquare, tab: 'contact_messages', badge: contactMessages.filter(m => m.status === 'New').length },
     { label: 'AI Knowledge & FAQ', icon: Zap, tab: 'ai_knowledge' },
-    { label: 'Email Activity Logs', icon: Mail, tab: 'email_activity' },
     { label: 'Platform Settings', icon: Settings, tab: 'settings' },
   ];
 
@@ -2804,357 +2714,311 @@ const AdminDashboardPage: React.FC = () => {
         .duration-200{animation-duration:.2s}
         .duration-300{animation-duration:.3s}
 
-        /* ── SCROLLBARS ── */
-        ::-webkit-scrollbar{width:4px;height:4px}
-        ::-webkit-scrollbar-track{background:#f1f5f9}
-        ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:6px}
-        ::-webkit-scrollbar-thumb:hover{background:#0D9488}
-
-        /* ── SIDEBAR (FlyoraGo Teal Brand) ── */
-        .admin-sidebar {
-          background: linear-gradient(180deg, #0F766E 0%, #0D9488 50%, #09544E 100%);
-          border-right: none;
-          box-shadow: 6px 0 30px rgba(13,148,136,0.25);
-          position: relative;
+        /* ── ADMIN MNC MODERN LIGHT THEME (Google / Meta Style) ── */
+        :root {
+          --admin-bg: #F8FAFC;
+          --admin-surface: #FFFFFF;
+          --admin-surface-2: #F1F5F9;
+          --admin-border: rgba(226, 232, 240, 0.8);
+          --admin-border-active: #0D9488;
+          --admin-navy: #0F172A;
+          --admin-teal: #0D9488;
+          --admin-teal-light: #14B8A6;
+          --admin-blue: #2563EB;
+          --admin-text-primary: #0F172A;
+          --admin-text-secondary: #475569;
+          --admin-text-muted: #94A3B8;
         }
-        .admin-sidebar::after {
-          content: '';
-          position: absolute;
-          top: 0; right: 0; bottom: 0;
-          width: 1px;
-          background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2) 30%, rgba(255,255,255,0.1) 70%, transparent);
+
+        /* ── KEYFRAMES ── */
+        @keyframes fade-in{from{opacity:0}to{opacity:1}}
+        @keyframes zoom-in-95{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+        @keyframes slide-in-from-bottom-3{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes slide-in-from-top-4{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes slide-in-from-left{from{transform:translateX(-10px);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes admin-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+        @keyframes admin-glow-pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+        @keyframes admin-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+        @keyframes admin-counter-up{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes admin-card-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes admin-pulse-ring{0%{transform:scale(0.95);opacity:0.8}100%{transform:scale(1.35);opacity:0}}
+        @keyframes admin-progress-fill{from{width:0}to{width:var(--prog-w,100%)}}
+
+        .animate-in{animation-duration:.25s;animation-fill-mode:both;animation-timing-function:cubic-bezier(0.16,1,0.3,1)}
+        .fade-in{animation-name:fade-in}
+        .zoom-in-95{animation-name:zoom-in-95}
+        .slide-in-from-bottom-3{animation-name:slide-in-from-bottom-3}
+        .slide-in-from-top-4{animation-name:slide-in-from-top-4}
+        .duration-200{animation-duration:.2s}
+        .duration-300{animation-duration:.3s}
+
+        /* ── SCROLLBARS ── */
+        ::-webkit-scrollbar{width:5px;height:5px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:999px}
+        ::-webkit-scrollbar-thumb:hover{background:#94A3B8}
+
+        /* ── SIDEBAR (Modern Fluid Brand) ── */
+        .admin-sidebar {
+          background: linear-gradient(180deg, #094F49 0%, #0D6B63 45%, #0B534D 100%);
+          border-right: none;
+          box-shadow: 4px 0 32px rgba(15, 23, 42, 0.08);
+          position: relative;
         }
         .admin-sidebar-logo {
-          background: rgba(0,0,0,0.1);
-          border-bottom: 1px solid rgba(255,255,255,0.12);
+          background: #FFFFFF;
+          border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+          position: relative;
         }
         .admin-nav-item {
-          border-radius: 12px;
-          transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+          border-radius: 14px;
+          transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
           position: relative;
-          overflow: hidden;
+          font-weight: 600;
         }
         .admin-nav-item:hover {
-          background: rgba(255,255,255,0.14);
-          transform: translateX(3px);
+          background: rgba(255,255,255,0.12);
+          transform: translateX(2px);
         }
         .admin-nav-item.active {
           background: #FFFFFF;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0,0,0,0.06);
         }
         .admin-nav-item.active::before {
           content: '';
           position: absolute;
-          left: 0; top: 15%; bottom: 15%;
-          width: 4px;
-          background: #10B981;
+          left: 0; top: 20%; bottom: 20%;
+          width: 3.5px;
+          background: #0D9488;
           border-radius: 0 4px 4px 0;
         }
-        .admin-nav-section-label {
-          font-size: 9px;
-          font-weight: 800;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.55);
-          padding: 0 12px 8px;
-        }
 
-        /* ── HEADER ── */
+        /* ── HEADER (Google / Meta Glass Topbar) ── */
         .admin-header {
-          background: rgba(255,255,255,0.92);
+          background: rgba(255, 255, 255, 0.88);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
-          border-bottom: 1px solid #E2E8F7;
-          box-shadow: 0 1px 0 rgba(10,22,40,0.04), 0 4px 20px rgba(10,22,40,0.06);
+          border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .admin-search-box {
-          background: #F0F4FF;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 12px;
+          background: #F1F5F9;
+          border: 1px solid transparent;
+          border-radius: 14px;
           transition: all 0.2s ease;
-          color: #0A1628;
+          color: #0F172A;
+          font-weight: 500;
+        }
+        .admin-search-box:hover {
+          background: #E2E8F0;
         }
         .admin-search-box:focus {
-          background: #fff;
+          background: #FFFFFF;
           border-color: #0D9488;
-          box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
           outline: none;
         }
-        .admin-search-box::placeholder{color:#94A3B8}
+        .admin-search-box::placeholder{color:#64748B}
 
-        /* ── MAIN CONTENT ── */
+        /* ── MAIN CONTENT CANVAS ── */
         .admin-main {
-          background: #F0F4FF;
+          background: #F8FAFC;
         }
         .admin-section-bg {
           background:
-            radial-gradient(ellipse at 0% 0%, rgba(13,148,136,0.06) 0%, transparent 50%),
-            radial-gradient(ellipse at 100% 100%, rgba(27,79,216,0.06) 0%, transparent 50%),
-            #F0F4FF;
+            radial-gradient(circle at 10% 10%, rgba(13,148,136,0.04) 0%, transparent 40%),
+            radial-gradient(circle at 90% 20%, rgba(37,99,235,0.04) 0%, transparent 45%),
+            radial-gradient(circle at 50% 90%, rgba(16,185,129,0.03) 0%, transparent 50%),
+            #F8FAFC;
         }
 
-        /* ── STAT CARDS ── */
+        /* ── TOP MNC GLASS PANELS & CARDS ── */
+        .glass-panel {
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.02);
+        }
+        
         .admin-stat-card {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 18px;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 20px;
           cursor: pointer;
           position: relative;
           overflow: hidden;
-          transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-          animation: admin-card-enter 0.4s cubic-bezier(0.16,1,0.3,1) both;
-        }
-        .admin-stat-card::before {
-          content: '';
-          position: absolute;
-          top: 0; left: -60%;
-          width: 40%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
-          animation: admin-shine 3s ease-in-out infinite;
-          pointer-events: none;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.02);
+          transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .admin-stat-card:hover {
-          border-color: #0D9488;
-          transform: translateY(-5px) scale(1.01);
-          box-shadow: 0 20px 50px rgba(10,22,40,0.12), 0 0 0 1px rgba(13,148,136,0.2);
-        }
-        .admin-stat-card:hover .admin-stat-icon {
-          transform: scale(1.12) rotate(8deg);
+          transform: translateY(-3px);
+          box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+          border-color: rgba(203, 213, 225, 0.9);
         }
         .admin-stat-icon {
-          transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+          transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
           border-radius: 14px;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
+          width: 42px;
+          height: 42px;
           flex-shrink: 0;
         }
-        .admin-stat-number {
-          animation: admin-counter-up 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
-          color: #0A1628;
-          font-weight: 900;
-          font-size: 1.75rem;
-          line-height: 1;
-          letter-spacing: -0.04em;
+        .admin-stat-card:hover .admin-stat-icon {
+          transform: scale(1.08);
         }
 
-        /* ── CHART CARD ── */
+        /* ── CHART CARDS ── */
         .admin-chart-card {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 20px;
-          box-shadow: 0 4px 24px rgba(10,22,40,0.06);
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 24px;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 8px 20px -6px rgba(15, 23, 42, 0.03);
+          transition: all 0.2s ease;
         }
 
-        /* ── DATA TABLES ── */
+        /* ── DATA TABLES (Crisp borderless MNC style) ── */
         .admin-table-card {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          border-radius: 20px;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 22px;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
-          box-shadow: 0 4px 24px rgba(10,22,40,0.06);
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.02);
           width: 100%;
           max-width: 100%;
         }
         .admin-table-head {
-          background: linear-gradient(135deg, #F8FAFF 0%, #F0F4FF 100%);
-          border-bottom: 1.5px solid #E2E8F7;
+          background: #F8FAFC;
+          border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
         .admin-table-head th {
-          color: #64748B;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
+          color: #475569;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
-          padding: 12px 14px;
+          padding: 14px 16px;
           white-space: nowrap;
         }
         .admin-table-row {
           border-bottom: 1px solid #F1F5F9;
-          transition: all 0.18s ease;
+          transition: background 0.15s ease;
         }
         .admin-table-row:last-child{border-bottom:none}
         .admin-table-row:hover {
-          background: linear-gradient(135deg, rgba(13,148,136,0.04) 0%, rgba(27,79,216,0.03) 100%);
+          background: #F8FAFC;
         }
         .admin-table-row td {
-          padding: 12px 14px;
-          color: #475569;
+          padding: 13px 16px;
+          color: #334155;
           font-size: 13px;
           vertical-align: middle;
         }
-        .admin-table-row td:first-child{color:#0A1628;font-weight:700}
+        .admin-table-row td:first-child{color:#0F172A;font-weight:700}
 
-        /* ── BUTTONS ── */
+        /* ── MNC BUTTONS ── */
         .admin-btn-primary {
-          background: linear-gradient(135deg, #0D9488 0%, #1B4FD8 100%);
+          background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
           color: white;
           border: none;
           border-radius: 12px;
-          font-weight: 700;
+          font-weight: 600;
           font-size: 12px;
           padding: 8px 18px;
-          transition: all 0.25s ease;
-          box-shadow: 0 4px 14px rgba(13,148,136,0.3);
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(13,148,136,0.25);
           cursor: pointer;
-          position: relative;
-          overflow: hidden;
-        }
-        .admin-btn-primary::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(rgba(255,255,255,0.15), transparent);
-          pointer-events: none;
         }
         .admin-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 28px rgba(13,148,136,0.4);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(13,148,136,0.35);
           filter: brightness(1.05);
         }
         .admin-btn-ghost {
-          background: #F0F4FF;
-          border: 1.5px solid #E2E8F7;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.9);
           color: #475569;
-          border-radius: 10px;
+          border-radius: 12px;
           font-weight: 600;
           font-size: 12px;
-          padding: 7px 14px;
-          transition: all 0.2s ease;
+          padding: 8px 16px;
+          transition: all 0.18s ease;
           cursor: pointer;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .admin-btn-ghost:hover {
-          background: #fff;
-          border-color: #0D9488;
-          color: #0A1628;
-          box-shadow: 0 2px 8px rgba(13,148,136,0.12);
+          background: #F8FAFC;
+          border-color: #CBD5E1;
+          color: #0F172A;
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
         }
         .admin-btn-danger {
           background: #FEF2F2;
-          border: 1.5px solid #FECACA;
+          border: 1px solid #FECACA;
           color: #DC2626;
-          border-radius: 10px;
+          border-radius: 12px;
           padding: 7px 14px;
           font-size: 12px;
           font-weight: 600;
-          transition: all 0.2s ease;
+          transition: all 0.18s ease;
           cursor: pointer;
         }
         .admin-btn-danger:hover {
           background: #FEE2E2;
           border-color: #F87171;
-          box-shadow: 0 2px 8px rgba(220,38,38,0.15);
         }
 
         /* ── BADGES ── */
-        .admin-badge-active{background:#D1FAE5;color:#065F46;border:1.5px solid #A7F3D0;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px;letter-spacing:.04em}
-        .admin-badge-pending{background:#FEF3C7;color:#92400E;border:1.5px solid #FDE68A;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-error{background:#FEE2E2;color:#991B1B;border:1.5px solid #FECACA;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-info{background:#DBEAFE;color:#1E40AF;border:1.5px solid #BFDBFE;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-neutral{background:#F1F5F9;color:#475569;border:1.5px solid #E2E8F0;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-teal{background:#CCFBF1;color:#0F766E;border:1.5px solid #99F6E4;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-        .admin-badge-violet{background:#EDE9FE;color:#5B21B6;border:1.5px solid #DDD6FE;border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px}
-
-        /* ── SECTION HEADERS ── */
-        .admin-section-title {
-          font-size: 1.2rem;
-          font-weight: 900;
-          color: #0A1628;
-          letter-spacing: -0.03em;
-          line-height: 1.2;
-        }
-        .admin-section-sub{font-size:13px;color:#64748B;font-weight:500;margin-top:3px}
+        .admin-badge-active{background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-pending{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-error{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-info{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-neutral{background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-teal{background:#F0FDFA;color:#0F766E;border:1px solid #99F6E4;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
+        .admin-badge-violet{background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE;border-radius:999px;font-size:11px;font-weight:700;padding:2px 10px}
 
         /* ── FILTER CHIPS ── */
         .admin-chip {
-          background: #fff;
-          border: 1.5px solid #E2E8F7;
-          color: #64748B;
-          border-radius: 10px;
-          font-size: 11px;
-          font-weight: 700;
+          background: #FFFFFF;
+          border: 1px solid rgba(226, 232, 240, 0.9);
+          color: #475569;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
           padding: 6px 14px;
           cursor: pointer;
           transition: all 0.18s ease;
           white-space: nowrap;
         }
-        .admin-chip:hover{background:#F0F4FF;border-color:#0D9488;color:#0A1628}
+        .admin-chip:hover{background:#F8FAFC;border-color:#CBD5E1;color:#0F172A}
         .admin-chip.active {
-          background: linear-gradient(135deg, #0D9488 0%, #1B4FD8 100%);
-          border-color: transparent;
-          color: #fff;
-          box-shadow: 0 4px 14px rgba(13,148,136,0.25);
+          background: #0D9488;
+          border-color: #0D9488;
+          color: #FFFFFF;
+          box-shadow: 0 2px 8px rgba(13,148,136,0.25);
         }
-
-        /* ── ACTIVITY ITEMS ── */
-        .admin-activity-item {
-          display:flex;align-items:flex-start;gap:12px;
-          padding:10px 0;
-          border-bottom:1px solid #F1F5F9;
-          transition:all .18s ease;
-        }
-        .admin-activity-item:last-child{border-bottom:none}
-        .admin-activity-item:hover{padding-left:6px}
-
-        /* ── OVERVIEW CARD ── */
-        .admin-overview-card {
-          background:#fff;
-          border:1.5px solid #E2E8F7;
-          border-radius:20px;
-          overflow:hidden;
-          box-shadow: 0 4px 24px rgba(10,22,40,0.06);
-        }
-
-        /* ── GRADIENT ICON BACKGROUNDS (stat cards) ── */
-        .grad-indigo{background:linear-gradient(135deg,#EEF2FF,#E0E7FF)}
-        .grad-sky{background:linear-gradient(135deg,#E0F2FE,#BAE6FD)}
-        .grad-emerald{background:linear-gradient(135deg,#D1FAE5,#A7F3D0)}
-        .grad-amber{background:linear-gradient(135deg,#FEF3C7,#FDE68A)}
-        .grad-rose{background:linear-gradient(135deg,#FEE2E2,#FECACA)}
-
-        /* ── DROPDOWN ── */
-        .dropdown{position:relative}
-        .dropdown-menu {
-          position:absolute;right:0;top:calc(100% + 8px);
-          background:#fff;
-          border:1.5px solid #E2E8F7;
-          border-radius:14px;
-          box-shadow:0 20px 60px rgba(10,22,40,0.12);
-          z-index:200;min-width:160px;padding:6px;overflow:hidden
-        }
-        .dropdown-item {
-          display:flex;align-items:center;gap:8px;width:100%;
-          padding:8px 12px;border-radius:10px;
-          font-size:13px;font-weight:600;
-          cursor:pointer;transition:background .15s;
-          color:#475569;
-        }
-        .dropdown-item:hover{background:#F0F4FF;color:#0A1628}
-        .dropdown-item.danger{color:#DC2626}
-        .dropdown-item.danger:hover{background:#FEF2F2}
 
         /* ── MOBILE BACKDROP ── */
         .admin-mobile-backdrop {
-          background:rgba(10,22,40,0.5);
-          backdrop-filter:blur(8px);
-          -webkit-backdrop-filter:blur(8px);
+          background: rgba(15, 23, 42, 0.4);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
 
         /* ── INPUT LIGHT ── */
         .admin-input {
-          background: #F8FAFF !important;
-          border: 1.5px solid #E2E8F7 !important;
-          color: #0A1628 !important;
+          background: #FFFFFF !important;
+          border: 1px solid rgba(226, 232, 240, 0.9) !important;
+          color: #0F172A !important;
           border-radius: 12px !important;
           transition: all 0.2s ease !important;
         }
         .admin-input:focus {
-          background: #fff !important;
+          background: #FFFFFF !important;
           border-color: #0D9488 !important;
-          box-shadow: 0 0 0 3px rgba(13,148,136,0.1) !important;
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.12) !important;
           outline: none !important;
         }
         .admin-input::placeholder{color:#94A3B8 !important}
@@ -3168,90 +3032,42 @@ const AdminDashboardPage: React.FC = () => {
         .admin-shimmer::after {
           content:'';
           position:absolute;top:0;left:0;right:0;bottom:0;
-          background:linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent);
+          background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);
           animation:admin-shimmer 1.5s infinite;
         }
 
         /* ── SECTION FADE IN ── */
         .admin-tab-content {
-          animation: slide-in-from-bottom-3 0.35s cubic-bezier(0.16,1,0.3,1) both;
-        }
-
-        /* ── DIVIDER ── */
-        .admin-divider{border-color:#E2E8F7}
-
-        /* ── METRIC CARD ── */
-        .admin-metric-card {
-          background:#fff;
-          border:1.5px solid #E2E8F7;
-          border-radius:18px;
-          padding:20px;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          transition:all 0.25s ease;
-          box-shadow: 0 2px 12px rgba(10,22,40,0.05);
-        }
-        .admin-metric-card:hover {
-          border-color:#0D9488;
-          transform:translateY(-2px);
-          box-shadow:0 12px 40px rgba(13,148,136,0.1);
+          animation: slide-in-from-bottom-3 0.25s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         /* ── HOVER LIFT ── */
-        .admin-hover-lift {
-          transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        .hover-float {
+          transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .admin-hover-lift:hover {
+        .hover-float:hover {
           transform: translateY(-3px);
-          box-shadow: 0 10px 30px rgba(10,22,40,0.1);
-        }
-
-        /* ── DYNAMIC SYSTEM STYLES ── */
-        .glass-panel {
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(226, 232, 247, 0.7);
-        }
-        
-        .text-gradient-primary {
-          background: linear-gradient(135deg, #0A1628 30%, #0F766E 100%);
-          -webkit-bg-clip: text;
-          -webkit-text-fill-color: transparent;
         }
 
         .glow-teal:hover {
-          box-shadow: 0 12px 30px -10px rgba(13, 148, 136, 0.25), 0 0 0 1px rgba(13, 148, 136, 0.2) !important;
+          box-shadow: 0 10px 24px -4px rgba(13, 148, 136, 0.15) !important;
           border-color: rgba(13, 148, 136, 0.4) !important;
         }
-        
         .glow-blue:hover {
-          box-shadow: 0 12px 30px -10px rgba(27, 79, 216, 0.25), 0 0 0 1px rgba(27, 79, 216, 0.2) !important;
-          border-color: rgba(27, 79, 216, 0.4) !important;
+          box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.15) !important;
+          border-color: rgba(37, 99, 235, 0.4) !important;
         }
-        
         .glow-indigo:hover {
-          box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+          box-shadow: 0 10px 24px -4px rgba(99, 102, 241, 0.15) !important;
           border-color: rgba(99, 102, 241, 0.4) !important;
         }
-        
         .glow-amber:hover {
-          box-shadow: 0 12px 30px -10px rgba(245, 158, 11, 0.25), 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+          box-shadow: 0 10px 24px -4px rgba(245, 158, 11, 0.15) !important;
           border-color: rgba(245, 158, 11, 0.4) !important;
         }
-        
         .glow-rose:hover {
-          box-shadow: 0 12px 30px -10px rgba(244, 63, 94, 0.25), 0 0 0 1px rgba(244, 63, 94, 0.2) !important;
-          border-color: rgba(244, 63, 94, 0.4) !important;
-        }
-        
-        /* ── FLOATING ANIMATION ── */
-        .hover-float {
-          transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .hover-float:hover {
-          transform: translateY(-5px) scale(1.015);
+          box-shadow: 0 10px 24px -4px rgba(239, 68, 68, 0.15) !important;
+          border-color: rgba(239, 68, 68, 0.4) !important;
         }
 
         /* ── DIAGNOSTIC BAR ── */
@@ -3295,33 +3111,35 @@ const AdminDashboardPage: React.FC = () => {
       {/* ── Sidebar ── */}
       <aside
         className={`admin-sidebar fixed lg:static inset-y-0 left-0 z-50 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${sideOpen
-            ? 'w-[260px] translate-x-0 lg:w-[260px] lg:opacity-100'
-            : 'w-0 -translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none'
+          ? 'w-[260px] translate-x-0 lg:w-[260px] lg:opacity-100'
+          : 'w-0 -translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none'
           }`}
       >
         <div className="w-[260px] h-full flex flex-col justify-between shrink-0">
           <div className="flex flex-col min-h-0">
             {/* Logo */}
-            <div className="admin-sidebar-logo flex items-center justify-between px-5 py-5">
-              <div className="flex items-center gap-3">
-                <div className="relative w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-white shadow-md">
-                  <Plane size={16} className="text-[#0D9488] -rotate-45" />
+            <div className="admin-sidebar-logo px-3.5 py-3 flex items-center justify-between">
+              <Link to="/admin" className="flex items-center group flex-1 min-w-0">
+                <div className="flex items-center justify-center w-full transition-transform duration-300 group-hover:scale-[1.01]">
+                  <img
+                    src="/images/flyorago_admin_logo.png"
+                    alt="Flyorago Logo"
+                    className="w-full h-auto max-h-[58px] object-contain"
+                  />
                 </div>
-                <div>
-                  <span className="text-[16px] font-black tracking-wider text-white">
-                    FLYORAGO
-                  </span>
-                  <div className="text-[9px] font-extrabold uppercase tracking-widest text-white/75">ADMIN PORTAL</div>
-                </div>
-              </div>
-              <button onClick={() => setSideOpen(false)} className="lg:hidden p-1.5 rounded-lg transition-colors text-white/70 hover:text-white">
-                <X size={16} />
+              </Link>
+              <button
+                onClick={() => setSideOpen(false)}
+                className="lg:hidden p-1.5 ml-1 rounded-lg transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                title="Close Sidebar"
+              >
+                <X size={17} />
               </button>
             </div>
 
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 max-h-[calc(100vh-180px)]">
-              <p className="text-[9px] font-black uppercase tracking-widest px-3 pb-2 text-white/70" style={{letterSpacing:'0.15em'}}>MANAGEMENT</p>
+              <p className="text-[9px] font-black uppercase tracking-widest px-3 pb-2 text-white/70" style={{ letterSpacing: '0.15em' }}>MANAGEMENT</p>
               {navItems.map((item, idx) => (
                 <button
                   key={item.tab}
@@ -3331,23 +3149,23 @@ const AdminDashboardPage: React.FC = () => {
                     if (window.innerWidth < 1024) setSideOpen(false);
                   }}
                   className={`admin-nav-item ${tab === item.tab ? 'active' : ''} w-full flex items-center justify-between px-3 py-2.5 whitespace-nowrap`}
-                  style={{animationDelay:`${idx*30}ms`}}
+                  style={{ animationDelay: `${idx * 30}ms` }}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon
                       size={16}
-                      style={{color: tab === item.tab ? '#0D9488' : 'rgba(255,255,255,0.85)', transition:'color .2s ease'}}
+                      style={{ color: tab === item.tab ? '#0D9488' : 'rgba(255,255,255,0.85)', transition: 'color .2s ease' }}
                     />
-                    <span className="text-[13px] font-bold" style={{color: tab === item.tab ? '#0F766E' : 'rgba(255,255,255,0.92)'}}>{item.label}</span>
+                    <span className="text-[13px] font-bold" style={{ color: tab === item.tab ? '#0F766E' : 'rgba(255,255,255,0.92)' }}>{item.label}</span>
                   </div>
                   {(item.badge ?? 0) > 0 && (
                     <span
                       className="text-[10px] font-black px-2 py-0.5 rounded-full"
                       style={tab === item.tab
-                        ? {background:'#0D9488',color:'#FFFFFF'}
+                        ? { background: '#0D9488', color: '#FFFFFF' }
                         : item.tab === 'kyc' && (item.badge ?? 0) > 0
-                        ? {background:'#FEF2F2',color:'#DC2626'}
-                        : {background:'rgba(255,255,255,0.2)',color:'#FFFFFF'}
+                          ? { background: '#FEF2F2', color: '#DC2626' }
+                          : { background: 'rgba(255,255,255,0.2)', color: '#FFFFFF' }
                       }
                     >
                       {item.badge}
@@ -3356,10 +3174,10 @@ const AdminDashboardPage: React.FC = () => {
                 </button>
               ))}
 
-              <div className="pt-3 mt-2" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
-                <p className="text-[9px] font-black uppercase tracking-widest px-3 pb-2 text-white/70" style={{letterSpacing:'0.15em'}}>SYSTEM</p>
+              <div className="pt-3 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+                <p className="text-[9px] font-black uppercase tracking-widest px-3 pb-2 text-white/70" style={{ letterSpacing: '0.15em' }}>SYSTEM</p>
                 <Link to="/" className="admin-nav-item flex items-center gap-3 px-3 py-2.5 w-full transition-all">
-                  <Globe size={16} style={{color:'rgba(255,255,255,0.85)'}} />
+                  <Globe size={16} style={{ color: 'rgba(255,255,255,0.85)' }} />
                   <span className="text-[13px] font-bold text-white/90">View Website</span>
                 </Link>
               </div>
@@ -3367,8 +3185,8 @@ const AdminDashboardPage: React.FC = () => {
           </div>
 
           {/* Bottom user + sign out */}
-          <div className="p-3" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1" style={{background:'rgba(0,0,0,0.12)'}}>
+          <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1" style={{ background: 'rgba(0,0,0,0.12)' }}>
               <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black bg-white text-[#0D9488] shadow-sm">A</div>
               <div className="min-w-0">
                 <p className="text-[12px] font-bold truncate text-white">System Admin</p>
@@ -3404,9 +3222,9 @@ const AdminDashboardPage: React.FC = () => {
             <button
               onClick={() => setSideOpen(prev => !prev)}
               className="p-2 rounded-xl transition-all flex items-center justify-center"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7',color:'#475569'}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='#fff';(e.currentTarget as HTMLButtonElement).style.color='#0A1628';(e.currentTarget as HTMLButtonElement).style.borderColor='#0D9488'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='#F0F4FF';(e.currentTarget as HTMLButtonElement).style.color='#475569';(e.currentTarget as HTMLButtonElement).style.borderColor='#E2E8F7'}}
+              style={{ background: '#F0F4FF', border: '1.5px solid #E2E8F7', color: '#475569' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; (e.currentTarget as HTMLButtonElement).style.color = '#0A1628'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#0D9488' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#F0F4FF'; (e.currentTarget as HTMLButtonElement).style.color = '#475569'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#E2E8F7' }}
               title="Toggle Sidebar"
             >
               <Menu size={17} />
@@ -3414,10 +3232,10 @@ const AdminDashboardPage: React.FC = () => {
 
             {!sideOpen && (
               <div className="hidden sm:flex items-center gap-2 mr-1 animate-in fade-in duration-200">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{background:'linear-gradient(135deg,#0D9488,#1B4FD8)'}}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#0D9488,#1B4FD8)' }}>
                   <Plane size={13} className="text-white -rotate-45" />
                 </div>
-                <span className="text-sm font-black tracking-wider" style={{color:'#0A1628'}}>
+                <span className="text-sm font-black tracking-wider" style={{ color: '#0A1628' }}>
                   FLYORAGO
                 </span>
               </div>
@@ -3425,7 +3243,7 @@ const AdminDashboardPage: React.FC = () => {
 
             {/* Search */}
             <div className="relative flex items-center">
-              <Search size={14} className="absolute left-3.5 pointer-events-none" style={{color:'#334155'}} />
+              <Search size={14} className="absolute left-3.5 pointer-events-none" style={{ color: '#334155' }} />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -3442,9 +3260,9 @@ const AdminDashboardPage: React.FC = () => {
               disabled={loading}
               title="Refresh data"
               className="p-2 rounded-xl transition-all"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7',color:'#475569'}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color='#0D9488';(e.currentTarget as HTMLButtonElement).style.borderColor='#0D9488'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color='#475569';(e.currentTarget as HTMLButtonElement).style.borderColor='#E2E8F7'}}
+              style={{ background: '#F0F4FF', border: '1.5px solid #E2E8F7', color: '#475569' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#0D9488'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#0D9488' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#475569'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#E2E8F7' }}
             >
               <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             </button>
@@ -3452,15 +3270,15 @@ const AdminDashboardPage: React.FC = () => {
             {/* Notifications */}
             <button
               className="relative p-2 rounded-xl transition-all"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7',color:'#475569'}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color='#0D9488';(e.currentTarget as HTMLButtonElement).style.borderColor='#0D9488'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color='#475569';(e.currentTarget as HTMLButtonElement).style.borderColor='#E2E8F7'}}
+              style={{ background: '#F0F4FF', border: '1.5px solid #E2E8F7', color: '#475569' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#0D9488'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#0D9488' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#475569'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#E2E8F7' }}
             >
               <Bell size={15} />
               {(stats?.pendingKyc ?? 0) > 0 && (
                 <span
                   className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                  style={{background:'#ef4444',boxShadow:'0 0 6px rgba(239,68,68,0.6)',animation:'admin-status-dot 2s ease infinite'}}
+                  style={{ background: '#ef4444', boxShadow: '0 0 6px rgba(239,68,68,0.6)', animation: 'admin-status-dot 2s ease infinite' }}
                 />
               )}
             </button>
@@ -3468,17 +3286,17 @@ const AdminDashboardPage: React.FC = () => {
             {/* Admin Profile */}
             <div
               className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl ml-1"
-              style={{background:'#F0F4FF',border:'1.5px solid #E2E8F7'}}
+              style={{ background: '#F0F4FF', border: '1.5px solid #E2E8F7' }}
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                style={{background:'linear-gradient(135deg,#0D9488,#1B4FD8)',color:'white',boxShadow:'0 2px 8px rgba(13,148,136,0.25)'}}
+                style={{ background: 'linear-gradient(135deg,#0D9488,#1B4FD8)', color: 'white', boxShadow: '0 2px 8px rgba(13,148,136,0.25)' }}
               >
                 A
               </div>
               <div className="hidden md:block">
-                <p className="text-[12px] font-bold leading-none" style={{color:'#0A1628'}}>System Admin</p>
-                <p className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{color:'#64748B'}}>Super Admin</p>
+                <p className="text-[12px] font-bold leading-none" style={{ color: '#0A1628' }}>System Admin</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{ color: '#64748B' }}>Super Admin</p>
               </div>
             </div>
           </div>
@@ -3521,51 +3339,48 @@ const AdminDashboardPage: React.FC = () => {
               </div>
 
               {/* ── Stat Cards ── */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 {statCards.map((c, i) => (
                   <div
                     key={i}
-                    className={`glass-panel hover-float ${c.glow} p-5 rounded-[22px] cursor-pointer flex flex-col justify-between h-[148px] relative overflow-hidden shadow-xs transition-all duration-300 animate-in fade-in`}
-                    style={{ animationDelay: `${i * 60}ms`, border: '1px solid rgba(226, 232, 247, 0.8)' }}
+                    className="admin-stat-card p-5 cursor-pointer flex flex-col justify-between h-[156px] relative select-none"
                     onClick={() => { if (i === 4) setTab('kyc'); else if (i === 0) setTab('users'); else if (i === 1) setTab('trips'); else if (i === 2) setTab('bookings'); else setTab('shipments'); }}
                   >
-                    {/* Background Soft Glow */}
-                    <div className="absolute top-0 right-0 w-24 h-24 rounded-full filter blur-2xl opacity-10 pointer-events-none" style={{ background: c.color }} />
-
                     {/* Top row */}
-                    <div className="flex items-center justify-between mb-1.5 z-10">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{c.label}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{c.label}</span>
                       <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300"
-                        style={{ background: `${c.color}12`, border: `1px solid ${c.color}20` }}
+                        className="admin-stat-icon"
+                        style={{ background: `${c.color}10`, color: c.color }}
                       >
-                        <c.icon size={15} style={{ color: c.color }} />
+                        <c.icon size={18} />
                       </div>
                     </div>
 
-                    {/* Middle row: Number and Sparkline */}
-                    <div className="flex items-end justify-between gap-2 z-10">
-                      <div>
-                        <div className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-                          {loading ? (
-                            <span className="inline-block w-16 h-7 rounded-lg admin-shimmer" />
-                          ) : (
-                            c.val.toLocaleString()
-                          )}
-                        </div>
+                    {/* Value + Sparkline */}
+                    <div className="flex items-baseline justify-between gap-2 my-auto">
+                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">
+                        {loading ? (
+                          <span className="inline-block w-16 h-8 rounded-lg admin-shimmer" />
+                        ) : (
+                          c.val.toLocaleString()
+                        )}
                       </div>
-                      <div className="pb-1">
+                      <div className="opacity-90">
                         <Sparkline data={c.spark} color={c.color} />
                       </div>
                     </div>
 
-                    {/* Bottom row: Trend Sub-text */}
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-2 z-10">
-                      <div className="flex items-center gap-1">
-                        <TrendingUp size={10} style={{ color: c.up ? '#10B981' : '#EF4444', transform: c.up ? 'none' : 'rotate(180deg)' }} />
-                        <span className="text-[10px] font-black" style={{ color: c.up ? '#10B981' : '#EF4444' }}>{c.sub}</span>
+                    {/* Bottom row: Trend indicator */}
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100/80">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${c.up ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                          }`}>
+                          <TrendingUp size={11} className={c.up ? '' : 'rotate-180'} />
+                          {c.sub}
+                        </span>
                       </div>
-                      <span className="text-[9px] font-bold text-slate-400">7d trend</span>
+                      <span className="text-[10px] font-medium text-slate-400">vs last week</span>
                     </div>
                   </div>
                 ))}
@@ -3584,17 +3399,17 @@ const AdminDashboardPage: React.FC = () => {
 
                 {/* Donut */}
                 <div className="admin-chart-card p-5">
-                  <h2 className="text-sm font-bold mb-4" style={{color:'#0A1628'}}>Users by Role</h2>
+                  <h2 className="text-sm font-bold mb-4" style={{ color: '#0A1628' }}>Users by Role</h2>
                   <div className="flex items-center gap-4">
                     <Donut segs={donutSegs} total={donutTotal} />
                     <div className="space-y-2.5 flex-1">
                       {donutSegs.map((s, i) => (
                         <div key={i} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.color, boxShadow:`0 0 6px ${s.color}40` }} />
-                            <span className="text-[11px] font-medium" style={{color:'#475569'}}>{s.label}</span>
+                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.color, boxShadow: `0 0 6px ${s.color}40` }} />
+                            <span className="text-[11px] font-medium" style={{ color: '#475569' }}>{s.label}</span>
                           </div>
-                          <span className="text-[11px] font-bold" style={{color:'#0A1628'}}>{donutTotal > 0 ? Math.round((s.value / donutTotal) * 100) : 0}%</span>
+                          <span className="text-[11px] font-bold" style={{ color: '#0A1628' }}>{donutTotal > 0 ? Math.round((s.value / donutTotal) * 100) : 0}%</span>
                         </div>
                       ))}
                     </div>
@@ -3609,7 +3424,7 @@ const AdminDashboardPage: React.FC = () => {
                 {/* Recent Trips */}
                 <div className="lg:col-span-2 glass-panel rounded-[22px] overflow-hidden shadow-xs border border-slate-200/80">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/40">
-                    <h2 className="text-sm font-black" style={{color:'#0A1628'}}>Recent Flight Trips</h2>
+                    <h2 className="text-sm font-black" style={{ color: '#0A1628' }}>Recent Flight Trips</h2>
                     <button onClick={() => setTab('trips')} className="text-[11px] font-black flex items-center gap-1 transition-all text-teal-600 hover:text-teal-700">
                       View All Trips <ArrowRight size={11} />
                     </button>
@@ -3654,7 +3469,7 @@ const AdminDashboardPage: React.FC = () => {
                 <div className="space-y-5">
                   {/* Recent Activity */}
                   <div className="glass-panel p-5 rounded-[22px] border border-slate-200/80 shadow-xs">
-                    <h2 className="text-sm font-black mb-3.5" style={{color:'#0A1628'}}>Recent Activity Log</h2>
+                    <h2 className="text-sm font-black mb-3.5" style={{ color: '#0A1628' }}>Recent Activity Log</h2>
                     <div className="space-y-3">
                       {recentActivity.length === 0 ? (
                         <p className="text-xs text-center py-6 text-slate-400 font-semibold">No recent activity logged</p>
@@ -3676,7 +3491,7 @@ const AdminDashboardPage: React.FC = () => {
 
                   {/* System Alerts */}
                   <div className="glass-panel p-5 rounded-[22px] border border-slate-200/80 shadow-xs">
-                    <h2 className="text-sm font-black mb-3.5" style={{color:'#0A1628'}}>Security & System Alerts</h2>
+                    <h2 className="text-sm font-black mb-3.5" style={{ color: '#0A1628' }}>Security & System Alerts</h2>
                     <div className="space-y-2.5">
                       {[
                         { text: `${stats?.pendingKyc ?? kycUsers.filter(u => u.status === 'PENDING').length} KYC Reviews Pending`, sub: 'Identity verification queue', c: '#D97706', i: ShieldCheck, action: () => setTab('kyc') },
@@ -3827,23 +3642,23 @@ const AdminDashboardPage: React.FC = () => {
                       <th>DEPARTURE</th>
                       <th>BAGGAGE SPACE</th>
                       <th>STATUS</th>
-                      <th style={{textAlign:'center'}}>ACTIONS</th>
+                      <th style={{ textAlign: 'center' }}>ACTIONS</th>
                     </tr>
                   </thead>
                   {loading ? <Skeleton rows={6} cols={8} /> : (
                     <tbody>
                       {fTrips.map(t => (
                         <tr key={t.id} className="admin-table-row">
-                          <td className="whitespace-nowrap" style={{color:'#0D9488',fontWeight:'900'}}>#{t.id}</td>
-                          <td className="max-w-[160px] truncate" style={{color:'#0A1628',fontWeight:'700'}} title={`${t.from_location} → ${t.to_location}`}>
+                          <td className="whitespace-nowrap" style={{ color: '#0D9488', fontWeight: '900' }}>#{t.id}</td>
+                          <td className="max-w-[160px] truncate" style={{ color: '#0A1628', fontWeight: '700' }} title={`${t.from_location} → ${t.to_location}`}>
                             {t.from_location} → {t.to_location}
                           </td>
-                          <td className="max-w-[170px] truncate" style={{color:'#475569'}} title={t.traveler_email || t.traveler_name}>
+                          <td className="max-w-[170px] truncate" style={{ color: '#475569' }} title={t.traveler_email || t.traveler_name}>
                             <div className="font-semibold text-slate-800">{t.traveler_name || 'Traveler'}</div>
                             <div className="text-[11px] text-slate-400 truncate">{t.traveler_email || '—'}</div>
                           </td>
-                          <td className="max-w-[120px] truncate" style={{color:'#64748B'}}>{t.airline || 'Commercial Airline'}</td>
-                          <td className="whitespace-nowrap" style={{color:'#64748B',fontSize:'12px'}}>{t.departure_date}</td>
+                          <td className="max-w-[120px] truncate" style={{ color: '#64748B' }}>{t.airline || 'Commercial Airline'}</td>
+                          <td className="whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>{t.departure_date}</td>
                           <td className="whitespace-nowrap">
                             <span className="font-extrabold text-emerald-600">{t.available_weight}</span>
                             <span className="text-slate-400">/{t.capacity_weight} kg</span>
@@ -3857,7 +3672,7 @@ const AdminDashboardPage: React.FC = () => {
                               <button onClick={() => setStatusModal({ title: `Trip #${t.id} Status`, current: t.status, options: ['Active', 'PAYMENT_RELEASED', 'CANCELLED'], onSelect: s => updateTripStatus(t.id, s) })} className="admin-btn-ghost flex items-center gap-1">
                                 <Edit3 size={11} /> Status
                               </button>
-                              <button onClick={() => deleteTrip(t.id)} className="admin-btn-danger p-1.5 border-0" style={{padding:'6px'}}>
+                              <button onClick={() => deleteTrip(t.id)} className="admin-btn-danger p-1.5 border-0" style={{ padding: '6px' }}>
                                 <Trash2 size={13} />
                               </button>
                             </div>
@@ -3995,25 +3810,25 @@ const AdminDashboardPage: React.FC = () => {
                       <th>WEIGHT</th>
                       <th>ESCROW REWARD</th>
                       <th>STATUS</th>
-                      <th style={{textAlign:'center'}}>ACTIONS</th>
+                      <th style={{ textAlign: 'center' }}>ACTIONS</th>
                     </tr>
                   </thead>
                   {loading ? <Skeleton rows={6} cols={8} /> : (
                     <tbody>
                       {fBookings.map(b => (
                         <tr key={b.id} className="admin-table-row">
-                          <td className="whitespace-nowrap" style={{color:'#0D9488',fontWeight:'900'}}>#{b.id}</td>
-                          <td className="max-w-[150px] truncate" style={{color:'#0A1628',fontWeight:'700'}} title={b.sender?.first_name ? `${b.sender.first_name} ${b.sender.last_name || ''}` : b.sender_name || 'Sender'}>
+                          <td className="whitespace-nowrap" style={{ color: '#0D9488', fontWeight: '900' }}>#{b.id}</td>
+                          <td className="max-w-[150px] truncate" style={{ color: '#0A1628', fontWeight: '700' }} title={b.sender?.first_name ? `${b.sender.first_name} ${b.sender.last_name || ''}` : b.sender_name || 'Sender'}>
                             {b.sender?.first_name ? `${b.sender.first_name} ${b.sender.last_name || ''}` : b.sender_name || 'Sender'}
                           </td>
-                          <td className="max-w-[150px] truncate" style={{color:'#475569'}} title={b.traveler?.first_name ? `${b.traveler.first_name} ${b.traveler.last_name || ''}` : b.traveler_name || 'Awaiting Match'}>
+                          <td className="max-w-[150px] truncate" style={{ color: '#475569' }} title={b.traveler?.first_name ? `${b.traveler.first_name} ${b.traveler.last_name || ''}` : b.traveler_name || 'Awaiting Match'}>
                             {b.traveler?.first_name ? `${b.traveler.first_name} ${b.traveler.last_name || ''}` : b.traveler_name || 'Awaiting Match'}
                           </td>
-                          <td className="max-w-[150px] truncate" style={{color:'#64748B',fontSize:'12px'}} title={`${b.trip?.from_location || b.route?.from || 'Origin'} → ${b.trip?.to_location || b.route?.to || 'Destination'}`}>
+                          <td className="max-w-[150px] truncate" style={{ color: '#64748B', fontSize: '12px' }} title={`${b.trip?.from_location || b.route?.from || 'Origin'} → ${b.trip?.to_location || b.route?.to || 'Destination'}`}>
                             {b.trip?.from_location || b.route?.from || 'Origin'} → {b.trip?.to_location || b.route?.to || 'Destination'}
                           </td>
-                          <td className="whitespace-nowrap font-semibold" style={{color:'#475569'}}>{b.weight} kg</td>
-                          <td className="whitespace-nowrap" style={{color:'#059669',fontWeight:'900'}}>₹{b.agreed_price || b.reward || 0}</td>
+                          <td className="whitespace-nowrap font-semibold" style={{ color: '#475569' }}>{b.weight} kg</td>
+                          <td className="whitespace-nowrap" style={{ color: '#059669', fontWeight: '900' }}>₹{b.agreed_price || b.reward || 0}</td>
                           <td className="whitespace-nowrap"><StatusBadge status={b.status} /></td>
                           <td className="whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
@@ -4023,7 +3838,7 @@ const AdminDashboardPage: React.FC = () => {
                               <button onClick={() => setStatusModal({ title: `Booking #${b.id} Status`, current: b.status, options: ['REQUEST_SENT', 'Confirmed', 'PAYMENT_RELEASED', 'CANCELLED'], onSelect: s => updateBookingStatus(b.id, s) })} className="admin-btn-ghost flex items-center gap-1">
                                 <Edit3 size={11} /> Status
                               </button>
-                              <button onClick={() => deleteBooking(b.id)} className="admin-btn-danger p-1.5 border-0" style={{padding:'6px'}}>
+                              <button onClick={() => deleteBooking(b.id)} className="admin-btn-danger p-1.5 border-0" style={{ padding: '6px' }}>
                                 <Trash2 size={13} />
                               </button>
                             </div>
@@ -4048,19 +3863,19 @@ const AdminDashboardPage: React.FC = () => {
               <div className="admin-table-card overflow-x-auto">
                 <table className="w-full text-sm min-w-[700px]">
                   <thead><tr className="admin-table-head">
-                    <th>ID</th><th>Sender</th><th>Traveler</th><th>Route</th><th>Status</th><th>Date</th><th style={{textAlign:'center'}}>Actions</th>
+                    <th>ID</th><th>Sender</th><th>Traveler</th><th>Route</th><th>Status</th><th>Date</th><th style={{ textAlign: 'center' }}>Actions</th>
                   </tr></thead>
                   {loading ? <Skeleton rows={8} cols={7} /> : (
                     <tbody>
                       {fShipments.map(s => (
                         <tr key={s.id} className="admin-table-row">
-                          <td style={{color:'#0D9488',fontWeight:'800'}}>#{s.id}</td>
-                          <td style={{color:'#0A1628',fontWeight:'600'}}>{s.booking?.sender?.first_name} {s.booking?.sender?.last_name}</td>
-                          <td style={{color:'#475569'}}>{s.booking?.traveler?.first_name} {s.booking?.traveler?.last_name}</td>
-                          <td style={{color:'#64748B',fontSize:'12px'}}>{s.booking?.trip?.from_location}→{s.booking?.trip?.to_location || '—'}</td>
+                          <td style={{ color: '#0D9488', fontWeight: '800' }}>#{s.id}</td>
+                          <td style={{ color: '#0A1628', fontWeight: '600' }}>{s.booking?.sender?.first_name} {s.booking?.sender?.last_name}</td>
+                          <td style={{ color: '#475569' }}>{s.booking?.traveler?.first_name} {s.booking?.traveler?.last_name}</td>
+                          <td style={{ color: '#64748B', fontSize: '12px' }}>{s.booking?.trip?.from_location}→{s.booking?.trip?.to_location || '—'}</td>
                           <td><StatusBadge status={s.status} /></td>
-                          <td style={{color:'#64748B',fontSize:'12px'}}>{s.created_at ? new Date(s.created_at).toLocaleDateString() : '-'}</td>
-                          <td style={{textAlign:'center'}}>
+                          <td style={{ color: '#64748B', fontSize: '12px' }}>{s.created_at ? new Date(s.created_at).toLocaleDateString() : '-'}</td>
+                          <td style={{ textAlign: 'center' }}>
                             <button onClick={() => setStatusModal({ title: `Shipment #${s.id} Status`, current: s.status, options: ['Package Received', 'IN_TRANSIT', 'Customs Clearance', 'Out for Delivery', 'DELIVERED'], onSelect: st => updateShipmentStatus(s.id, st) })} className="admin-btn-ghost flex items-center gap-1 mx-auto">
                               <Edit3 size={11} /> Status
                             </button>
@@ -4078,7 +3893,7 @@ const AdminDashboardPage: React.FC = () => {
           {/* ─── USERS (Advanced Top MNC Platform) ───────────────────────── */}
           {tab === 'users' && (
             <div className="admin-tab-content space-y-6">
-              
+
               {/* Header with Title and Live Stats Banner */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -4126,7 +3941,7 @@ const AdminDashboardPage: React.FC = () => {
                       const encodedUri = encodeURI(csvContent);
                       const link = document.createElement("a");
                       link.setAttribute("href", encodedUri);
-                      link.setAttribute("download", `flyorago_users_export_${new Date().toISOString().slice(0,10)}.csv`);
+                      link.setAttribute("download", `flyorago_users_export_${new Date().toISOString().slice(0, 10)}.csv`);
                       document.body.appendChild(link);
                       link.click();
                       document.body.removeChild(link);
@@ -4142,7 +3957,7 @@ const AdminDashboardPage: React.FC = () => {
 
               {/* Quick Metrics Bar */}
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div 
+                <div
                   onClick={() => { setUserRoleFilter('ALL'); setUserStatusFilter('ALL'); setUserKycFilter('ALL'); setUserPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${userRoleFilter === 'ALL' && userStatusFilter === 'ALL' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4150,7 +3965,7 @@ const AdminDashboardPage: React.FC = () => {
                   <div className="text-2xl font-black mt-1">{users.length}</div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setUserStatusFilter(userStatusFilter === 'active' ? 'ALL' : 'active'); setUserPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${userStatusFilter === 'active' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4160,7 +3975,7 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setUserKycFilter(userKycFilter === 'APPROVED' ? 'ALL' : 'APPROVED'); setUserPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${userKycFilter === 'APPROVED' ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4170,7 +3985,7 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setUserStatusFilter(userStatusFilter === 'blocked' ? 'ALL' : 'blocked'); setUserPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${userStatusFilter === 'blocked' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4180,7 +3995,7 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setUserStatusFilter(userStatusFilter === 'deletion_requested' ? 'ALL' : 'deletion_requested'); setUserPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer relative ${userStatusFilter === 'deletion_requested' ? 'bg-amber-600 text-white border-amber-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4197,7 +4012,7 @@ const AdminDashboardPage: React.FC = () => {
               {/* Advanced Enterprise Filter & Search Command Center */}
               <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-                  
+
                   {/* High-speed Real-time Search Box */}
                   <div className="relative flex-1 min-w-[280px]">
                     <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -4212,7 +4027,7 @@ const AdminDashboardPage: React.FC = () => {
                       className="w-full pl-10 pr-9 py-2.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all text-slate-800"
                     />
                     {userSearchInput && (
-                      <button 
+                      <button
                         onClick={() => { setUserSearchInput(''); setUserPage(1); }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                         title="Clear search"
@@ -4224,7 +4039,7 @@ const AdminDashboardPage: React.FC = () => {
 
                   {/* Filter Dropdowns and Sorters */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    
+
                     {/* Role Filter */}
                     <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
                       <span className="text-[10px] font-black text-slate-400 uppercase">Role:</span>
@@ -4357,15 +4172,15 @@ const AdminDashboardPage: React.FC = () => {
 
                         return (
                           <tr key={u.id} className="admin-table-row hover:bg-slate-50/80 transition-colors">
-                            
+
                             {/* User Avatar + Full Name + ID */}
                             <td className="max-w-[220px]">
                               <div className="flex items-center gap-3">
                                 <div
                                   className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black text-white shrink-0 shadow-sm"
                                   style={{
-                                    background: u.isActive 
-                                      ? 'linear-gradient(135deg, #0D9488 0%, #1E40AF 100%)' 
+                                    background: u.isActive
+                                      ? 'linear-gradient(135deg, #0D9488 0%, #1E40AF 100%)'
                                       : 'linear-gradient(135deg, #EF4444 0%, #991B1B 100%)'
                                   }}
                                 >
@@ -4373,9 +4188,9 @@ const AdminDashboardPage: React.FC = () => {
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1.5">
-                                    <span 
+                                    <span
                                       onClick={() => setViewUserDrawer(u)}
-                                      className="font-extrabold text-slate-900 truncate hover:text-teal-600 cursor-pointer text-sm" 
+                                      className="font-extrabold text-slate-900 truncate hover:text-teal-600 cursor-pointer text-sm"
                                       title={u.fullName}
                                     >
                                       {u.fullName}
@@ -4407,12 +4222,11 @@ const AdminDashboardPage: React.FC = () => {
 
                             {/* Role Badge */}
                             <td className="whitespace-nowrap">
-                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${
-                                (u.role || '').toLowerCase() === 'traveler' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
+                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${(u.role || '').toLowerCase() === 'traveler' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
                                 (u.role || '').toLowerCase() === 'sender' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
-                                (u.role || '').toLowerCase() === 'admin' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                                'bg-slate-100 text-slate-700 border border-slate-200'
-                              }`}>
+                                  (u.role || '').toLowerCase() === 'admin' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                                    'bg-slate-100 text-slate-700 border border-slate-200'
+                                }`}>
                                 {u.role || 'User'}
                               </span>
                             </td>
@@ -4443,16 +4257,15 @@ const AdminDashboardPage: React.FC = () => {
                                 </div>
                               ) : (
                                 <span
-                                  className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-full ${
-                                    u.isActive ? 'admin-badge-active' : 'admin-badge-error'
-                                  }`}
+                                  className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-full ${u.isActive ? 'admin-badge-active' : 'admin-badge-error'
+                                    }`}
                                 >
-                                  <span 
-                                    className="w-1.5 h-1.5 rounded-full" 
+                                  <span
+                                    className="w-1.5 h-1.5 rounded-full"
                                     style={{
-                                      background: u.isActive ? '#059669' : '#DC2626', 
+                                      background: u.isActive ? '#059669' : '#DC2626',
                                       animation: u.isActive ? 'admin-status-dot 2s ease infinite' : 'none'
-                                    }} 
+                                    }}
                                   />
                                   {u.isActive ? 'Active' : 'Blocked'}
                                 </span>
@@ -4472,9 +4285,8 @@ const AdminDashboardPage: React.FC = () => {
 
                                 <button
                                   onClick={() => toggleUserActive(u)}
-                                  className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg transition-all ${
-                                    u.isActive ? 'admin-btn-danger' : 'admin-btn-ghost'
-                                  }`}
+                                  className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg transition-all ${u.isActive ? 'admin-btn-danger' : 'admin-btn-ghost'
+                                    }`}
                                   style={u.isActive ? {} : { color: '#059669', borderColor: '#A7F3D0', background: '#D1FAE5' }}
                                   title={u.isActive ? 'Block Account' : 'Reactivate Account'}
                                 >
@@ -4484,13 +4296,12 @@ const AdminDashboardPage: React.FC = () => {
 
                                 {!u.isStaff && (
                                   <>
-                                    <button 
-                                      onClick={() => deleteUser(u)} 
-                                      className={`px-2.5 py-1 rounded-lg font-extrabold text-xs transition flex items-center gap-1 shadow-2xs ${
-                                        u.deletionRequested
-                                          ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                                          : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80'
-                                      }`}
+                                    <button
+                                      onClick={() => deleteUser(u)}
+                                      className={`px-2.5 py-1 rounded-lg font-extrabold text-xs transition flex items-center gap-1 shadow-2xs ${u.deletionRequested
+                                        ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                        : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80'
+                                        }`}
                                       title={u.deletionRequested ? "Approve User Deletion Request" : "Delete User Account"}
                                     >
                                       <Trash2 size={12} />
@@ -4590,11 +4401,10 @@ const AdminDashboardPage: React.FC = () => {
                           <button
                             key={pageNum}
                             onClick={() => setUserPage(pageNum)}
-                            className={`w-8 h-8 rounded-xl text-xs font-black transition ${
-                              userPage === pageNum 
-                                ? 'bg-slate-900 text-white shadow-xs' 
-                                : 'text-slate-600 hover:bg-slate-100'
-                            }`}
+                            className={`w-8 h-8 rounded-xl text-xs font-black transition ${userPage === pageNum
+                              ? 'bg-slate-900 text-white shadow-xs'
+                              : 'text-slate-600 hover:bg-slate-100'
+                              }`}
                           >
                             {pageNum}
                           </button>
@@ -4619,7 +4429,7 @@ const AdminDashboardPage: React.FC = () => {
           {/* ─── KYC Identity Verification (Top MNC Google/Stripe Compliance Engine) ──── */}
           {tab === 'kyc' && (
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              
+
               {/* Header with Title and Quick Actions */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -4670,7 +4480,7 @@ const AdminDashboardPage: React.FC = () => {
                       const encodedUri = encodeURI(csvContent);
                       const link = document.createElement("a");
                       link.setAttribute("href", encodedUri);
-                      link.setAttribute("download", `flyorago_kyc_export_${new Date().toISOString().slice(0,10)}.csv`);
+                      link.setAttribute("download", `flyorago_kyc_export_${new Date().toISOString().slice(0, 10)}.csv`);
                       document.body.appendChild(link);
                       link.click();
                       document.body.removeChild(link);
@@ -4686,7 +4496,7 @@ const AdminDashboardPage: React.FC = () => {
 
               {/* Quick Clickable Metric KPI Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div 
+                <div
                   onClick={() => { setKycFilter('ALL'); setKycDocTypeFilter('ALL'); setKycPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'ALL' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4694,7 +4504,7 @@ const AdminDashboardPage: React.FC = () => {
                   <div className="text-2xl font-black mt-1">{kycUsers.length}</div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setKycFilter(kycFilter === 'PENDING' ? 'ALL' : 'PENDING'); setKycPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'PENDING' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white border-amber-200/80 hover:border-amber-300 shadow-2xs'}`}
                 >
@@ -4704,7 +4514,7 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setKycFilter(kycFilter === 'APPROVED' ? 'ALL' : 'APPROVED'); setKycPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'APPROVED' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4714,7 +4524,7 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => { setKycFilter(kycFilter === 'REJECTED' ? 'ALL' : 'REJECTED'); setKycPage(1); }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${kycFilter === 'REJECTED' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs'}`}
                 >
@@ -4728,7 +4538,7 @@ const AdminDashboardPage: React.FC = () => {
               {/* Omni Search & Multi-Faceted Filters Bar */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-                  
+
                   {/* Real-time Omni-Search */}
                   <div className="relative flex-1">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
@@ -4743,8 +4553,8 @@ const AdminDashboardPage: React.FC = () => {
                       className="w-full bg-slate-50 border border-slate-200 focus:border-flyora-teal focus:bg-white rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 placeholder:text-slate-400 outline-none transition"
                     />
                     {kycSearchInput && (
-                      <button 
-                        onClick={() => { setKycSearchInput(''); setKycPage(1); }} 
+                      <button
+                        onClick={() => { setKycSearchInput(''); setKycPage(1); }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                       >
                         <X size={13} />
@@ -4864,26 +4674,26 @@ const AdminDashboardPage: React.FC = () => {
 
                         return (
                           <tr key={u.userId} className="admin-table-row hover:bg-slate-50/80 transition-colors">
-                            
+
                             {/* User Avatar & Name */}
                             <td className="whitespace-nowrap">
                               <div className="flex items-center gap-3">
-                                <div 
+                                <div
                                   className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-xs"
                                   style={{
                                     background: u.status === 'APPROVED' ? 'linear-gradient(135deg, #059669, #0D9488)' :
-                                                u.status === 'PENDING' ? 'linear-gradient(135deg, #D97706, #F59E0B)' :
-                                                u.status === 'REJECTED' ? 'linear-gradient(135deg, #DC2626, #E11D48)' :
-                                                'linear-gradient(135deg, #475569, #64748B)'
+                                      u.status === 'PENDING' ? 'linear-gradient(135deg, #D97706, #F59E0B)' :
+                                        u.status === 'REJECTED' ? 'linear-gradient(135deg, #DC2626, #E11D48)' :
+                                          'linear-gradient(135deg, #475569, #64748B)'
                                   }}
                                 >
                                   {initial}
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1.5">
-                                    <span 
+                                    <span
                                       onClick={() => setSelectedKyc(u)}
-                                      className="font-extrabold text-slate-900 truncate hover:text-teal-600 cursor-pointer text-sm" 
+                                      className="font-extrabold text-slate-900 truncate hover:text-teal-600 cursor-pointer text-sm"
                                       title={u.fullName}
                                     >
                                       {u.fullName}
@@ -5060,11 +4870,10 @@ const AdminDashboardPage: React.FC = () => {
                           <button
                             key={pageNum}
                             onClick={() => setKycPage(pageNum)}
-                            className={`w-8 h-8 rounded-xl text-xs font-black transition ${
-                              kycPage === pageNum 
-                                ? 'bg-slate-900 text-white shadow-xs' 
-                                : 'text-slate-600 hover:bg-slate-100'
-                            }`}
+                            className={`w-8 h-8 rounded-xl text-xs font-black transition ${kycPage === pageNum
+                              ? 'bg-slate-900 text-white shadow-xs'
+                              : 'text-slate-600 hover:bg-slate-100'
+                              }`}
                           >
                             {pageNum}
                           </button>
@@ -5184,8 +4993,8 @@ const AdminDashboardPage: React.FC = () => {
                       key={f.id}
                       onClick={() => setDisputeStatusFilter(f.id as any)}
                       className={`px-3.5 py-2 rounded-2xl font-extrabold text-xs whitespace-nowrap transition-all ${disputeStatusFilter === f.id
-                          ? 'bg-slate-900 text-white shadow-md'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-slate-900 text-white shadow-md'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                     >
                       {f.label}
@@ -5732,8 +5541,8 @@ const AdminDashboardPage: React.FC = () => {
                       key={st}
                       onClick={() => setMsgStatusFilter(st)}
                       className={`px-3.5 py-2 rounded-2xl font-extrabold text-xs whitespace-nowrap transition-all ${msgStatusFilter === st
-                          ? 'bg-slate-900 text-white shadow-md'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-slate-900 text-white shadow-md'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                     >
                       {st === 'ALL' ? 'All Messages' : st}
@@ -5799,12 +5608,12 @@ const AdminDashboardPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2.5 py-1 rounded-full font-extrabold text-[10px] uppercase border ${msg.status === 'New'
-                                  ? 'bg-amber-100 text-amber-800 border-amber-300'
-                                  : msg.status === 'Read'
-                                    ? 'bg-slate-100 text-slate-700 border-slate-200'
-                                    : msg.status === 'Replied'
-                                      ? 'bg-blue-100 text-blue-800 border-blue-300'
-                                      : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                : msg.status === 'Read'
+                                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                  : msg.status === 'Replied'
+                                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                    : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                                 }`}>
                                 {msg.status}
                               </span>
@@ -5831,173 +5640,6 @@ const AdminDashboardPage: React.FC = () => {
 
           {/* ── Settings / Admin Credentials Tab ── */}
           {tab === 'settings' && <SettingsTab toast={toast} />}
-
-          {/* ── Email Activity Logs Tab (Top-MNC System Audit) ── */}
-          {tab === 'email_activity' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              {/* Header & Metric Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Dispatch Logs</div>
-                    <div className="text-3xl font-black text-slate-900 mt-1">{emailLogs.length}</div>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Automated transactional emails</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-black">
-                    <Mail size={22} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Delivered / Sent</div>
-                    <div className="text-3xl font-black text-emerald-600 mt-1">
-                      {emailLogs.filter(e => e.status?.toLowerCase() === 'sent' || e.status?.toLowerCase() === 'delivered').length}
-                    </div>
-                    <p className="text-[10px] text-emerald-500 mt-0.5">Successful SMTP transmissions</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
-                    <CheckCircle2 size={22} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Failed Dispatches</div>
-                    <div className="text-3xl font-black text-rose-600 mt-1">
-                      {emailLogs.filter(e => e.status?.toLowerCase() === 'failed' || e.status?.toLowerCase() === 'error').length}
-                    </div>
-                    <p className="text-[10px] text-rose-400 mt-0.5">Issues requiring retry</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-black">
-                    <AlertTriangle size={22} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Email Provider</div>
-                    <div className="text-2xl font-black text-slate-900 mt-1">AWS SES / SMTP</div>
-                    <p className="text-[10px] text-indigo-500 mt-0.5">High-deliverability relay</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
-                    <Globe size={22} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Toolbar */}
-              <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-                  {(['ALL', 'sent', 'failed'] as const).map(f => (
-                    <button
-                      key={f}
-                      onClick={() => setEmailFilter(f)}
-                      className={`px-3.5 py-2 rounded-2xl font-extrabold text-xs whitespace-nowrap transition-all ${
-                        emailFilter === f ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {f === 'ALL' ? 'All Activity' : f === 'sent' ? 'Sent / Delivered' : 'Failed'}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="relative min-w-[240px]">
-                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search recipient, subject, event..."
-                      value={emailSearch}
-                      onChange={e => setEmailSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:border-flyora-teal outline-none transition-all"
-                    />
-                  </div>
-                  <button
-                    onClick={() => {
-                      setEmailLoading(true);
-                      api('/api/admin/email-activity/')
-                        .then(res => setEmailLogs(res.data || []))
-                        .catch(err => console.warn(err))
-                        .finally(() => setEmailLoading(false));
-                    }}
-                    className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
-                    title="Refresh logs"
-                  >
-                    <RefreshCw size={15} className={emailLoading ? 'animate-spin' : ''} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Email Table */}
-              <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead>
-                      <tr className="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                        <th className="px-6 py-4">Recipient</th>
-                        <th className="px-6 py-4">Event & Template</th>
-                        <th className="px-6 py-4">Subject</th>
-                        <th className="px-6 py-4">Dispatch Time</th>
-                        <th className="px-6 py-4">Provider</th>
-                        <th className="px-6 py-4 text-right">Delivery Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {emailLogs
-                        .filter(e => {
-                          const matchFilter = emailFilter === 'ALL' || (emailFilter === 'sent' ? (e.status?.toLowerCase() === 'sent' || e.status?.toLowerCase() === 'delivered') : (e.status?.toLowerCase() === 'failed' || e.status?.toLowerCase() === 'error'));
-                          const s = emailSearch.toLowerCase();
-                          const matchSearch = !s || e.recipient?.toLowerCase().includes(s) || e.subject?.toLowerCase().includes(s) || e.event?.toLowerCase().includes(s) || e.template?.toLowerCase().includes(s);
-                          return matchFilter && matchSearch;
-                        })
-                        .map(log => (
-                          <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="font-extrabold text-slate-900 text-xs">{log.recipient}</div>
-                              {log.messageId && <div className="text-[10px] font-mono text-slate-400 truncate max-w-[160px]">{log.messageId}</div>}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-extrabold text-[10px] uppercase">
-                                {log.event || log.template || 'System Notification'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 font-bold text-slate-800 max-w-[240px] truncate" title={log.subject}>
-                              {log.subject}
-                            </td>
-                            <td className="px-6 py-4 text-xs text-slate-500 font-medium whitespace-nowrap">
-                              {log.createdAt ? new Date(log.createdAt).toLocaleString() : '—'}
-                            </td>
-                            <td className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                              {log.provider || 'SMTP'}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                                log.status?.toLowerCase() === 'sent' || log.status?.toLowerCase() === 'delivered'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : 'bg-rose-50 text-rose-700 border-rose-200'
-                              }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  log.status?.toLowerCase() === 'sent' || log.status?.toLowerCase() === 'delivered' ? 'bg-emerald-500' : 'bg-rose-500'
-                                }`} />
-                                {log.status || 'SENT'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      {emailLogs.length === 0 && !emailLoading && (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">
-                            No email activity logged yet.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* ── Transactions & Platform Fee Revenue Ledger Tab (Top-MNC Grade) ── */}
           {tab === 'transactions' && (
@@ -6086,11 +5728,10 @@ const AdminDashboardPage: React.FC = () => {
                             <div className="text-[11px] text-slate-400 font-medium">{rec.userEmail}</div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                              rec.userRole === 'Sender' 
-                                ? 'bg-sky-50 text-sky-700 border-sky-200' 
-                                : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                            }`}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${rec.userRole === 'Sender'
+                              ? 'bg-sky-50 text-sky-700 border-sky-200'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              }`}>
                               {rec.userRole}
                             </span>
                           </td>

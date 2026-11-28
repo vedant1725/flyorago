@@ -68,15 +68,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, activeSubItem, onS
           className="flex items-center gap-3 mb-8 px-2 cursor-pointer shrink-0 group relative z-10"
           onClick={() => navigate('/')}
         >
-          <div className="relative">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-flyora-teal to-teal-600 flex items-center justify-center shadow-lg shadow-teal-900/40 group-hover:scale-105 transition-transform duration-300 border border-teal-400/20">
-              <Send size={15} className="text-white transform -rotate-45 translate-x-0.5" />
-            </div>
-            <div className="absolute inset-0 bg-flyora-teal rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-opacity" />
+          <div className="relative flex items-center justify-center p-0.5">
+            <div className="absolute inset-0 rounded-full bg-flyora-teal/30 blur-md group-hover:bg-flyora-teal/60 transition-all duration-300" />
+            <img
+              src="/images/flyorago-header-icon.png"
+              alt="Flyorago Logo"
+              className="relative w-9 h-9 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_10px_rgba(13,148,136,0.4)]"
+            />
           </div>
-          <span className="text-lg font-black text-white tracking-wider">
-            FLYORA<span className="text-flyora-teal">GO</span>
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-lg font-black text-white tracking-wider">
+              FLYORA<span className="text-flyora-teal">GO</span>
+            </span>
+            <span className="text-[7.5px] font-extrabold text-teal-300/60 tracking-widest uppercase mt-0.5">
+              Ship Smarter
+            </span>
+          </div>
         </div>
 
         {/* Navigation Items Area */}

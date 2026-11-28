@@ -8,7 +8,7 @@ import ChooseRole from '../components/ChooseRole';
 import PopularRoutes from '../components/PopularRoutes';
 import Stats from '../components/Stats';
 import CommunityTestimonials from '../components/CommunityTestimonials';
-import CTASection from '../components/CTASection';
+import MobileAppShowcase from '../components/MobileAppShowcase';
 import FAQSection from '../components/FAQSection';
 import Footer from '../components/Footer';
 import { SeoHead } from '../components/seo/SeoHead';
@@ -75,7 +75,7 @@ const LandingPage: React.FC = () => {
         <PopularRoutes />
         <Stats />
         <CommunityTestimonials />
-        <CTASection />
+        <MobileAppShowcase />
         <FAQSection />
       </main>
       <Footer />

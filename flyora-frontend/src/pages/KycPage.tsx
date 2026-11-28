@@ -301,11 +301,23 @@ const KycPage: React.FC = () => {
       {/* Premium Header */}
       <header className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
-              <Plane size={18} className="text-white transform -rotate-45" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="relative flex items-center justify-center p-0.5">
+              <div className="absolute inset-0 rounded-full bg-flyora-teal/30 blur-md group-hover:bg-flyora-teal/60 transition-all duration-300" />
+              <img
+                src="/images/flyorago-header-icon.png"
+                alt="Flyorago Logo"
+                className="relative w-10 h-10 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_10px_rgba(13,148,136,0.35)]"
+              />
             </div>
-            <span className="text-xl font-black text-flyora-navy">fly<span className="text-flyora-teal">orago</span></span>
+            <div className="flex flex-col leading-none text-left">
+              <span className="text-xl font-black text-flyora-navy">
+                FLYORA<span className="text-flyora-teal">GO</span>
+              </span>
+              <span className="text-[7.5px] font-extrabold text-flyora-teal-dark tracking-widest uppercase mt-0.5">
+                Verification Portal
+              </span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-3">
