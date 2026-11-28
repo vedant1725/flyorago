@@ -53,36 +53,69 @@ const Header: React.FC = () => {
   return (
     <header
       className={`
-        fixed left-0 right-0 z-50 transition-all duration-300 ease-out
+        fixed left-0 right-0 z-50 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
         ${isScrolled
-          ? 'top-2 sm:top-3.5 px-3 sm:px-6'
-          : 'top-3 sm:top-5 px-3 sm:px-6'
+          ? 'top-2 sm:top-2.5 px-3 sm:px-8'
+          : 'top-3.5 sm:top-6 px-3.5 sm:px-8'
         }
       `}
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Floating Pill Container (Exact Reference Style: Pill shape, Glassmorphism, Rounded Full) */}
+      <div
+        className={`
+          mx-auto transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
+          ${isScrolled ? 'max-w-6xl' : 'max-w-7xl'}
+        `}
+      >
+        {/* Floating Pill Container: On-scroll shrink-expand physics (MNC Apple/Stripe dynamic island feel) */}
         <div
           className={`
-            w-full transition-all duration-300 ease-out
+            w-full transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
             rounded-full
             ${isScrolled
-              ? 'bg-white/95 backdrop-blur-2xl shadow-[0_12px_45px_rgba(10,22,40,0.12)] border border-gray-200/90 py-1.5 px-3 sm:px-5'
-              : 'bg-white/85 backdrop-blur-xl shadow-[0_8px_32px_rgba(10,22,40,0.08)] border border-white/60 py-2 px-3.5 sm:px-6'
+              ? 'bg-white/95 backdrop-blur-2xl shadow-[0_16px_50px_rgba(10,22,40,0.14)] border border-gray-200/90 py-1.5 px-3 sm:px-5 scale-[0.985]'
+              : 'bg-white/85 backdrop-blur-xl shadow-[0_8px_32px_rgba(10,22,40,0.08)] border border-white/70 py-2.5 px-3.5 sm:px-6 scale-100'
             }
           `}
         >
-          <div className="flex items-center justify-between h-13 sm:h-15">
-            {/* ─── Left: Prominent Official Standalone Logo Icon (Matches Reference) ─── */}
-            <Link to="/" className="flex items-center group flex-shrink-0" id="flyora-logo">
+          <div
+            className={`
+              flex items-center justify-between transition-all duration-500 ease-out
+              ${isScrolled ? 'h-11 sm:h-13' : 'h-13 sm:h-16'}
+            `}
+          >
+            {/* ─── Left: Official Standalone Logo + FLYORAGO Brand Wordmark ─── */}
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group flex-shrink-0" id="flyora-logo">
               <div className="relative flex items-center justify-center p-0.5">
                 {/* Luminous Ambient Glow Backdrop */}
                 <div className="absolute inset-0 rounded-full bg-flyora-teal/25 blur-md group-hover:bg-flyora-teal/40 transition-all duration-300" />
                 <img
                   src="/images/flyorago-header-icon.png"
                   alt="Flyorago Official Logo"
-                  className="relative w-11 h-11 sm:w-12 sm:h-12 object-contain transform group-hover:scale-108 transition-transform duration-300 drop-shadow-[0_4px_10px_rgba(13,148,136,0.3)]"
+                  className={`
+                    relative object-contain transform group-hover:scale-108 transition-all duration-500 drop-shadow-[0_4px_10px_rgba(13,148,136,0.3)]
+                    ${isScrolled ? 'w-9 h-9 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12'}
+                  `}
                 />
+              </div>
+
+              {/* Brand Wordmark (Visible everywhere on Mobile and Desktop so it never looks empty) */}
+              <div className="flex flex-col leading-none select-none">
+                <span
+                  className={`
+                    font-black tracking-tight text-flyora-navy transition-all duration-300
+                    ${isScrolled ? 'text-[16px] sm:text-[18px]' : 'text-[18px] sm:text-[20px]'}
+                  `}
+                >
+                  FLYORA<span className="text-flyora-teal">GO</span>
+                </span>
+                <span
+                  className={`
+                    font-extrabold text-flyora-teal-dark tracking-widest uppercase transition-all duration-300
+                    ${isScrolled ? 'text-[7.5px] sm:text-[8px] opacity-80' : 'text-[8px] sm:text-[8.5px] opacity-90'}
+                  `}
+                >
+                  Ship Smarter
+                </span>
               </div>
             </Link>
 
