@@ -55,32 +55,31 @@ const Header: React.FC = () => {
       className={`
         fixed left-0 right-0 z-50 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
         ${isScrolled
-          ? 'top-2 sm:top-2.5 px-3 sm:px-8'
-          : 'top-3.5 sm:top-6 px-3.5 sm:px-8'
+          ? 'top-2 sm:top-2.5 px-3 sm:px-6'
+          : 'top-0 px-0'
         }
       `}
     >
       <div
         className={`
           mx-auto transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
-          ${isScrolled ? 'max-w-6xl' : 'max-w-7xl'}
+          ${isScrolled ? 'max-w-6xl' : 'max-w-full'}
         `}
       >
-        {/* Floating Pill Container: On-scroll shrink-expand physics (MNC Apple/Stripe dynamic island feel) */}
+        {/* Container: Perfect flat full-width fit at top-of-page, smoothly morphs into rounded pill on scroll */}
         <div
           className={`
             w-full transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
-            rounded-full
             ${isScrolled
-              ? 'bg-white/95 backdrop-blur-2xl shadow-[0_16px_50px_rgba(10,22,40,0.14)] border border-gray-200/90 py-1.5 px-3 sm:px-5 scale-[0.985]'
-              : 'bg-white/85 backdrop-blur-xl shadow-[0_8px_32px_rgba(10,22,40,0.08)] border border-white/70 py-2.5 px-3.5 sm:px-6 scale-100'
+              ? 'rounded-full bg-white/95 backdrop-blur-2xl shadow-[0_16px_50px_rgba(10,22,40,0.14)] border border-gray-200/90 py-1.5 px-3 sm:px-6 scale-[0.99]'
+              : 'rounded-none bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 py-2.5 px-4 sm:px-8 lg:px-12 scale-100'
             }
           `}
         >
           <div
             className={`
-              flex items-center justify-between transition-all duration-500 ease-out
-              ${isScrolled ? 'h-11 sm:h-13' : 'h-13 sm:h-16'}
+              flex items-center justify-between transition-all duration-500 ease-out mx-auto
+              ${isScrolled ? 'h-11 sm:h-13 max-w-6xl' : 'h-14 sm:h-16 max-w-[1536px]'}
             `}
           >
             {/* ─── Left: Official Standalone Logo + FLYORAGO Brand Wordmark ─── */}
@@ -103,7 +102,7 @@ const Header: React.FC = () => {
                 <span
                   className={`
                     font-black tracking-tight text-flyora-navy transition-all duration-300
-                    ${isScrolled ? 'text-[16px] sm:text-[18px]' : 'text-[18px] sm:text-[20px]'}
+                    ${isScrolled ? 'text-[16px] sm:text-[18px]' : 'text-[18px] sm:text-[21px]'}
                   `}
                 >
                   FLYORA<span className="text-flyora-teal">GO</span>

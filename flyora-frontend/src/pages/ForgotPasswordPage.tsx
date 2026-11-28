@@ -171,16 +171,23 @@ export const ForgotPasswordPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/50" />
 
           <div className="relative z-10 w-full h-full flex flex-col justify-between">
-            <Link to="/" className="flex items-center gap-2.5 group w-fit">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal group-hover:shadow-[0_8px_25px_rgba(13,148,136,0.5)] transition-all duration-300">
-                  <Plane size={20} className="text-white transform -rotate-45 group-hover:rotate-0 transition-transform duration-300" />
-                </div>
-                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-flyora-blue rounded-full border-2 border-flyora-navy" />
+            <Link to="/" className="flex items-center gap-3 group w-fit">
+              <div className="relative flex items-center justify-center p-0.5">
+                <div className="absolute inset-0 rounded-full bg-flyora-teal/40 blur-md group-hover:bg-flyora-teal/70 transition-all duration-300" />
+                <img
+                  src="/images/flyorago-header-icon.png"
+                  alt="Flyorago Logo"
+                  className="relative w-12 h-12 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_15px_rgba(13,148,136,0.5)]"
+                />
               </div>
-              <span className="text-2xl font-black tracking-tight text-white">
-                fly<span className="text-flyora-teal">orago</span>
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className="text-2xl font-black tracking-tight text-white transition-colors duration-300">
+                  FLYORA<span className="text-flyora-teal-bright">GO</span>
+                </span>
+                <span className="text-[9px] font-extrabold text-white/60 tracking-widest uppercase mt-0.5">
+                  Ship Smarter
+                </span>
+              </div>
             </Link>
 
             <div className="max-w-md bg-white/10 backdrop-blur-md border border-white/15 rounded-3xl p-6 text-white">
@@ -239,16 +246,23 @@ export const ForgotPasswordPage: React.FC = () => {
           <div className="w-full max-w-[420px] px-6 py-8 lg:p-0 bg-white lg:bg-transparent relative z-20 flex-1 lg:flex-none flex flex-col justify-center">
             {/* Brand + Title */}
             <div className="text-center mb-7 flex flex-col items-center">
-              <Link to="/" className="hidden lg:flex items-center gap-2.5 group mb-5 w-fit">
-                <div className="relative">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal">
-                    <Plane size={18} className="text-white transform -rotate-45" />
-                  </div>
-                  <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-flyora-blue rounded-full border-2 border-white" />
+              <Link to="/" className="hidden lg:flex items-center gap-3 group mb-5 w-fit">
+                <div className="relative flex items-center justify-center p-0.5">
+                  <div className="absolute inset-0 rounded-full bg-flyora-teal/30 blur-md group-hover:bg-flyora-teal/60 transition-all duration-300" />
+                  <img
+                    src="/images/flyorago-header-icon.png"
+                    alt="Flyorago Logo"
+                    className="relative w-11 h-11 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_12px_rgba(13,148,136,0.4)]"
+                  />
                 </div>
-                <span className="text-2xl font-black tracking-tight text-flyora-navy">
-                  fly<span className="text-flyora-teal">orago</span>
-                </span>
+                <div className="flex flex-col leading-none text-left">
+                  <span className="text-2xl font-black tracking-tight text-flyora-navy">
+                    FLYORA<span className="text-flyora-teal">GO</span>
+                  </span>
+                  <span className="text-[8.5px] font-extrabold text-flyora-teal-dark tracking-widest uppercase mt-0.5">
+                    Ship Smarter
+                  </span>
+                </div>
               </Link>
 
               {/* Step Progress Bar */}

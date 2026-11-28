@@ -22,15 +22,20 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
             {/* Brand Column */}
             <div className="lg:col-span-2">
-              <Link to="/" onClick={handleLinkClick} className="inline-flex items-center gap-2 group mb-4" id="footer-logo">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-flyora-teal to-flyora-teal-light flex items-center justify-center shadow-teal group-hover:shadow-[0_4px_15px_rgba(13,148,136,0.4)] transition-all duration-300">
-                  <Plane size={16} className="text-white -rotate-45" />
+              <Link to="/" onClick={handleLinkClick} className="inline-flex items-center gap-3 group mb-4" id="footer-logo">
+                <div className="relative flex items-center justify-center p-0.5">
+                  <div className="absolute inset-0 rounded-full bg-flyora-teal/30 blur-md group-hover:bg-flyora-teal/50 transition-all duration-300" />
+                  <img
+                    src="/images/flyorago-header-icon.png"
+                    alt="Flyorago Official Logo"
+                    className="relative w-11 h-11 object-contain transform group-hover:scale-108 transition-all duration-300 drop-shadow-[0_4px_12px_rgba(13,148,136,0.35)]"
+                  />
                 </div>
                 <div className="flex flex-col leading-none">
-                  <span className="text-lg font-black tracking-tight text-white">
+                  <span className="text-xl font-black tracking-tight text-white group-hover:text-flyora-teal-bright transition-colors">
                     FLYORA<span className="text-flyora-teal-bright">GO</span>
                   </span>
-                  <span className="text-[8px] font-medium text-white/40 tracking-widest uppercase mt-0.5">
+                  <span className="text-[8.5px] font-extrabold text-white/50 tracking-widest uppercase mt-0.5">
                     Ship Smarter
                   </span>
                 </div>
